@@ -317,22 +317,24 @@
   // "sug" = nome suggerito (solo come segnaposto/aiuto, lo studente scrive il suo).
   // "foto" = immagine reale del luogo (mostrata nel popup). Dove manca, nessuna foto.
   var ZONE = [
-    {id:1,  x:33.28, y:12.67, sug:"Il parco della piscina"},
-    {id:2,  x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg"},
-    {id:3,  x:84.00, y:5.67,  sug:"Il garage dei bus"},
-    {id:4,  x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg"},
-    {id:5,  x:80.98, y:27.37, sug:"L'aula di musica"},
-    {id:6,  x:73.85, y:27.49, sug:"Il laboratorio di informatica", foto:"lab_info.jpg"},
-    {id:7,  x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg"},
+    // Numerazione "a percorso": si parte dalla chiesa, poi ingressi e scuole,
+    // e si sale verso i campi sportivi e gli edifici in alto.
+    {id:1,  x:87.00, y:73.50, sug:"La chiesa"},
+    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg"},
+    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg"},
+    {id:4,  x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg"},
+    {id:5,  x:40.77, y:73.03, sug:"Il parcheggio"},
+    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg"},
+    {id:7,  x:31.27, y:42.82, sug:"Le piscine – piano vasca"},
     {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg"},
-    {id:9,  x:31.27, y:42.82, sug:"Le piscine – piano vasca"},
-    {id:10, x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg"},
-    {id:11, x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg"},
-    {id:12, x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg"},
-    {id:13, x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg"},
-    {id:14, x:40.77, y:73.03, sug:"Il parcheggio"},
-    {id:15, x:87.00, y:73.50, sug:"La chiesa"},
-    {id:16, x:63.00, y:58.00, sug:"La mensa",                      foto:"mensa.jpeg"}
+    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg"},
+    {id:10, x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg"},
+    {id:11, x:73.85, y:27.49, sug:"L'aula di musica"},
+    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg"},
+    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg"},
+    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg"},
+    {id:15, x:33.28, y:12.67, sug:"Il parco della piscina"},
+    {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus"}
   ];
 
   var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
