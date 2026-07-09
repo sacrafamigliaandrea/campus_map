@@ -32,47 +32,47 @@
     color:var(--inchiostro);
     background:var(--carta);
     -webkit-font-smoothing:antialiased;
-    /* pagina senza scroll: header + mappa entrano nella schermata */
+    /* pagina senza scroll: sidebar + mappa entrano nella schermata */
     height:100vh;height:100dvh;overflow:hidden;
-    display:flex;flex-direction:column;
+    display:flex;flex-direction:row;
   }
   h1,h2,h3,.font-titolo{font-family:"Lexend",system-ui,sans-serif;font-weight:600;}
 
   /* ---------- Header ---------- */
-  header.top{
-    display:flex;align-items:center;gap:16px;
-    padding:14px 22px;
+  .sidebar{
+    flex:0 0 260px;
+    display:flex;flex-direction:column;gap:18px;
+    padding:24px 20px;
     background:#fff;
-    border-bottom:3px solid var(--blu);
-    position:sticky;top:0;z-index:50;
-    flex-wrap:wrap;
+    border-right:3px solid var(--blu);
+    overflow:auto;
   }
-  header.top img.logo{height:52px;width:auto;display:block}
-  .titolo-wrap{flex:1 1 auto;min-width:200px}
-  header.top h1{font-size:1.35rem;margin:0;color:var(--blu);line-height:1.1}
-  header.top p.sub{margin:2px 0 0;font-size:.95rem;color:var(--grigio)}
+  .sidebar img.logo{height:64px;width:auto;display:block}
+  .titolo-wrap{flex:0 0 auto}
+  .sidebar h1{font-size:1.5rem;margin:0;color:var(--blu);line-height:1.1}
+  .sidebar p.sub{margin:6px 0 0;font-size:.95rem;color:var(--grigio)}
 
-  .progress{
-    display:flex;align-items:center;gap:12px;flex:0 0 auto;
-  }
+  .progress{display:flex;flex-direction:column;gap:8px;flex:0 0 auto}
   .progress .conteggio{
     font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu);
-    font-size:1rem;white-space:nowrap;
+    font-size:1.05rem;white-space:nowrap;
   }
-  .barra{width:150px;height:12px;border-radius:99px;background:var(--blu-chiaro);overflow:hidden}
+  .barra{width:100%;height:12px;border-radius:99px;background:var(--blu-chiaro);overflow:hidden}
   .barra > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blu),var(--oro));transition:width .5s ease}
   .btn-reset{
+    align-self:flex-start;
     border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--grigio);
-    font-family:"Lexend",sans-serif;font-size:.85rem;font-weight:500;
-    padding:8px 14px;border-radius:99px;cursor:pointer;
+    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:500;
+    padding:9px 16px;border-radius:99px;cursor:pointer;
   }
   .btn-reset:hover{border-color:var(--oro);color:var(--oro-scuro)}
+  .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.4}
 
   /* ---------- Mappa ---------- */
   .mappa-scroll{
-    flex:1 1 auto;min-height:0;
+    flex:1 1 auto;min-height:0;min-width:0;
     display:flex;align-items:center;justify-content:center;
-    padding:14px 22px 18px;
+    padding:18px 22px;
   }
   .mappa{
     position:relative;
@@ -230,44 +230,50 @@
   }
   .salvato-msg.mostra{display:flex}
 
-  footer.pie{text-align:center;color:var(--grigio);font-size:.85rem;padding:0 22px 40px}
-
   @media (max-width:760px){
     .modale{width:min(560px,96vw)}
     .modale-body{flex-direction:column;gap:14px}
     .col-foto{flex:0 0 auto;height:190px}
   }
-  @media (max-width:640px){
-    header.top h1{font-size:1.1rem}
+  @media (max-width:720px){
+    body{flex-direction:column}
+    .sidebar{
+      flex:0 0 auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;
+      border-right:none;border-bottom:3px solid var(--blu);padding:12px 16px;
+    }
+    .sidebar img.logo{height:44px}
+    .titolo-wrap{flex:1 1 auto;min-width:140px}
+    .sidebar h1{font-size:1.15rem}
+    .sidebar p.sub{display:none}
+    .progress{flex-direction:row;align-items:center;margin-left:auto}
     .barra{width:90px}
+    .btn-reset{align-self:center}
+    .sidebar .pie{display:none}
   }
 </style>
 </head>
 <body>
 
-<header class="top">
+<aside class="sidebar">
   <img class="logo" src="logo.png" alt="Logo Scuola Sacra Famiglia" />
   <div class="titolo-wrap">
     <h1>Campus Map</h1>
     <p class="sub">Scopri, dai un nome e racconta ogni angolo della scuola</p>
   </div>
   <div class="progress">
-    <span class="conteggio" id="conteggio">0 di 14</span>
+    <span class="conteggio" id="conteggio">0 di 16</span>
     <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
-    <button class="btn-reset" id="btnReset" type="button">Riparti</button>
   </div>
-</header>
+  <button class="btn-reset" id="btnReset" type="button">Riparti</button>
+  <p class="pie">Le tue schede restano salvate su questo dispositivo. Buona esplorazione!</p>
+</aside>
 
-<div class="mappa-scroll">
+<main class="mappa-scroll">
   <div class="mappa" id="mappa">
     <img class="sfondo" src="Campus.png" alt="Veduta aerea del campus della Scuola Sacra Famiglia" />
     <!-- i marker vengono generati via JS -->
   </div>
-</div>
-
-<footer class="pie">
-  Le tue schede restano salvate su questo dispositivo. Buona esplorazione!
-</footer>
+</main>
 
 <!-- Popup di benvenuto (compare all'avvio, poi scompare) -->
 <div class="overlay" id="benvenuto" role="dialog" aria-modal="true" aria-labelledby="benvenutoTitolo">
