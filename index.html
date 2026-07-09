@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Esplora il nostro Campus — Scuola Sacra Famiglia</title>
+<link rel="icon" href="logo.png" />
+<link rel="apple-touch-icon" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --blu:#123E90;          /* blu istituzionale Scuola Sacra Famiglia */
+    --blu-scuro:#0C2C68;
+    --blu-chiaro:#E8EEFA;
+    --oro:#D4A017;          /* accento / inviti all'azione */
+    --oro-scuro:#B8860B;
+    --carta:#F7F5F0;
+    --inchiostro:#1F2430;
+    --grigio:#5B6472;
+    --verde-ok:#2E7D5B;
+    --ombra:0 10px 30px rgba(18,62,144,.18);
+    --raggio:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Atkinson Hyperlegible",system-ui,sans-serif;
+    font-size:18px;
+    line-height:1.5;
+    color:var(--inchiostro);
+    background:var(--carta);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.font-titolo{font-family:"Lexend",system-ui,sans-serif;font-weight:600;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex;align-items:center;gap:16px;
+    padding:14px 22px;
+    background:#fff;
+    border-bottom:3px solid var(--blu);
+    position:sticky;top:0;z-index:50;
+    flex-wrap:wrap;
+  }
+  header.top img.logo{height:52px;width:auto;display:block}
+  .titolo-wrap{flex:1 1 auto;min-width:200px}
+  header.top h1{font-size:1.35rem;margin:0;color:var(--blu);line-height:1.1}
+  header.top p.sub{margin:2px 0 0;font-size:.95rem;color:var(--grigio)}
+
+  .progress{
+    display:flex;align-items:center;gap:12px;flex:0 0 auto;
+  }
+  .progress .conteggio{
+    font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu);
+    font-size:1rem;white-space:nowrap;
+  }
+  .barra{width:150px;height:12px;border-radius:99px;background:var(--blu-chiaro);overflow:hidden}
+  .barra > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blu),var(--oro));transition:width .5s ease}
+  .btn-reset{
+    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--grigio);
+    font-family:"Lexend",sans-serif;font-size:.85rem;font-weight:500;
+    padding:8px 14px;border-radius:99px;cursor:pointer;
+  }
+  .btn-reset:hover{border-color:var(--oro);color:var(--oro-scuro)}
+
+  /* ---------- Istruzioni ---------- */
+  .intro{
+    max-width:1100px;margin:20px auto 0;padding:0 22px;
+  }
+  .intro .card{
+    background:var(--blu-chiaro);border-radius:var(--raggio);
+    padding:16px 20px;display:flex;gap:14px;align-items:flex-start;
+    border-left:5px solid var(--blu);
+  }
+  .intro .card svg{flex:0 0 auto;margin-top:2px}
+  .intro .card p{margin:0}
+  .intro .card strong{color:var(--blu-scuro)}
+
+  /* ---------- Mappa ---------- */
+  .mappa-scroll{
+    max-width:1400px;margin:22px auto 60px;padding:0 22px;
+  }
+  .mappa{
+    position:relative;width:100%;
+    aspect-ratio:2482 / 1728;
+    border-radius:var(--raggio);
+    overflow:hidden;
+    box-shadow:var(--ombra);
+    background:#dfe4ea url("Campus.png") center/cover no-repeat;
+  }
+  .mappa img.sfondo{display:block;width:100%;height:auto}
+
+  /* ---------- Marker ---------- */
+  .marker{
+    position:absolute;transform:translate(-50%,-50%);
+    width:clamp(30px,3.4vw,46px);height:clamp(30px,3.4vw,46px);
+    border-radius:50%;
+    border:3px solid #fff;
+    background:var(--oro);
+    color:#fff;
+    font-family:"Lexend",sans-serif;font-weight:700;
+    font-size:clamp(.8rem,1.4vw,1.05rem);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,.35);
+    z-index:5;
+    transition:transform .15s ease, background .3s ease;
+    padding:0;
+  }
+  .marker:hover,.marker:focus-visible{
+    transform:translate(-50%,-50%) scale(1.18);
+    outline:none;z-index:20;
+  }
+  .marker:focus-visible{box-shadow:0 0 0 4px rgba(212,160,23,.5),0 3px 10px rgba(0,0,0,.35)}
+  /* anello che pulsa per invitare al clic */
+  .marker.da-fare::after{
+    content:"";position:absolute;inset:-3px;border-radius:50%;
+    border:3px solid var(--oro);
+    animation:pulsa 1.9s ease-out infinite;
+  }
+  @keyframes pulsa{
+    0%{transform:scale(1);opacity:.85}
+    70%{transform:scale(2.1);opacity:0}
+    100%{transform:scale(2.1);opacity:0}
+  }
+  .marker.fatto{background:var(--blu)}
+  .marker.fatto .num{display:none}
+  .marker.fatto .check{display:block}
+  .marker .check{display:none;width:60%;height:60%}
+  @media (prefers-reduced-motion:reduce){
+    .marker.da-fare::after{animation:none;opacity:.5}
+  }
+
+  /* ---------- Modale ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(12,44,104,.55);
+    backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;
+    padding:20px;z-index:100;
+  }
+  .overlay.aperto{display:flex}
+  .modale{
+    background:#fff;border-radius:20px;
+    width:min(560px,100%);max-height:90vh;overflow:auto;
+    box-shadow:var(--ombra);
+    animation:entra .25s ease;
+  }
+  @keyframes entra{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  .modale-head{
+    background:var(--blu);color:#fff;padding:18px 22px;
+    display:flex;align-items:center;gap:12px;
+    position:sticky;top:0;
+  }
+  .modale-head .badge{
+    flex:0 0 auto;width:40px;height:40px;border-radius:50%;
+    background:var(--oro);display:flex;align-items:center;justify-content:center;
+    font-family:"Lexend",sans-serif;font-weight:700;font-size:1.1rem;
+  }
+  .modale-head h2{margin:0;font-size:1.2rem;flex:1}
+  .modale-head .chiudi{
+    background:rgba(255,255,255,.15);border:none;color:#fff;
+    width:36px;height:36px;border-radius:50%;cursor:pointer;
+    font-size:1.3rem;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .modale-head .chiudi:hover{background:rgba(255,255,255,.3)}
+  .modale-body{padding:22px}
+  .campo{margin-bottom:18px}
+  .campo label{
+    display:block;font-family:"Lexend",sans-serif;font-weight:600;
+    color:var(--blu-scuro);margin-bottom:6px;font-size:1rem;
+  }
+  .campo .aiuto{font-weight:400;color:var(--grigio);font-size:.9rem;font-family:"Atkinson Hyperlegible",sans-serif}
+  .campo input,.campo textarea{
+    width:100%;font-family:"Atkinson Hyperlegible",sans-serif;font-size:1rem;
+    padding:11px 13px;border:1.5px solid #D5DBE6;border-radius:12px;
+    background:var(--carta);color:var(--inchiostro);resize:vertical;
+  }
+  .campo input:focus,.campo textarea:focus{
+    outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(18,62,144,.15);
+    background:#fff;
+  }
+  .campo textarea{min-height:96px}
+  .azioni{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+  .btn{
+    font-family:"Lexend",sans-serif;font-weight:600;font-size:1rem;
+    padding:12px 22px;border-radius:99px;cursor:pointer;border:none;
+  }
+  .btn-primario{background:var(--blu);color:#fff}
+  .btn-primario:hover{background:var(--blu-scuro)}
+  .btn-secondario{background:#fff;color:var(--grigio);border:1.5px solid #D5DBE6}
+  .btn-secondario:hover{border-color:var(--oro);color:var(--oro-scuro)}
+  .salvato-msg{
+    display:none;align-items:center;gap:8px;color:var(--verde-ok);
+    font-family:"Lexend",sans-serif;font-weight:600;margin-right:auto;font-size:.95rem;
+  }
+  .salvato-msg.mostra{display:flex}
+
+  footer.pie{text-align:center;color:var(--grigio);font-size:.85rem;padding:0 22px 40px}
+
+  @media (max-width:640px){
+    header.top h1{font-size:1.1rem}
+    .barra{width:90px}
+    .intro .card{font-size:.95rem}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <img class="logo" src="logo.png" alt="Logo Scuola Sacra Famiglia" />
+  <div class="titolo-wrap">
+    <h1>Esplora il nostro Campus</h1>
+    <p class="sub">Scopri, dai un nome e racconta ogni angolo della scuola</p>
+  </div>
+  <div class="progress">
+    <span class="conteggio" id="conteggio">0 di 14</span>
+    <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
+    <button class="btn-reset" id="btnReset" type="button">Riparti</button>
+  </div>
+</header>
+
+<div class="intro">
+  <div class="card">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#123E90"/>
+      <rect x="11" y="10.5" width="2" height="7" rx="1" fill="#fff"/>
+      <circle cx="12" cy="7.3" r="1.35" fill="#fff"/>
+    </svg>
+    <p><strong>Come funziona.</strong> Ogni pallino dorato che pulsa è un luogo del campus tutto da scoprire.
+    Toccalo e apri la sua scheda: scrivi <strong>come si chiama</strong>, <strong>a cosa serve</strong> e
+    <strong>un ricordo o un'esperienza</strong> che hai vissuto lì. Quando salvi, il pallino diventa blu:
+    così vedi quante zone hai già esplorato.</p>
+  </div>
+</div>
+
+<div class="mappa-scroll">
+  <div class="mappa" id="mappa">
+    <img class="sfondo" src="Campus.png" alt="Veduta aerea del campus della Scuola Sacra Famiglia" />
+    <!-- i marker vengono generati via JS -->
+  </div>
+</div>
+
+<footer class="pie">
+  Le tue schede restano salvate su questo dispositivo. Buona esplorazione!
+</footer>
+
+<!-- Modale -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modaleTitolo">
+  <div class="modale" id="modale">
+    <div class="modale-head">
+      <span class="badge" id="modaleBadge">1</span>
+      <h2 id="modaleTitolo">Zona 1</h2>
+      <button class="chiudi" id="btnChiudi" type="button" aria-label="Chiudi la scheda">&times;</button>
+    </div>
+    <div class="modale-body">
+      <div class="campo">
+        <label for="fNome">Come si chiama questo luogo?
+          <span class="aiuto">— il nome che gli daresti tu</span>
+        </label>
+        <input type="text" id="fNome" maxlength="80" placeholder="Es. Il campo da calcio" />
+      </div>
+      <div class="campo">
+        <label for="fFunzione">A cosa serve?
+          <span class="aiuto">— la sua funzione, chi lo usa e per cosa</span>
+        </label>
+        <textarea id="fFunzione" maxlength="600" placeholder="Es. Qui si fa educazione fisica e si giocano i tornei..."></textarea>
+      </div>
+      <div class="campo">
+        <label for="fEsperienza">La mia esperienza in questo luogo
+          <span class="aiuto">— un ricordo, un momento, qualcosa che ti è successo qui</span>
+        </label>
+        <textarea id="fEsperienza" maxlength="600" placeholder="Es. Il primo giorno di scuola qui abbiamo..."></textarea>
+      </div>
+      <div class="azioni">
+        <span class="salvato-msg" id="salvatoMsg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5" stroke="#2E7D5B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Scheda salvata
+        </span>
+        <button class="btn btn-secondario" id="btnAnnulla" type="button">Chiudi</button>
+        <button class="btn btn-primario" id="btnSalva" type="button">Salva la scheda</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Coordinate rilevate dai pallini rossi di Campus_zone.png (in % sullo sfondo).
+  // "sug" = nome suggerito (solo come segnaposto/aiuto, lo studente scrive il suo).
+  var ZONE = [
+    {id:1,  x:33.28, y:12.67, sug:"Il frutteto / il parco alberato"},
+    {id:2,  x:58.26, y:16.26, sug:"Il campo da calcio"},
+    {id:3,  x:84.00, y:5.67,  sug:"Il magazzino / capannone"},
+    {id:4,  x:73.85, y:17.19, sug:"La palestra"},
+    {id:5,  x:80.98, y:27.37, sug:"L'edificio dei servizi"},
+    {id:6,  x:73.85, y:27.49, sug:"Il cortile interno / chiostro"},
+    {id:7,  x:63.30, y:33.80, sug:"I campi da tennis"},
+    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket"},
+    {id:9,  x:31.27, y:42.82, sug:"Le piscine all'aperto"},
+    {id:10, x:47.22, y:49.65, sug:"La piscina coperta"},
+    {id:11, x:92.51, y:43.75, sug:"La residenza / foresteria"},
+    {id:12, x:73.37, y:62.67, sug:"L'ala delle aule"},
+    {id:13, x:53.46, y:62.79, sug:"L'ingresso principale"},
+    {id:14, x:40.77, y:73.03, sug:"Il parcheggio"}
+  ];
+
+  var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
+  var dati = caricaDati();
+  var zonaAttiva = null;
+
+  var mappa      = document.getElementById("mappa");
+  var overlay    = document.getElementById("overlay");
+  var modale     = document.getElementById("modale");
+  var elTitolo   = document.getElementById("modaleTitolo");
+  var elBadge    = document.getElementById("modaleBadge");
+  var elNome     = document.getElementById("fNome");
+  var elFunzione = document.getElementById("fFunzione");
+  var elEsperienza = document.getElementById("fEsperienza");
+  var elSalvato  = document.getElementById("salvatoMsg");
+
+  var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+    '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function caricaDati(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function salvaDati(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(dati)); }catch(e){}
+  }
+  function completata(id){
+    var d = dati[id];
+    return !!(d && (d.nome || d.funzione || d.esperienza));
+  }
+
+  // ---- Costruzione marker ----
+  ZONE.forEach(function(z){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "marker";
+    b.style.left = z.x + "%";
+    b.style.top  = z.y + "%";
+    b.setAttribute("data-id", z.id);
+    b.innerHTML = '<span class="num">'+z.id+'</span>' + CHECK_SVG;
+    b.addEventListener("click", function(){ apriZona(z.id); });
+    aggiornaMarker(b, z.id);
+    b.setAttribute("aria-label", "Zona "+z.id+": " + (completata(z.id) ? "scheda compilata, modifica" : "da esplorare"));
+    z._el = b;
+    mappa.appendChild(b);
+  });
+
+  function aggiornaMarker(el, id){
+    if(completata(id)){
+      el.classList.add("fatto");
+      el.classList.remove("da-fare");
+    }else{
+      el.classList.add("da-fare");
+      el.classList.remove("fatto");
+    }
+  }
+
+  function aggiornaProgresso(){
+    var fatte = ZONE.filter(function(z){ return completata(z.id); }).length;
+    document.getElementById("conteggio").textContent = fatte + " di " + ZONE.length;
+    document.getElementById("barraFill").style.width = (fatte/ZONE.length*100) + "%";
+  }
+
+  // ---- Modale ----
+  function apriZona(id){
+    zonaAttiva = ZONE.find(function(z){ return z.id === id; });
+    var d = dati[id] || {};
+    elBadge.textContent = id;
+    elTitolo.textContent = d.nome ? d.nome : ("Zona " + id);
+    elNome.value = d.nome || "";
+    elFunzione.value = d.funzione || "";
+    elEsperienza.value = d.esperienza || "";
+    elNome.placeholder = "Es. " + zonaAttiva.sug;
+    elSalvato.classList.remove("mostra");
+    overlay.classList.add("aperto");
+    document.body.style.overflow = "hidden";
+    setTimeout(function(){ elNome.focus(); }, 60);
+  }
+
+  function chiudiModale(){
+    overlay.classList.remove("aperto");
+    document.body.style.overflow = "";
+    zonaAttiva = null;
+  }
+
+  function salva(){
+    if(!zonaAttiva) return;
+    var id = zonaAttiva.id;
+    dati[id] = {
+      nome: elNome.value.trim(),
+      funzione: elFunzione.value.trim(),
+      esperienza: elEsperienza.value.trim()
+    };
+    salvaDati();
+    aggiornaMarker(zonaAttiva._el, id);
+    zonaAttiva._el.setAttribute("aria-label", "Zona "+id+": " + (completata(id) ? "scheda compilata, modifica" : "da esplorare"));
+    elTitolo.textContent = dati[id].nome ? dati[id].nome : ("Zona " + id);
+    aggiornaProgresso();
+    elSalvato.classList.add("mostra");
+    setTimeout(function(){ chiudiModale(); }, 750);
+  }
+
+  document.getElementById("btnSalva").addEventListener("click", salva);
+  document.getElementById("btnAnnulla").addEventListener("click", chiudiModale);
+  document.getElementById("btnChiudi").addEventListener("click", chiudiModale);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) chiudiModale(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && overlay.classList.contains("aperto")) chiudiModale();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", function(){
+    if(confirm("Vuoi cancellare tutte le schede e ripartire da capo?")){
+      dati = {};
+      salvaDati();
+      ZONE.forEach(function(z){
+        aggiornaMarker(z._el, z.id);
+        z._el.setAttribute("aria-label", "Zona "+z.id+": da esplorare");
+      });
+      aggiornaProgresso();
+    }
+  });
+
+  aggiornaProgresso();
+})();
+</script>
+</body>
+</html>
