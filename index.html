@@ -47,7 +47,7 @@
     border-right:3px solid var(--blu);
     overflow:auto;
   }
-  .sidebar img.logo{height:64px;width:auto;display:block}
+  .sidebar img.logo{width:150px;height:auto;max-width:100%;align-self:center;display:block}
   .titolo-wrap{flex:0 0 auto}
   .sidebar h1{font-size:1.5rem;margin:0;color:var(--blu);line-height:1.1}
   .sidebar p.sub{margin:6px 0 0;font-size:.95rem;color:var(--grigio)}
@@ -66,7 +66,22 @@
     padding:9px 16px;border-radius:99px;cursor:pointer;
   }
   .btn-reset:hover{border-color:var(--oro);color:var(--oro-scuro)}
-  .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.4}
+  .btn-musica{
+    align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
+    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--blu);
+    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:600;
+    padding:9px 16px;border-radius:99px;cursor:pointer;
+  }
+  .btn-musica:hover{border-color:var(--oro)}
+  .btn-musica.attiva{background:var(--blu);color:#fff;border-color:var(--blu)}
+  .btn-musica svg{width:18px;height:18px;display:block}
+  .btn-musica .ic-on{display:none}
+  .btn-musica.attiva .ic-off{display:none}
+  .btn-musica.attiva .ic-on{display:inline-flex}
+  .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.5}
+  .sidebar .pie strong{color:var(--blu);font-family:"Lexend",sans-serif;font-weight:600;font-size:.85rem}
+  .sidebar .pie .copy{opacity:.75}
+  .yt-audio{position:fixed;left:-9999px;top:0;width:1px;height:1px;border:0}
 
   /* ---------- Mappa ---------- */
   .mappa-scroll{
@@ -241,7 +256,7 @@
       flex:0 0 auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;
       border-right:none;border-bottom:3px solid var(--blu);padding:12px 16px;
     }
-    .sidebar img.logo{height:44px}
+    .sidebar img.logo{width:auto;height:44px;align-self:center}
     .titolo-wrap{flex:1 1 auto;min-width:140px}
     .sidebar h1{font-size:1.15rem}
     .sidebar p.sub{display:none}
@@ -265,7 +280,20 @@
     <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
   </div>
   <button class="btn-reset" id="btnReset" type="button">Riparti</button>
-  <p class="pie">Le tue schede restano salvate su questo dispositivo. Buona esplorazione!</p>
+  <button class="btn-musica" id="btnMusica" type="button" aria-pressed="false" aria-label="Attiva la musica di sottofondo">
+    <span class="ic-off" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    </span>
+    <span class="ic-on" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.5a9 9 0 0 1 0 13"/></svg>
+    </span>
+    <span class="lbl">Attiva musica</span>
+  </button>
+  <p class="pie">
+    <strong>Scuola Sacra Famiglia</strong><br />
+    Animatore Digitale Andrea Cerioli<br />
+    <span class="copy">&copy; 2026</span>
+  </p>
 </aside>
 
 <main class="mappa-scroll">
@@ -274,6 +302,9 @@
     <!-- i marker vengono generati via JS -->
   </div>
 </main>
+
+<!-- Musica di sottofondo: iframe YouTube nascosto (solo audio percepito). -->
+<iframe id="ytAudio" class="yt-audio" title="Musica di sottofondo" allow="autoplay" src=""></iframe>
 
 <!-- Popup di benvenuto (compare all'avvio, poi scompare) -->
 <div class="overlay" id="benvenuto" role="dialog" aria-modal="true" aria-labelledby="benvenutoTitolo">
@@ -739,6 +770,31 @@
   benvenuto.addEventListener("click", function(e){ if(e.target === benvenuto) chiudiBenvenuto(); });
   document.addEventListener("keydown", function(e){
     if(e.key === "Escape" && benvenuto.classList.contains("aperto")) chiudiBenvenuto();
+  });
+
+  // ---- Musica di sottofondo (YouTube, solo audio) ----
+  var VIDEO_ID = "4Eg0GmYe1m4";
+  var ytAudio = document.getElementById("ytAudio");
+  var btnMusica = document.getElementById("btnMusica");
+  var lblMusica = btnMusica.querySelector(".lbl");
+  var musicaOn = false;
+  btnMusica.addEventListener("click", function(){
+    musicaOn = !musicaOn;
+    if(musicaOn){
+      ytAudio.src = "https://www.youtube-nocookie.com/embed/" + VIDEO_ID +
+        "?autoplay=1&loop=1&playlist=" + VIDEO_ID +
+        "&controls=0&modestbranding=1&playsinline=1&rel=0";
+      btnMusica.classList.add("attiva");
+      lblMusica.textContent = "Musica attiva";
+      btnMusica.setAttribute("aria-pressed", "true");
+      btnMusica.setAttribute("aria-label", "Disattiva la musica di sottofondo");
+    }else{
+      ytAudio.src = "";
+      btnMusica.classList.remove("attiva");
+      lblMusica.textContent = "Attiva musica";
+      btnMusica.setAttribute("aria-pressed", "false");
+      btnMusica.setAttribute("aria-label", "Attiva la musica di sottofondo");
+    }
   });
 
   aggiornaProgresso();
