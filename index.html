@@ -171,6 +171,30 @@
     margin-top:8px;font-size:.9rem;color:var(--grigio);
     font-family:"Lexend",sans-serif;font-weight:500;text-align:center;
   }
+  /* ---------- Attività di trascinamento ---------- */
+  .attivita{display:none;margin:0 0 22px;padding-bottom:20px;border-bottom:1px solid var(--blu-chiaro)}
+  .attivita.mostra{display:block}
+  .att-consegna{margin:0 0 4px;font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu-scuro);font-size:1rem}
+  .att-sub{margin:0 0 12px;font-size:.9rem;color:var(--grigio)}
+  .att-zona{
+    min-height:76px;border:2px dashed var(--blu);border-radius:12px;
+    background:rgba(18,62,144,.05);padding:10px;
+    display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;
+  }
+  .att-zona.hover{background:rgba(212,160,23,.12);border-color:var(--oro)}
+  .att-hint{color:var(--grigio);font-size:.9rem;align-self:center}
+  .att-feedback{min-height:22px;margin:8px 0 4px;font-size:.92rem;font-family:"Lexend",sans-serif;font-weight:600}
+  .att-tray{display:flex;flex-wrap:wrap;gap:8px}
+  .att-chip{
+    touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;
+    border:1.5px solid #D5DBE6;background:#fff;color:var(--inchiostro);
+    border-radius:999px;padding:9px 15px;font-size:1rem;
+    font-family:"Atkinson Hyperlegible",sans-serif;line-height:1;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .att-chip.ok{background:#EAF3DE;border-color:#639922;color:#27500A;cursor:default}
+  .att-chip .ck{width:15px;height:15px;flex:0 0 auto}
+  .att-chip.dragging{cursor:grabbing;box-shadow:0 8px 22px rgba(0,0,0,.25);position:fixed;z-index:9999}
   .campo{margin-bottom:18px}
   .campo label{
     display:block;font-family:"Lexend",sans-serif;font-weight:600;
@@ -277,6 +301,13 @@
         <img id="fotoLuogo" src="" alt="" />
         <figcaption>Guarda la foto e riconosci il luogo</figcaption>
       </figure>
+      <div class="attivita" id="attivitaWrap">
+        <p class="att-consegna" id="attConsegna"></p>
+        <p class="att-sub">Le cose che non c'entrano tornano indietro con un aiuto.</p>
+        <div class="att-zona" id="attZona"><span class="att-hint" id="attHint">Trascina qui le cose giuste</span></div>
+        <div class="att-feedback" id="attFeedback" role="status" aria-live="polite"></div>
+        <div class="att-tray" id="attTray"></div>
+      </div>
       <div class="campo">
         <label for="fNome">Come si chiama questo luogo?
           <span class="aiuto">— il nome che gli daresti tu</span>
@@ -337,6 +368,59 @@
     {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus"}
   ];
 
+  // Attività di trascinamento per ogni luogo (10 tessere: le "giuste" appartengono
+  // al luogo, le "sbagliate" [etichetta, aiuto] appartengono altrove nel campus).
+  var ATTIVITA = {
+    1:{ consegna:"Trascina nel riquadro ciò che appartiene alla chiesa",
+        giuste:["Il silenzio e il raccoglimento","La preghiera","Il canto del coro","Le panche","L'altare"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il computer","è nel laboratorio di informatica"],["Il vassoio del pranzo","è in mensa"],["Il canestro","è al campo da basket"]] },
+    2:{ consegna:"Trascina nel riquadro ciò che si fa o si trova all'ingresso della scuola",
+        giuste:["Il saluto del mattino","Appendere la giacca","Il cartellone degli avvisi","L'accoglienza dei compagni","Entrare e uscire"],
+        sbagliate:[["Tuffarsi","si fa in piscina"],["Il canestro","è al campo da basket"],["Gli strumenti musicali","sono in aula di musica"],["Il bus","sta nel suo garage"],["Il vassoio del pranzo","è in mensa"]] },
+    3:{ consegna:"Trascina nel riquadro ciò che appartiene alla scuola secondaria",
+        giuste:["Le aule dei ragazzi","La lavagna","Lo studio delle materie","I compiti","La campanella"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il pallone da basket","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["Gli attrezzi da giardino","servono nel parco"],["Il volante del bus","è del bus nel garage"]] },
+    4:{ consegna:"Trascina nel riquadro ciò che serve all'ingresso delle piscine",
+        giuste:["Mostrare la tessera","Le ciabatte","Gli spogliatoi","La doccia prima di entrare","Il regolamento della piscina"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il computer","è nel laboratorio"],["La lavagna","è nelle aule"],["Il microfono del coro","è in aula di musica"],["Il vassoio del pranzo","è in mensa"]] },
+    5:{ consegna:"Trascina nel riquadro ciò che appartiene al parcheggio",
+        giuste:["Le auto in sosta","Le strisce dei posti","La rotonda","Arrivare e partire","Camminare con prudenza"],
+        sbagliate:[["Nuotare","si fa in piscina"],["Il canestro","è al campo da basket"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["La lavagna","è nelle aule"]] },
+    6:{ consegna:"Trascina nel riquadro ciò che appartiene alla scuola primaria",
+        giuste:["Le aule dei bambini","Imparare a leggere e scrivere","I banchi","La maestra","L'intervallo"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["La rete da pallavolo","è al campo da pallavolo"],["Il bus","sta nel suo garage"],["Gli iMac del laboratorio","sono nel laboratorio"],["L'altare","è nella chiesa"]] },
+    7:{ consegna:"Trascina nel riquadro ciò che serve in piscina",
+        giuste:["Il costume","La cuffia","Le ciabatte","L'asciugamano","Nuotare"],
+        sbagliate:[["La racchetta","serve ai campi da gioco"],["Il pallone da calcio","serve al campo da calcio"],["Il computer","è nel laboratorio"],["Lo zaino di scuola","resta in aula"],["Il vassoio del pranzo","è in mensa"]] },
+    8:{ consegna:"Trascina nel riquadro ciò che serve al campo da basket",
+        giuste:["Il canestro","Il pallone da basket","Le scarpe da ginnastica","Fare canestro","Giocare in squadra"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["Il bus","sta nel suo garage"],["L'altare","è nella chiesa"]] },
+    9:{ consegna:"Trascina nel riquadro ciò che serve in mensa",
+        giuste:["Il vassoio","Le posate","Il pranzo","I tavoli","Mangiare insieme"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["La chitarra","è in aula di musica"],["Gli iMac","sono nel laboratorio"]] },
+    10:{ consegna:"Trascina nel riquadro ciò che serve al campo da pallavolo",
+        giuste:["La rete","Il pallone da pallavolo","Fare una schiacciata","Le due squadre","Il fischietto dell'arbitro"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["La lavagna","è nelle aule"],["Il bus","sta nel suo garage"],["L'altare","è nella chiesa"]] },
+    11:{ consegna:"Trascina nel riquadro ciò che appartiene all'aula di musica",
+        giuste:["Gli strumenti musicali","Il leggio","Cantare","Lo spartito","Suonare insieme"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["Gli iMac","sono nel laboratorio"],["Il canestro","è al campo da basket"]] },
+    12:{ consegna:"Trascina nel riquadro ciò che serve nel laboratorio di informatica",
+        giuste:["I computer (iMac)","La tastiera","Il mouse","Cercare informazioni","Il videoproiettore"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["La rete da pallavolo","è al campo da pallavolo"]] },
+    13:{ consegna:"Trascina nel riquadro ciò che appartiene alla QDV Arena",
+        giuste:["Il campo al coperto","Le partite e i tornei","Il pubblico","Gli eventi della scuola","Il grande tendone"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["Gli iMac","sono nel laboratorio"],["L'altare","è nella chiesa"],["Il volante del bus","è del bus nel garage"]] },
+    14:{ consegna:"Trascina nel riquadro ciò che serve al campo da calcio",
+        giuste:["Il pallone da calcio","Le porte","Gli scarpini","Segnare un gol","Le due squadre"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["La chitarra","è in aula di musica"],["Gli iMac","sono nel laboratorio"]] },
+    15:{ consegna:"Trascina nel riquadro ciò che appartiene al parco della piscina",
+        giuste:["L'erba e gli alberi","Prendere il sole","Giocare all'aperto","L'ombra degli alberi","Rilassarsi tra un bagno e l'altro"],
+        sbagliate:[["Il computer","è nel laboratorio"],["La lavagna","è nelle aule"],["Il vassoio del pranzo","è in mensa"],["Gli scarpini da calcio","servono al campo da calcio"],["Il bus","sta nel suo garage"]] },
+    16:{ consegna:"Trascina nel riquadro ciò che appartiene al garage dei bus",
+        giuste:["I pullman della scuola","L'autista","Il posteggio dei mezzi","Salire e scendere dal bus","I sedili del bus"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["La chitarra","è in aula di musica"],["La lavagna","è nelle aule"]] }
+  };
+
   var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
   var dati = caricaDati();
   var zonaAttiva = null;
@@ -352,6 +436,12 @@
   var elSalvato  = document.getElementById("salvatoMsg");
   var elFoto     = document.getElementById("fotoLuogo");
   var elFotoWrap = document.getElementById("fotoWrap");
+  var attWrap    = document.getElementById("attivitaWrap");
+  var attConsegna= document.getElementById("attConsegna");
+  var attZona    = document.getElementById("attZona");
+  var attHint    = document.getElementById("attHint");
+  var attFeedback= document.getElementById("attFeedback");
+  var attTray    = document.getElementById("attTray");
 
   var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
     '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -400,6 +490,132 @@
     document.getElementById("barraFill").style.width = (fatte/ZONE.length*100) + "%";
   }
 
+  // ---- Attività di trascinamento ----
+  var CK_SVG = '<svg class="ck" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+    '<path d="M20 6L9 17l-5-5" stroke="#27500A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function mescola(a){
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+
+  function creaTessera(label, giusta, aiuto, id, nGiuste){
+    var c = document.createElement("button");
+    c.type = "button";
+    c.className = "att-chip";
+    c.dataset.label = label;
+    c.dataset.giusta = giusta ? "1" : "0";
+    if(aiuto) c.dataset.aiuto = aiuto;
+    c.textContent = label;
+    c.addEventListener("pointerdown", function(e){ iniziaDrag(e, c, id, nGiuste); });
+    return c;
+  }
+
+  function segnaPiazzata(c){
+    c.classList.add("ok");
+    c.dataset.piazzata = "1";
+    if(!c.querySelector(".ck")) c.insertAdjacentHTML("afterbegin", CK_SVG);
+  }
+
+  function costruisciAttivita(zona){
+    attTray.innerHTML = "";
+    Array.prototype.slice.call(attZona.querySelectorAll(".att-chip")).forEach(function(c){ c.remove(); });
+    attFeedback.textContent = "";
+    var att = ATTIVITA[zona.id];
+    if(!att){ attWrap.classList.remove("mostra"); return; }
+    attWrap.classList.add("mostra");
+    attConsegna.textContent = att.consegna;
+    var nGiuste = att.giuste.length;
+    var piazzate = (dati[zona.id] && dati[zona.id].attivita) ? dati[zona.id].attivita : [];
+    var tessere = [];
+    att.giuste.forEach(function(l){ tessere.push({t:l, ok:true}); });
+    att.sbagliate.forEach(function(s){ tessere.push({t:s[0], ok:false, h:s[1]}); });
+    mescola(tessere);
+    tessere.forEach(function(t){
+      var c = creaTessera(t.t, t.ok, t.h, zona.id, nGiuste);
+      if(t.ok && piazzate.indexOf(t.t) >= 0){ segnaPiazzata(c); attZona.appendChild(c); }
+      else{ attTray.appendChild(c); }
+    });
+    aggiornaHint();
+    aggiornaAttProgresso(nGiuste);
+  }
+
+  function aggiornaHint(){
+    attHint.style.display = attZona.querySelector(".att-chip") ? "none" : "block";
+  }
+
+  function contaPiazzate(){ return attZona.querySelectorAll(".att-chip").length; }
+
+  function aggiornaAttProgresso(nGiuste){
+    var n = contaPiazzate();
+    if(n === 0){ attFeedback.textContent = ""; return; }
+    if(n >= nGiuste){
+      attFeedback.style.color = "var(--verde-ok)";
+      attFeedback.textContent = "Bravo! Hai trovato tutto ciò che appartiene a questo luogo.";
+    }else{
+      attFeedback.style.color = "var(--verde-ok)";
+      attFeedback.textContent = "Giusto! (" + n + " su " + nGiuste + ")";
+    }
+  }
+
+  function salvaAttivita(id){
+    if(!dati[id]) dati[id] = {};
+    dati[id].attivita = Array.prototype.slice.call(attZona.querySelectorAll(".att-chip"))
+      .map(function(c){ return c.dataset.label; });
+    salvaDati();
+  }
+
+  var dragEl=null, dragOffX=0, dragOffY=0, dragId=null, dragN=0;
+  function iniziaDrag(e, el, id, nGiuste){
+    if(el.dataset.piazzata) return;
+    dragEl=el; dragId=id; dragN=nGiuste;
+    var r=el.getBoundingClientRect();
+    dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top;
+    el.classList.add("dragging");
+    el.style.width=r.width+"px"; el.style.left=r.left+"px"; el.style.top=r.top+"px";
+    try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    el.addEventListener("pointermove", muoviDrag);
+    el.addEventListener("pointerup", fineDrag);
+    el.addEventListener("pointercancel", fineDrag);
+  }
+  function sopraZona(e){
+    var z=attZona.getBoundingClientRect();
+    return e.clientX>=z.left && e.clientX<=z.right && e.clientY>=z.top && e.clientY<=z.bottom;
+  }
+  function muoviDrag(e){
+    if(!dragEl) return;
+    dragEl.style.left=(e.clientX-dragOffX)+"px";
+    dragEl.style.top=(e.clientY-dragOffY)+"px";
+    attZona.classList.toggle("hover", sopraZona(e));
+  }
+  function fineDrag(e){
+    if(!dragEl) return;
+    var el=dragEl, giusta=el.dataset.giusta==="1", aiuto=el.dataset.aiuto;
+    el.removeEventListener("pointermove", muoviDrag);
+    el.removeEventListener("pointerup", fineDrag);
+    el.removeEventListener("pointercancel", fineDrag);
+    var dentro = sopraZona(e);
+    el.classList.remove("dragging");
+    el.style.width=""; el.style.left=""; el.style.top="";
+    attZona.classList.remove("hover");
+    if(dentro && giusta){
+      segnaPiazzata(el);
+      attZona.appendChild(el);
+      aggiornaHint();
+      aggiornaAttProgresso(dragN);
+      salvaAttivita(dragId);
+    }else if(dentro && !giusta){
+      attFeedback.style.color = "var(--oro-scuro)";
+      attFeedback.textContent = el.dataset.label + ": " + aiuto + " — riprova.";
+      lampeggia(el);
+    }
+    dragEl=null; dragId=null;
+  }
+  function lampeggia(el){
+    el.style.background="#FAEEDA"; el.style.borderColor="#BA7517"; el.style.color="#854F0B";
+    setTimeout(function(){ el.style.background=""; el.style.borderColor=""; el.style.color=""; }, 750);
+  }
+
   // ---- Modale ----
   function apriZona(id){
     zonaAttiva = ZONE.find(function(z){ return z.id === id; });
@@ -418,6 +634,7 @@
     elFunzione.value = d.funzione || "";
     elEsperienza.value = d.esperienza || "";
     elNome.placeholder = "Es. " + zonaAttiva.sug;
+    costruisciAttivita(zonaAttiva);
     elSalvato.classList.remove("mostra");
     overlay.classList.add("aperto");
     document.body.style.overflow = "hidden";
@@ -433,10 +650,12 @@
   function salva(){
     if(!zonaAttiva) return;
     var id = zonaAttiva.id;
+    var prec = dati[id] || {};
     dati[id] = {
       nome: elNome.value.trim(),
       funzione: elFunzione.value.trim(),
-      esperienza: elEsperienza.value.trim()
+      esperienza: elEsperienza.value.trim(),
+      attivita: prec.attivita || []
     };
     salvaDati();
     aggiornaMarker(zonaAttiva._el, id);
