@@ -24,7 +24,7 @@
     --raggio:16px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;height:100%}
   body{
     font-family:"Atkinson Hyperlegible",system-ui,sans-serif;
     font-size:18px;
@@ -32,6 +32,9 @@
     color:var(--inchiostro);
     background:var(--carta);
     -webkit-font-smoothing:antialiased;
+    /* pagina senza scroll: header + mappa entrano nella schermata */
+    height:100vh;height:100dvh;overflow:hidden;
+    display:flex;flex-direction:column;
   }
   h1,h2,h3,.font-titolo{font-family:"Lexend",system-ui,sans-serif;font-weight:600;}
 
@@ -65,32 +68,22 @@
   }
   .btn-reset:hover{border-color:var(--oro);color:var(--oro-scuro)}
 
-  /* ---------- Istruzioni ---------- */
-  .intro{
-    max-width:1100px;margin:20px auto 0;padding:0 22px;
-  }
-  .intro .card{
-    background:var(--blu-chiaro);border-radius:var(--raggio);
-    padding:16px 20px;display:flex;gap:14px;align-items:flex-start;
-    border-left:5px solid var(--blu);
-  }
-  .intro .card svg{flex:0 0 auto;margin-top:2px}
-  .intro .card p{margin:0}
-  .intro .card strong{color:var(--blu-scuro)}
-
   /* ---------- Mappa ---------- */
   .mappa-scroll{
-    max-width:1400px;margin:22px auto 60px;padding:0 22px;
+    flex:1 1 auto;min-height:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:14px 22px 18px;
   }
   .mappa{
-    position:relative;width:100%;
+    position:relative;
+    /* la larghezza viene calcolata via JS per far entrare tutto senza scroll */
     aspect-ratio:2482 / 1728;
     border-radius:var(--raggio);
     overflow:hidden;
     box-shadow:var(--ombra);
     background:#dfe4ea url("Campus.png") center/cover no-repeat;
   }
-  .mappa img.sfondo{display:block;width:100%;height:auto}
+  .mappa img.sfondo{display:block;width:100%;height:100%}
 
   /* ---------- Marker ---------- */
   .marker{
@@ -166,6 +159,18 @@
   }
   .modale-head .chiudi:hover{background:rgba(255,255,255,.3)}
   .modale-body{padding:22px}
+  .foto-luogo{
+    margin:0 0 20px;display:none;
+  }
+  .foto-luogo.mostra{display:block}
+  .foto-luogo img{
+    display:block;width:100%;max-height:230px;object-fit:cover;
+    border-radius:14px;background:var(--blu-chiaro);
+  }
+  .foto-luogo figcaption{
+    margin-top:8px;font-size:.9rem;color:var(--grigio);
+    font-family:"Lexend",sans-serif;font-weight:500;text-align:center;
+  }
   .campo{margin-bottom:18px}
   .campo label{
     display:block;font-family:"Lexend",sans-serif;font-weight:600;
@@ -221,20 +226,6 @@
   </div>
 </header>
 
-<div class="intro">
-  <div class="card">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="#123E90"/>
-      <rect x="11" y="10.5" width="2" height="7" rx="1" fill="#fff"/>
-      <circle cx="12" cy="7.3" r="1.35" fill="#fff"/>
-    </svg>
-    <p><strong>Come funziona.</strong> Ogni pallino dorato che pulsa è un luogo del campus tutto da scoprire.
-    Toccalo e apri la sua scheda: scrivi <strong>come si chiama</strong>, <strong>a cosa serve</strong> e
-    <strong>un ricordo o un'esperienza</strong> che hai vissuto lì. Quando salvi, il pallino diventa blu:
-    così vedi quante zone hai già esplorato.</p>
-  </div>
-</div>
-
 <div class="mappa-scroll">
   <div class="mappa" id="mappa">
     <img class="sfondo" src="Campus.png" alt="Veduta aerea del campus della Scuola Sacra Famiglia" />
@@ -246,6 +237,33 @@
   Le tue schede restano salvate su questo dispositivo. Buona esplorazione!
 </footer>
 
+<!-- Popup di benvenuto (compare all'avvio, poi scompare) -->
+<div class="overlay" id="benvenuto" role="dialog" aria-modal="true" aria-labelledby="benvenutoTitolo">
+  <div class="modale">
+    <div class="modale-head">
+      <span class="badge" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="11" y="10.5" width="2" height="7" rx="1" fill="#fff"/>
+          <circle cx="12" cy="7.3" r="1.35" fill="#fff"/>
+        </svg>
+      </span>
+      <h2 id="benvenutoTitolo">Come funziona</h2>
+    </div>
+    <div class="modale-body">
+      <p style="margin:0 0 20px">
+        Ogni pallino dorato che pulsa è un luogo del campus tutto da scoprire.
+        Toccalo e apri la sua scheda: scrivi <strong>come si chiama</strong>,
+        <strong>a cosa serve</strong> e <strong>un ricordo o un'esperienza</strong>
+        che hai vissuto lì. Quando salvi, il pallino diventa blu: così vedi quante
+        zone hai già esplorato.
+      </p>
+      <div class="azioni">
+        <button class="btn btn-primario" id="btnInizia" type="button">Inizia a esplorare</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modale -->
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modaleTitolo">
   <div class="modale" id="modale">
@@ -255,6 +273,10 @@
       <button class="chiudi" id="btnChiudi" type="button" aria-label="Chiudi la scheda">&times;</button>
     </div>
     <div class="modale-body">
+      <figure class="foto-luogo" id="fotoWrap">
+        <img id="fotoLuogo" src="" alt="" />
+        <figcaption>Guarda la foto e riconosci il luogo</figcaption>
+      </figure>
       <div class="campo">
         <label for="fNome">Come si chiama questo luogo?
           <span class="aiuto">— il nome che gli daresti tu</span>
@@ -293,21 +315,24 @@
 
   // Coordinate rilevate dai pallini rossi di Campus_zone.png (in % sullo sfondo).
   // "sug" = nome suggerito (solo come segnaposto/aiuto, lo studente scrive il suo).
+  // "foto" = immagine reale del luogo (mostrata nel popup). Dove manca, nessuna foto.
   var ZONE = [
-    {id:1,  x:33.28, y:12.67, sug:"Il frutteto / il parco alberato"},
-    {id:2,  x:58.26, y:16.26, sug:"Il campo da calcio"},
-    {id:3,  x:84.00, y:5.67,  sug:"Il magazzino / capannone"},
-    {id:4,  x:73.85, y:17.19, sug:"La palestra"},
-    {id:5,  x:80.98, y:27.37, sug:"L'edificio dei servizi"},
-    {id:6,  x:73.85, y:27.49, sug:"Il cortile interno / chiostro"},
-    {id:7,  x:63.30, y:33.80, sug:"I campi da tennis"},
-    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket"},
-    {id:9,  x:31.27, y:42.82, sug:"Le piscine all'aperto"},
-    {id:10, x:47.22, y:49.65, sug:"La piscina coperta"},
-    {id:11, x:92.51, y:43.75, sug:"La residenza / foresteria"},
-    {id:12, x:73.37, y:62.67, sug:"L'ala delle aule"},
-    {id:13, x:53.46, y:62.79, sug:"L'ingresso principale"},
-    {id:14, x:40.77, y:73.03, sug:"Il parcheggio"}
+    {id:1,  x:33.28, y:12.67, sug:"Il parco della piscina"},
+    {id:2,  x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg"},
+    {id:3,  x:84.00, y:5.67,  sug:"Il garage dei bus"},
+    {id:4,  x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg"},
+    {id:5,  x:80.98, y:27.37, sug:"L'aula di musica"},
+    {id:6,  x:73.85, y:27.49, sug:"Il laboratorio di informatica", foto:"lab_info.jpg"},
+    {id:7,  x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg"},
+    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg"},
+    {id:9,  x:31.27, y:42.82, sug:"Le piscine – piano vasca"},
+    {id:10, x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg"},
+    {id:11, x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg"},
+    {id:12, x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg"},
+    {id:13, x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg"},
+    {id:14, x:40.77, y:73.03, sug:"Il parcheggio"},
+    {id:15, x:87.00, y:73.50, sug:"La chiesa"},
+    {id:16, x:63.00, y:58.00, sug:"La mensa",                      foto:"mensa.jpeg"}
   ];
 
   var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
@@ -323,6 +348,8 @@
   var elFunzione = document.getElementById("fFunzione");
   var elEsperienza = document.getElementById("fEsperienza");
   var elSalvato  = document.getElementById("salvatoMsg");
+  var elFoto     = document.getElementById("fotoLuogo");
+  var elFotoWrap = document.getElementById("fotoWrap");
 
   var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
     '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -377,6 +404,14 @@
     var d = dati[id] || {};
     elBadge.textContent = id;
     elTitolo.textContent = d.nome ? d.nome : ("Zona " + id);
+    if(zonaAttiva.foto){
+      elFoto.src = zonaAttiva.foto;
+      elFoto.alt = "Foto del luogo: " + zonaAttiva.sug;
+      elFotoWrap.classList.add("mostra");
+    }else{
+      elFoto.removeAttribute("src");
+      elFotoWrap.classList.remove("mostra");
+    }
     elNome.value = d.nome || "";
     elFunzione.value = d.funzione || "";
     elEsperienza.value = d.esperienza || "";
@@ -428,6 +463,39 @@
       });
       aggiornaProgresso();
     }
+  });
+
+  // ---- Adatta la mappa alla schermata (nessuno scroll) ----
+  var RATIO = 2482/1728;
+  var mainWrap = document.querySelector(".mappa-scroll");
+  function fitMap(){
+    var stile = getComputedStyle(mainWrap);
+    var padX = parseFloat(stile.paddingLeft) + parseFloat(stile.paddingRight);
+    var padY = parseFloat(stile.paddingTop) + parseFloat(stile.paddingBottom);
+    var availW = mainWrap.clientWidth - padX;
+    var availH = mainWrap.clientHeight - padY;
+    var w = Math.min(availW, availH * RATIO);
+    if(w > 0) mappa.style.width = Math.floor(w) + "px";
+  }
+  window.addEventListener("resize", fitMap);
+  window.addEventListener("orientationchange", fitMap);
+  var imgSfondo = mappa.querySelector("img.sfondo");
+  if(imgSfondo){ imgSfondo.addEventListener("load", fitMap); }
+  fitMap();
+
+  // ---- Popup di benvenuto ----
+  var benvenuto = document.getElementById("benvenuto");
+  benvenuto.classList.add("aperto");
+  document.body.style.overflow = "hidden";
+  function chiudiBenvenuto(){
+    benvenuto.classList.remove("aperto");
+    document.body.style.overflow = "";
+    fitMap();
+  }
+  document.getElementById("btnInizia").addEventListener("click", chiudiBenvenuto);
+  benvenuto.addEventListener("click", function(e){ if(e.target === benvenuto) chiudiBenvenuto(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && benvenuto.classList.contains("aperto")) chiudiBenvenuto();
   });
 
   aggiornaProgresso();
