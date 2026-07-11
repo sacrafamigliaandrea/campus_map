@@ -1,888 +1,1487 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Campus Map — Scuola Sacra Famiglia</title>
-<link rel="icon" href="logo.png" />
-<link rel="apple-touch-icon" href="logo.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Sacra Famiglia — Castello incantato in volo</title>
 <style>
   :root{
-    --blu:#123E90;          /* blu istituzionale Scuola Sacra Famiglia */
-    --blu-scuro:#0C2C68;
-    --blu-chiaro:#E8EEFA;
-    --oro:#D4A017;          /* accento / inviti all'azione */
-    --oro-scuro:#B8860B;
-    --carta:#F7F5F0;
-    --inchiostro:#1F2430;
-    --grigio:#5B6472;
-    --verde-ok:#2E7D5B;
-    --ombra:0 10px 30px rgba(18,62,144,.18);
-    --raggio:16px;
+    --stone:#cdbfa4; --ink:#1a1712; --gold:#d4af37; --parch:#efe6d0;
+    --istit:#123E90;
+    --panel:rgba(18,20,34,0.74); --line:rgba(212,175,55,0.35);
   }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%}
-  body{
-    font-family:"Atkinson Hyperlegible",system-ui,sans-serif;
-    font-size:18px;
-    line-height:1.5;
-    color:var(--inchiostro);
-    background:var(--carta);
-    -webkit-font-smoothing:antialiased;
-    /* pagina senza scroll: sidebar + mappa entrano nella schermata */
-    height:100vh;height:100dvh;overflow:hidden;
-    display:flex;flex-direction:row;
-  }
-  h1,h2,h3,.font-titolo{font-family:"Lexend",system-ui,sans-serif;font-weight:600;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#05070d;
+    font-family:'Georgia','Times New Roman',serif;color:var(--parch)}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
 
-  /* ---------- Header ---------- */
-  .sidebar{
-    flex:0 0 260px;
-    display:flex;flex-direction:column;gap:18px;
-    padding:24px 20px;
-    background:#fff;
-    border-right:3px solid var(--blu);
-    overflow:auto;
-  }
-  .sidebar img.logo{width:150px;height:auto;max-width:100%;align-self:center;display:block}
-  .titolo-wrap{flex:0 0 auto}
-  .sidebar h1{font-size:1.5rem;margin:0;color:var(--blu);line-height:1.1}
-  .sidebar p.sub{margin:6px 0 0;font-size:.95rem;color:var(--grigio)}
+  /* HUD */
+  #hud{position:fixed;left:18px;bottom:18px;display:flex;gap:14px;
+    pointer-events:none;user-select:none;z-index:20}
+  .gauge{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:8px 14px;min-width:104px;backdrop-filter:blur(4px)}
+  .gauge .lab{font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:#b8a878;opacity:.85}
+  .gauge .val{font-size:22px;font-weight:700;color:var(--parch);
+    font-variant-numeric:tabular-nums;line-height:1.1}
+  .gauge .val small{font-size:11px;opacity:.6;font-weight:400}
 
-  .progress{display:flex;flex-direction:column;gap:8px;flex:0 0 auto}
-  .progress .conteggio{
-    font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu);
-    font-size:1.05rem;white-space:nowrap;
-  }
-  .barra{width:100%;height:12px;border-radius:99px;background:var(--blu-chiaro);overflow:hidden}
-  .barra > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blu),var(--oro));transition:width .5s ease}
-  .btn-reset{
-    align-self:flex-start;
-    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--grigio);
-    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:500;
-    padding:9px 16px;border-radius:99px;cursor:pointer;
-  }
-  .btn-reset:hover{border-color:var(--oro);color:var(--oro-scuro)}
-  .btn-musica{
-    align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
-    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--blu);
-    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:600;
-    padding:9px 16px;border-radius:99px;cursor:pointer;
-  }
-  .btn-musica:hover{border-color:var(--oro)}
-  .btn-musica.attiva{background:var(--blu);color:#fff;border-color:var(--blu)}
-  .btn-musica svg{width:18px;height:18px;display:block}
-  .btn-musica .ic-on{display:none}
-  .btn-musica.attiva .ic-off{display:none}
-  .btn-musica.attiva .ic-on{display:inline-flex}
-  .btn-castle{
-    align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
-    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--blu);
-    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:600;
-    padding:9px 16px;border-radius:99px;cursor:pointer;
-  }
-  .btn-castle:hover{border-color:var(--oro)}
-  .btn-castle svg{width:18px;height:18px;display:block}
-  .btn-castle.attiva{background:#6b4f1d;color:#fff;border-color:#6b4f1d}
-  .link-3d{display:none}
-  body.castle .link-3d{
-    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
-    text-decoration:none;background:#6b4f1d;color:#fff;border:1.5px solid #6b4f1d;
-    font-family:"Lexend",sans-serif;font-weight:600;font-size:.9rem;
-    padding:9px 16px;border-radius:99px;
-  }
-  body.castle .link-3d:hover{background:#5b3a17}
-  .link-3d svg{width:18px;height:18px;display:block}
-  .link-3d span:nth-child(3) svg{width:15px;height:15px;opacity:.85}
-  /* Tema "castello" (eccezione narrativa: Hogwarts) applicato al toggle */
-  body.castle .sidebar{background:#f5edd9;border-right-color:#8a6a2f}
-  body.castle .sidebar h1{color:#5b3a17}
-  body.castle .progress .conteggio{color:#5b3a17}
-  body.castle .barra{background:#e7dab9}
-  body.castle .barra > span{background:linear-gradient(90deg,#8a6a2f,#d4a017)}
-  body.castle .btn-reset,body.castle .btn-musica{background:#fbf7ec}
-  body.castle .sidebar .pie strong{color:#5b3a17}
-  body.castle .mappa{box-shadow:0 12px 34px rgba(74,48,16,.4)}
-  .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.5}
-  .sidebar .pie strong{color:var(--blu);font-family:"Lexend",sans-serif;font-weight:600;font-size:.85rem}
-  .sidebar .pie .copy{opacity:.75}
-  .yt-audio{position:fixed;left:-9999px;top:0;width:1px;height:1px;border:0}
+  /* zone banner */
+  #zone{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:20;
+    pointer-events:none;text-align:center;opacity:0;transition:opacity .5s ease}
+  #zone.show{opacity:1}
+  #zone .zn{font-size:22px;letter-spacing:.14em;color:var(--parch);
+    text-shadow:0 2px 18px rgba(0,0,0,.7)}
+  #zone .zs{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#b9a97e}
 
-  /* ---------- Mappa ---------- */
-  .mappa-scroll{
-    flex:1 1 auto;min-height:0;min-width:0;
-    display:flex;align-items:center;justify-content:center;
-    padding:18px 22px;
-  }
-  .mappa{
-    position:relative;
-    /* la larghezza viene calcolata via JS per far entrare tutto senza scroll */
-    aspect-ratio:2482 / 1728;
-    border-radius:var(--raggio);
-    overflow:hidden;
-    box-shadow:var(--ombra);
-    background:#dfe4ea url("Campus.png") center/cover no-repeat;
-  }
-  .mappa img.sfondo{display:block;width:100%;height:100%}
+  /* compass */
+  #compass{position:fixed;top:16px;left:50%;transform:translateX(-50%);
+    width:220px;height:34px;overflow:hidden;background:var(--panel);
+    border:1px solid var(--line);border-radius:8px;z-index:20;pointer-events:none}
+  #compassStrip{position:absolute;top:0;left:0;height:100%;display:flex;
+    align-items:center;white-space:nowrap;color:#d8cba2;font-size:13px;
+    letter-spacing:.14em}
+  #compass .needle{position:absolute;top:0;left:50%;width:1px;height:100%;
+    background:var(--gold);transform:translateX(-50%);opacity:.9}
 
-  /* ---------- Marker ---------- */
-  .marker{
-    position:absolute;transform:translate(-50%,-50%);
-    width:clamp(30px,3.4vw,46px);height:clamp(30px,3.4vw,46px);
-    border-radius:50%;
-    border:3px solid #fff;
-    background:var(--oro);
-    color:#fff;
-    font-family:"Lexend",sans-serif;font-weight:700;
-    font-size:clamp(.8rem,1.4vw,1.05rem);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;
-    box-shadow:0 3px 10px rgba(0,0,0,.35);
-    z-index:5;
-    transition:transform .15s ease, background .3s ease;
-    padding:0;
-  }
-  .marker:hover,.marker:focus-visible{
-    transform:translate(-50%,-50%) scale(1.18);
-    outline:none;z-index:20;
-  }
-  .marker:focus-visible{box-shadow:0 0 0 4px rgba(212,160,23,.5),0 3px 10px rgba(0,0,0,.35)}
-  /* anello che pulsa per invitare al clic */
-  .marker.da-fare::after{
-    content:"";position:absolute;inset:-3px;border-radius:50%;
-    border:3px solid var(--oro);
-    animation:pulsa 1.9s ease-out infinite;
-  }
-  @keyframes pulsa{
-    0%{transform:scale(1);opacity:.85}
-    70%{transform:scale(2.1);opacity:0}
-    100%{transform:scale(2.1);opacity:0}
-  }
-  .marker.fatto{background:var(--blu)}
-  .marker.fatto .num{display:none}
-  .marker.fatto .check{display:block}
-  .marker .check{display:none;width:60%;height:60%}
-  @media (prefers-reduced-motion:reduce){
-    .marker.da-fare::after{animation:none;opacity:.5}
-  }
+  /* help card */
+  #help{position:fixed;right:18px;bottom:18px;z-index:20;max-width:264px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;backdrop-filter:blur(4px);font-size:12.5px;line-height:1.55}
+  #help h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:8px;font-weight:700}
+  #help .row{display:flex;justify-content:space-between;gap:12px;margin:3px 0}
+  #help kbd{background:rgba(239,230,208,.1);border:1px solid rgba(239,230,208,.22);
+    border-radius:5px;padding:1px 7px;font-family:inherit;font-size:11px;color:#f3ead4}
+  #help .hint{margin-top:8px;font-size:11px;color:#b8a878;opacity:.85}
+  #help .tp{position:absolute;top:14px;right:16px;font-size:10px;color:#8a7f60;
+    letter-spacing:.12em;text-transform:uppercase}
 
-  /* ---------- Modale ---------- */
-  .overlay{
-    position:fixed;inset:0;background:rgba(12,44,104,.55);
-    backdrop-filter:blur(3px);
-    display:none;align-items:center;justify-content:center;
-    padding:20px;z-index:100;
-  }
-  .overlay.aperto{display:flex}
-  .modale{
-    background:#fff;border-radius:20px;
-    width:min(980px,96vw);max-height:96vh;overflow:auto;
-    box-shadow:var(--ombra);
-    animation:entra .25s ease;
-    display:flex;flex-direction:column;
-  }
-  @keyframes entra{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
-  .modale-head{
-    background:var(--blu);color:#fff;padding:12px 20px;
-    display:flex;align-items:center;gap:12px;
-    position:sticky;top:0;
-  }
-  .modale-head .badge{
-    flex:0 0 auto;width:40px;height:40px;border-radius:50%;
-    background:var(--oro);display:flex;align-items:center;justify-content:center;
-    font-family:"Lexend",sans-serif;font-weight:700;font-size:1.1rem;
-  }
-  .modale-head h2{margin:0;font-size:1.2rem;flex:1}
-  .modale-head .chiudi{
-    background:rgba(255,255,255,.15);border:none;color:#fff;
-    width:36px;height:36px;border-radius:50%;cursor:pointer;
-    font-size:1.3rem;line-height:1;display:flex;align-items:center;justify-content:center;
-  }
-  .modale-head .chiudi:hover{background:rgba(255,255,255,.3)}
-  .modale-body{padding:16px;display:flex;gap:18px;align-items:stretch;flex:1 1 auto;min-height:0}
-  .modale-body.senza-foto .col-foto{display:none}
-  .col-foto{flex:0 0 40%;min-height:0;position:relative;border-radius:14px;overflow:hidden;background:var(--blu-chiaro)}
-  .col-form{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
-  .foto-luogo{
-    margin:0;display:none;position:absolute;inset:0;
-  }
-  .foto-luogo.mostra{display:block}
-  .foto-luogo img{
-    display:block;width:100%;height:100%;object-fit:cover;
-  }
-  .foto-luogo figcaption{
-    position:absolute;left:0;right:0;bottom:0;margin:0;
-    background:rgba(12,44,104,.72);color:#fff;padding:8px 10px;
-    font-size:.85rem;font-family:"Lexend",sans-serif;font-weight:500;text-align:center;
-  }
-  /* ---------- Attività di trascinamento ---------- */
-  .attivita{display:none;margin:0;padding-bottom:8px;border-bottom:1px solid var(--blu-chiaro)}
-  .attivita.mostra{display:block}
-  .att-consegna{margin:0 0 2px;font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu-scuro);font-size:.98rem}
-  .att-sub{margin:0 0 8px;font-size:.85rem;color:var(--grigio)}
-  .att-zona{
-    min-height:48px;border:2px dashed var(--blu);border-radius:12px;
-    background:rgba(18,62,144,.05);padding:8px;
-    display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start;
-  }
-  .att-zona.hover{background:rgba(212,160,23,.12);border-color:var(--oro)}
-  .att-hint{color:var(--grigio);font-size:.9rem;align-self:center}
-  .att-feedback{min-height:18px;margin:6px 0 2px;font-size:.9rem;font-family:"Lexend",sans-serif;font-weight:600}
-  .att-tray{display:flex;flex-wrap:wrap;gap:7px}
-  .att-chip{
-    touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;
-    border:1.5px solid #D5DBE6;background:#fff;color:var(--inchiostro);
-    border-radius:999px;padding:6px 12px;font-size:.92rem;
-    font-family:"Atkinson Hyperlegible",sans-serif;line-height:1;
-    display:inline-flex;align-items:center;gap:6px;
-  }
-  .att-chip.ok{background:#EAF3DE;border-color:#639922;color:#27500A;cursor:default}
-  .att-chip .ck{width:15px;height:15px;flex:0 0 auto}
-  .att-chip.dragging{cursor:grabbing;box-shadow:0 8px 22px rgba(0,0,0,.25);position:fixed;z-index:9999}
-  .campo{margin-bottom:0}
-  .campo label{
-    display:block;font-family:"Lexend",sans-serif;font-weight:600;
-    color:var(--blu-scuro);margin-bottom:3px;font-size:.95rem;
-  }
-  .campo .aiuto{font-weight:400;color:var(--grigio);font-size:.9rem;font-family:"Atkinson Hyperlegible",sans-serif}
-  .campo input,.campo textarea{
-    width:100%;font-family:"Atkinson Hyperlegible",sans-serif;font-size:1rem;
-    padding:8px 12px;border:1.5px solid #D5DBE6;border-radius:12px;
-    background:var(--carta);color:var(--inchiostro);resize:vertical;
-  }
-  .campo input:focus,.campo textarea:focus{
-    outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(18,62,144,.15);
-    background:#fff;
-  }
-  .campo textarea{min-height:40px}
-  .azioni{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
-  .btn{
-    font-family:"Lexend",sans-serif;font-weight:600;font-size:1rem;
-    padding:9px 20px;border-radius:99px;cursor:pointer;border:none;
-  }
-  .btn-primario{background:var(--blu);color:#fff}
-  .btn-primario:hover{background:var(--blu-scuro)}
-  .btn-secondario{background:#fff;color:var(--grigio);border:1.5px solid #D5DBE6}
-  .btn-secondario:hover{border-color:var(--oro);color:var(--oro-scuro)}
-  .salvato-msg{
-    display:none;align-items:center;gap:8px;color:var(--verde-ok);
-    font-family:"Lexend",sans-serif;font-weight:600;margin-right:auto;font-size:.95rem;
-  }
-  .salvato-msg.mostra{display:flex}
+  .locknote{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:15;color:#e9ddba;background:var(--panel);border:1px solid var(--line);
+    padding:12px 22px;border-radius:10px;font-size:14px;letter-spacing:.1em;
+    display:none}
+  #fps{position:fixed;top:14px;right:16px;z-index:20;font-size:11px;color:#7d7458;
+    font-family:monospace;letter-spacing:.05em}
 
-  @media (max-width:760px){
-    .modale{width:min(560px,96vw)}
-    .modale-body{flex-direction:column;gap:14px}
-    .col-foto{flex:0 0 auto;height:190px}
-  }
-  @media (max-width:720px){
-    body{flex-direction:column}
-    .sidebar{
-      flex:0 0 auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;
-      border-right:none;border-bottom:3px solid var(--blu);padding:12px 16px;
-    }
-    .sidebar img.logo{width:auto;height:44px;align-self:center}
-    .titolo-wrap{flex:1 1 auto;min-width:140px}
-    .sidebar h1{font-size:1.15rem}
-    .sidebar p.sub{display:none}
-    .progress{flex-direction:row;align-items:center;margin-left:auto}
-    .barra{width:90px}
-    .btn-reset{align-self:center}
-    .sidebar .pie{display:none}
-  }
+  /* teleport menu */
+  #tp{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:22;
+    display:none;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;backdrop-filter:blur(5px)}
+  #tp.show{display:flex}
+  #tp .t{background:rgba(239,230,208,.06);border:1px solid rgba(212,175,55,.28);
+    border-radius:8px;padding:7px 12px;color:#efe6d0;font-size:12.5px;cursor:pointer;
+    letter-spacing:.04em}
+  #tp .t:hover{background:rgba(212,175,55,.18)}
+  #tp .th{width:100%;text-align:center;font-size:10px;letter-spacing:.28em;
+    text-transform:uppercase;color:#b9a97e;margin-bottom:2px}
+
+  /* start overlay */
+  #gate{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;text-align:center;
+    background:radial-gradient(120% 120% at 50% 28%, #16233d 0%, #0a1024 55%, #05070d 100%);
+    transition:opacity .6s ease}
+  #gate.hidden{opacity:0;pointer-events:none}
+  #gate .crest{width:104px;height:104px}
+  #gate .sub{color:#b9a97e;letter-spacing:.30em;text-transform:uppercase;
+    font-size:12px}
+  #gate h1{font-size:clamp(28px,5vw,54px);letter-spacing:.05em;color:var(--parch);
+    text-shadow:0 2px 30px rgba(212,175,55,.25);font-weight:700;line-height:1.05}
+  #gate .place{color:#7f9bd6;letter-spacing:.22em;text-transform:uppercase;
+    font-size:12px;margin-top:-6px}
+  #enter{margin-top:4px;background:linear-gradient(180deg,#e7c964,#c49a2a);
+    color:#241c07;border:none;padding:14px 42px;border-radius:30px;
+    font-family:inherit;font-size:16px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;cursor:pointer;box-shadow:0 10px 40px rgba(212,175,55,.35)}
+  #enter:hover:not([disabled]){filter:brightness(1.06);transform:translateY(-1px)}
+  #enter[disabled]{opacity:.7;cursor:default}
+  #gate .legend{color:#94886a;font-size:13px;max-width:470px;line-height:1.7}
+  #loadbar{width:300px;height:4px;background:rgba(255,255,255,.08);border-radius:3px;
+    overflow:hidden}
+  #loadfill{height:100%;width:0;background:linear-gradient(90deg,#123E90,#e7c964);
+    transition:width .25s ease}
+  #gate .houses{display:flex;gap:16px;margin-top:2px}
+  #gate .houses span{font-size:11px;letter-spacing:.14em;color:#9a8f6f;
+    display:flex;align-items:center;gap:6px}
+  #gate .houses i{width:10px;height:10px;border-radius:2px;display:inline-block}
 </style>
 </head>
 <body>
+<div id="app"></div>
 
-<aside class="sidebar">
-  <img class="logo" src="logo.png" alt="Logo Scuola Sacra Famiglia" />
-  <div class="titolo-wrap">
-    <h1 id="titoloApp">Campus Map</h1>
-    <p class="sub">Scopri, dai un nome e racconta ogni angolo della scuola</p>
-  </div>
-  <div class="progress">
-    <span class="conteggio" id="conteggio">0 di 16</span>
-    <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
-  </div>
-  <button class="btn-reset" id="btnReset" type="button">Riparti</button>
-  <button class="btn-castle" id="btnCastle" type="button" aria-pressed="false" aria-label="Trasfigura il campus in castello">
-    <span aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V6h2v3h2v-3h2v3h2v-3h2v3h2v-3h2v3"/><path d="M4 9v12M20 9v12M3 21h18"/><path d="M10 21v-5h4v5"/></svg>
-    </span>
-    <span class="lbl">Campus Castle</span>
-  </button>
-  <a class="link-3d" id="link3d" href="https://campus-castle.vercel.app/" target="_blank" rel="noopener">
-    <span aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/><path d="M12 12v10"/></svg>
-    </span>
-    <span>Versione 3D</span>
-    <span aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
-    </span>
-  </a>
-  <button class="btn-musica" id="btnMusica" type="button" aria-pressed="false" aria-label="Attiva la musica di sottofondo">
-    <span class="ic-off" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-    </span>
-    <span class="ic-on" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.5a9 9 0 0 1 0 13"/></svg>
-    </span>
-    <span class="lbl">Attiva musica</span>
-  </button>
-  <p class="pie">
-    <strong>Scuola Sacra Famiglia</strong><br />
-    Animatore Digitale Andrea Cerioli<br />
-    <span class="copy">&copy; 2026</span>
-  </p>
-</aside>
+<div id="compass"><div id="compassStrip"></div><div class="needle"></div></div>
 
-<main class="mappa-scroll">
-  <div class="mappa" id="mappa">
-    <img class="sfondo" src="Campus.png" alt="Veduta aerea del campus della Scuola Sacra Famiglia" />
-    <!-- i marker vengono generati via JS -->
-  </div>
-</main>
-
-<!-- Musica di sottofondo: iframe YouTube nascosto (solo audio percepito). -->
-<iframe id="ytAudio" class="yt-audio" title="Musica di sottofondo" allow="autoplay" src=""></iframe>
-
-<!-- Popup di benvenuto (compare all'avvio, poi scompare) -->
-<div class="overlay" id="benvenuto" role="dialog" aria-modal="true" aria-labelledby="benvenutoTitolo">
-  <div class="modale">
-    <div class="modale-head">
-      <span class="badge" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <rect x="11" y="10.5" width="2" height="7" rx="1" fill="#fff"/>
-          <circle cx="12" cy="7.3" r="1.35" fill="#fff"/>
-        </svg>
-      </span>
-      <h2 id="benvenutoTitolo">Come funziona</h2>
-    </div>
-    <div class="modale-body">
-      <p style="margin:0 0 20px">
-        Ogni pallino dorato che pulsa è un luogo del campus tutto da scoprire.
-        Toccalo e apri la sua scheda: scrivi <strong>come si chiama</strong>,
-        <strong>a cosa serve</strong> e <strong>un ricordo o un'esperienza</strong>
-        che hai vissuto lì. Quando salvi, il pallino diventa blu: così vedi quante
-        zone hai già esplorato.
-      </p>
-      <div class="azioni">
-        <button class="btn btn-primario" id="btnInizia" type="button">Inizia a esplorare</button>
-      </div>
-    </div>
-  </div>
+<div id="hud">
+  <div class="gauge"><div class="lab">Velocità</div><div class="val" id="gSpeed">0<small> u/s</small></div></div>
+  <div class="gauge"><div class="lab">Quota</div><div class="val" id="gAlt">0<small> u</small></div></div>
 </div>
 
-<!-- Modale -->
-<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modaleTitolo">
-  <div class="modale" id="modale">
-    <div class="modale-head">
-      <span class="badge" id="modaleBadge">1</span>
-      <h2 id="modaleTitolo">Zona 1</h2>
-      <button class="chiudi" id="btnChiudi" type="button" aria-label="Chiudi la scheda">&times;</button>
-    </div>
-    <div class="modale-body">
-      <div class="col-foto">
-        <figure class="foto-luogo" id="fotoWrap">
-          <img id="fotoLuogo" src="" alt="" />
-          <figcaption>Guarda la foto e riconosci il luogo</figcaption>
-        </figure>
-      </div>
-      <div class="col-form">
-      <div class="attivita" id="attivitaWrap">
-        <p class="att-consegna" id="attConsegna"></p>
-        <p class="att-sub">Le cose che non c'entrano tornano indietro con un aiuto.</p>
-        <div class="att-zona" id="attZona"><span class="att-hint" id="attHint">Trascina qui le cose giuste</span></div>
-        <div class="att-feedback" id="attFeedback" role="status" aria-live="polite"></div>
-        <div class="att-tray" id="attTray"></div>
-      </div>
-      <div class="campo">
-        <label for="fNome">Come si chiama questo luogo?
-          <span class="aiuto">— il nome che gli daresti tu</span>
-        </label>
-        <input type="text" id="fNome" maxlength="80" placeholder="Es. Il campo da calcio" />
-      </div>
-      <div class="campo">
-        <label for="fFunzione">A cosa serve?
-          <span class="aiuto">— la sua funzione, chi lo usa e per cosa</span>
-        </label>
-        <textarea id="fFunzione" maxlength="600" placeholder="Es. Qui si fa educazione fisica e si giocano i tornei..."></textarea>
-      </div>
-      <div class="campo">
-        <label for="fEsperienza">La mia esperienza in questo luogo
-          <span class="aiuto">— un ricordo, un momento, qualcosa che ti è successo qui</span>
-        </label>
-        <textarea id="fEsperienza" maxlength="600" placeholder="Es. Il primo giorno di scuola qui abbiamo..."></textarea>
-      </div>
-      <div class="azioni">
-        <span class="salvato-msg" id="salvatoMsg">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M20 6L9 17l-5-5" stroke="#2E7D5B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Scheda salvata
-        </span>
-        <button class="btn btn-secondario" id="btnAnnulla" type="button">Chiudi</button>
-        <button class="btn btn-primario" id="btnSalva" type="button">Salva la scheda</button>
-      </div>
-      </div>
-    </div>
-  </div>
+<div id="zone"><div class="zn" id="zoneName">—</div><div class="zs" id="zoneSub"></div></div>
+
+<div id="tp">
+  <div class="th">Vai a (tasto G apri/chiudi)</div>
 </div>
 
+<div id="help">
+  <span class="tp">G · mappa</span>
+  <h2>Come volare</h2>
+  <div class="row"><span>Guarda / orienta</span><kbd>Mouse</kbd></div>
+  <div class="row"><span>Accelera / rallenta</span><kbd>Su</kbd><kbd>Giù</kbd></div>
+  <div class="row"><span>Gira sin. / destra</span><kbd>Sin</kbd><kbd>Des</kbd></div>
+  <div class="hint">La scopa vola da sola: Su accelera, Giù rallenta fino a fermarti. Guarda in alto per salire. G per andare in un luogo, F cambia vista.</div>
+</div>
+
+<div class="locknote" id="lockNote">Clicca per riprendere il volo</div>
+<div id="fps"></div>
+
+<div id="gate">
+  <svg class="crest" viewBox="0 0 100 100" fill="none">
+    <path d="M50 5 L90 19 V52 C90 76 71 92 50 97 C29 92 10 76 10 52 V19 Z"
+      stroke="#d4af37" stroke-width="2.5" fill="rgba(18,20,34,.5)"/>
+    <path d="M50 15 V90 M14 30 H86" stroke="#d4af37" stroke-width="1.4" opacity=".5"/>
+    <path d="M32 26 h16 v16 h-16 z" fill="#1c3a6e"/>
+    <path d="M52 26 h16 v16 h-16 z" fill="#1d5c39"/>
+    <path d="M32 46 h16 v16 h-16 z" fill="#b5892a"/>
+    <path d="M52 46 h16 v16 h-16 z" fill="#7a1f2b"/>
+    <circle cx="50" cy="72" r="9" stroke="#e7c964" stroke-width="2" fill="none"/>
+    <path d="M50 66 v12 M44 72 h12" stroke="#e7c964" stroke-width="1.6"/>
+  </svg>
+  <div>
+    <div class="sub">Campus</div>
+    <h1>SACRA FAMIGLIA</h1>
+    <div class="place">Castello incantato · Orzinuovi</div>
+  </div>
+  <div class="legend">Il campus della Sacra Famiglia trasfigurato in un maniero notturno: il chiostro delle quattro casate, la Sala Grande dalle candele sospese, la Torre di Astronomia, il campo da Quidditch e il Lago Nero. Prendi la scopa e alzati sopra le guglie.</div>
+  <div class="houses">
+    <span><i style="background:#1c3a6e"></i>Aquilablu</span>
+    <span><i style="background:#1d5c39"></i>Quercia</span>
+    <span><i style="background:#e7c964"></i>Cerogiallo</span>
+    <span><i style="background:#7a1f2b"></i>Tassorosso</span>
+  </div>
+  <div id="loadbar"><div id="loadfill"></div></div>
+  <button id="enter" disabled>Preparazione…</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-(function(){
-  "use strict";
+"use strict";
+/* =====================================================================
+   CAMPUS SACRA FAMIGLIA — il campus di Orzinuovi come castello di Hogwarts
+   Ricostruzione 3D fedele alla pianta del Campus.png, esplorabile in volo.
+   Single-file, Three.js r128. Unica dipendenza: CDN Three.js.
 
-  // Coordinate rilevate dai pallini rossi di Campus_zone.png (in % sullo sfondo).
-  // "sug" = nome suggerito (solo come segnaposto/aiuto, lo studente scrive il suo).
-  // "foto" = immagine reale del luogo (mostrata nel popup). Dove manca, nessuna foto.
-  var ZONE = [
-    // Numerazione "a percorso": si parte dalla chiesa, poi ingressi e scuole,
-    // e si sale verso i campi sportivi e gli edifici in alto.
-    {id:1,  x:87.00, y:73.50, sug:"La chiesa"},
-    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg",   fotoHog:"Campus_front.png"},
-    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg", fotoHog:"Campus_secondaria.png"},
-    {id:4,  x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg"},
-    {id:5,  x:40.77, y:73.03, sug:"Il parcheggio"},
-    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg",   fotoHog:"Campus_primaria.png"},
-    {id:7,  x:31.27, y:42.82, sug:"Le piscine – piano vasca"},
-    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg",      fotoHog:"Campus_basket.png"},
-    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg",             fotoHog:"Campus_mensa.png"},
-    {id:10, x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg"},
-    {id:11, x:73.85, y:27.49, sug:"L'aula di musica"},
-    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg",           fotoHog:"Campus_info.png"},
-    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg",         fotoHog:"Campus_qdv.png"},
-    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg",      fotoHog:"Campus_calcio.png"},
-    {id:15, x:33.28, y:12.67, sug:"Il parco della piscina"},
-    {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus"}
-  ];
+   Convenzioni: mai emoji; palette casate come contenuto; oro/pietra notturno.
+   Le foto reali (mensa, aule, lab, arena...) sono caricate come texture
+   ("quadri magici"). In file:// il browser puo' bloccarle per CORS: in tal
+   caso resta la cornice. Servire da HTTP (server statico o Vercel) per vederle.
+   ===================================================================== */
 
-  // Attività di trascinamento per ogni luogo (10 tessere: le "giuste" appartengono
-  // al luogo, le "sbagliate" [etichetta, aiuto] appartengono altrove nel campus).
-  var ATTIVITA = {
-    1:{ consegna:"Trascina nel riquadro ciò che appartiene alla chiesa",
-        giuste:["Il silenzio e il raccoglimento","La preghiera","Il canto del coro","Le panche","L'altare"],
-        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il computer","è nel laboratorio di informatica"],["Il vassoio del pranzo","è in mensa"],["Il canestro","è al campo da basket"]] },
-    2:{ consegna:"Trascina nel riquadro ciò che si fa o si trova all'ingresso della scuola",
-        giuste:["Il saluto del mattino","Appendere la giacca","Il cartellone degli avvisi","L'accoglienza dei compagni","Entrare e uscire"],
-        sbagliate:[["Tuffarsi","si fa in piscina"],["Il canestro","è al campo da basket"],["Gli strumenti musicali","sono in aula di musica"],["Il bus","sta nel suo garage"],["Il vassoio del pranzo","è in mensa"]] },
-    3:{ consegna:"Trascina nel riquadro ciò che appartiene alla scuola secondaria",
-        giuste:["Le aule dei ragazzi","La lavagna","Lo studio delle materie","I compiti","La campanella"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["Il pallone da basket","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["Gli attrezzi da giardino","servono nel parco"],["Il volante del bus","è del bus nel garage"]] },
-    4:{ consegna:"Trascina nel riquadro ciò che serve all'ingresso delle piscine",
-        giuste:["Mostrare la tessera","Le ciabatte","Gli spogliatoi","La doccia prima di entrare","Il regolamento della piscina"],
-        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il computer","è nel laboratorio"],["La lavagna","è nelle aule"],["Il microfono del coro","è in aula di musica"],["Il vassoio del pranzo","è in mensa"]] },
-    5:{ consegna:"Trascina nel riquadro ciò che appartiene al parcheggio",
-        giuste:["Le auto in sosta","Le strisce dei posti","La rotonda","Arrivare e partire","Camminare con prudenza"],
-        sbagliate:[["Nuotare","si fa in piscina"],["Il canestro","è al campo da basket"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["La lavagna","è nelle aule"]] },
-    6:{ consegna:"Trascina nel riquadro ciò che appartiene alla scuola primaria",
-        giuste:["Le aule dei bambini","Imparare a leggere e scrivere","I banchi","La maestra","L'intervallo"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["La rete da pallavolo","è al campo da pallavolo"],["Il bus","sta nel suo garage"],["Gli iMac del laboratorio","sono nel laboratorio"],["L'altare","è nella chiesa"]] },
-    7:{ consegna:"Trascina nel riquadro ciò che serve in piscina",
-        giuste:["Il costume","La cuffia","Le ciabatte","L'asciugamano","Nuotare"],
-        sbagliate:[["La racchetta","serve ai campi da gioco"],["Il pallone da calcio","serve al campo da calcio"],["Il computer","è nel laboratorio"],["Lo zaino di scuola","resta in aula"],["Il vassoio del pranzo","è in mensa"]] },
-    8:{ consegna:"Trascina nel riquadro ciò che serve al campo da basket",
-        giuste:["Il canestro","Il pallone da basket","Le scarpe da ginnastica","Fare canestro","Giocare in squadra"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["Il bus","sta nel suo garage"],["L'altare","è nella chiesa"]] },
-    9:{ consegna:"Trascina nel riquadro ciò che serve in mensa",
-        giuste:["Il vassoio","Le posate","Il pranzo","I tavoli","Mangiare insieme"],
-        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["La chitarra","è in aula di musica"],["Gli iMac","sono nel laboratorio"]] },
-    10:{ consegna:"Trascina nel riquadro ciò che serve al campo da pallavolo",
-        giuste:["La rete","Il pallone da pallavolo","Fare una schiacciata","Le due squadre","Il fischietto dell'arbitro"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["La lavagna","è nelle aule"],["Il bus","sta nel suo garage"],["L'altare","è nella chiesa"]] },
-    11:{ consegna:"Trascina nel riquadro ciò che appartiene all'aula di musica",
-        giuste:["Gli strumenti musicali","Il leggio","Cantare","Lo spartito","Suonare insieme"],
-        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["Gli iMac","sono nel laboratorio"],["Il canestro","è al campo da basket"]] },
-    12:{ consegna:"Trascina nel riquadro ciò che serve nel laboratorio di informatica",
-        giuste:["I computer (iMac)","La tastiera","Il mouse","Cercare informazioni","Il videoproiettore"],
-        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["La rete da pallavolo","è al campo da pallavolo"]] },
-    13:{ consegna:"Trascina nel riquadro ciò che appartiene alla QDV Arena",
-        giuste:["Il campo al coperto","Le partite e i tornei","Il pubblico","Gli eventi della scuola","Il grande tendone"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["Gli iMac","sono nel laboratorio"],["L'altare","è nella chiesa"],["Il volante del bus","è del bus nel garage"]] },
-    14:{ consegna:"Trascina nel riquadro ciò che serve al campo da calcio",
-        giuste:["Il pallone da calcio","Le porte","Gli scarpini","Segnare un gol","Le due squadre"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["La chitarra","è in aula di musica"],["Gli iMac","sono nel laboratorio"]] },
-    15:{ consegna:"Trascina nel riquadro ciò che appartiene al parco della piscina",
-        giuste:["L'erba e gli alberi","Prendere il sole","Giocare all'aperto","L'ombra degli alberi","Rilassarsi tra un bagno e l'altro"],
-        sbagliate:[["Il computer","è nel laboratorio"],["La lavagna","è nelle aule"],["Il vassoio del pranzo","è in mensa"],["Gli scarpini da calcio","servono al campo da calcio"],["Il bus","sta nel suo garage"]] },
-    16:{ consegna:"Trascina nel riquadro ciò che appartiene al garage dei bus",
-        giuste:["I pullman della scuola","L'autista","Il posteggio dei mezzi","Salire e scendere dal bus","I sedili del bus"],
-        sbagliate:[["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["La chitarra","è in aula di musica"],["La lavagna","è nelle aule"]] }
-  };
+/* ---------- utility ---------- */
+const rand = (a,b)=> a + Math.random()*(b-a);
+const clamp = (v,a,b)=> Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=> a+(b-a)*t;
+const smooth = (e0,e1,x)=>{ const t=clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); };
+const TAU = Math.PI*2;
 
-  var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
-  var dati = caricaDati();
-  var zonaAttiva = null;
-  var castleMode = false;
+/* radial glow texture generator (torce, candele, luna, stelle) */
+function glowTexture(inner, outer){
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  const grd=g.createRadialGradient(32,32,0,32,32,32);
+  grd.addColorStop(0,inner); grd.addColorStop(0.35,outer);
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=grd; g.fillRect(0,0,64,64);
+  const t=new THREE.CanvasTexture(c); t.needsUpdate=true; return t;
+}
+const TEX = {
+  fire: glowTexture('rgba(255,238,190,1)','rgba(255,150,40,.7)'),
+  candle: glowTexture('rgba(255,244,205,1)','rgba(255,190,90,.55)'),
+  moon: glowTexture('rgba(255,255,245,1)','rgba(210,225,255,.35)'),
+  star: glowTexture('rgba(255,255,255,1)','rgba(200,210,255,.4)'),
+  mist: glowTexture('rgba(190,205,225,.55)','rgba(150,170,200,.12)')
+};
 
-  var mappa      = document.getElementById("mappa");
-  var overlay    = document.getElementById("overlay");
-  var modale     = document.getElementById("modale");
-  var elTitolo   = document.getElementById("modaleTitolo");
-  var elBadge    = document.getElementById("modaleBadge");
-  var elNome     = document.getElementById("fNome");
-  var elFunzione = document.getElementById("fFunzione");
-  var elEsperienza = document.getElementById("fEsperienza");
-  var elSalvato  = document.getElementById("salvatoMsg");
-  var elFoto     = document.getElementById("fotoLuogo");
-  var elFotoWrap = document.getElementById("fotoWrap");
-  var modaleBody = document.querySelector("#modale .modale-body");
-  var attWrap    = document.getElementById("attivitaWrap");
-  var attConsegna= document.getElementById("attConsegna");
-  var attZona    = document.getElementById("attZona");
-  var attHint    = document.getElementById("attHint");
-  var attFeedback= document.getElementById("attFeedback");
-  var attTray    = document.getElementById("attTray");
+/* ---------- photo textures (quadri magici) ---------- */
+const texLoader = new THREE.TextureLoader();
+const _texCache = {};
+function loadTex(url){
+  if(_texCache[url]) return _texCache[url];
+  const t = texLoader.load(url);
+  t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = 4;
+  _texCache[url] = t;
+  return t;
+}
 
-  var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
-    '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* ---------- renderer / scene / camera ---------- */
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.06;
+app.appendChild(renderer.domElement);
 
-  function caricaDati(){
-    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-    catch(e){ return {}; }
+const scene = new THREE.Scene();
+const NIGHT = new THREE.Color(0x0b1526);
+scene.background = NIGHT;
+scene.fog = new THREE.FogExp2(0x162238, 0.00072);
+
+const camera = new THREE.PerspectiveCamera(66, innerWidth/innerHeight, 0.5, 7000);
+camera.rotation.order = 'YXZ';
+camera.position.set(360, 150, 540);
+
+/* ---------- materials (condivisi) ---------- */
+const M = {
+  stone:    new THREE.MeshStandardMaterial({color:0xbdae90, roughness:.92, metalness:.02}),
+  stoneDk:  new THREE.MeshStandardMaterial({color:0x8f8267, roughness:.95}),
+  stoneLt:  new THREE.MeshStandardMaterial({color:0xcabb9c, roughness:.9}),
+  brick:    new THREE.MeshStandardMaterial({color:0x9c6f4e, roughness:.92}),
+  roof:     new THREE.MeshStandardMaterial({color:0x545e6c, roughness:.78, metalness:.08}),
+  roofTile: new THREE.MeshStandardMaterial({color:0x474f5d, roughness:.8, metalness:.06}),
+  roofTeal: new THREE.MeshStandardMaterial({color:0x40506a, roughness:.7, metalness:.12}),
+  wood:     new THREE.MeshStandardMaterial({color:0x5a4230, roughness:.85}),
+  woodDk:   new THREE.MeshStandardMaterial({color:0x3c2c1e, roughness:.9}),
+  glass:    new THREE.MeshStandardMaterial({color:0x2a3550, emissive:0xffb857, emissiveIntensity:1.1, roughness:.4}),
+  glassCool:new THREE.MeshStandardMaterial({color:0x24304a, emissive:0x6fa8ff, emissiveIntensity:.6, roughness:.4}),
+  glassPane:new THREE.MeshStandardMaterial({color:0x9fc6e8, emissive:0x8fd0ff, emissiveIntensity:.3, roughness:.1, metalness:.3, transparent:true, opacity:.34, side:THREE.DoubleSide}),
+  gold:     new THREE.MeshStandardMaterial({color:0xd4af37, roughness:.35, metalness:.7, emissive:0x241a00, emissiveIntensity:.3}),
+  floor:    new THREE.MeshStandardMaterial({color:0x6a6152, roughness:.95}),
+  floorWood:new THREE.MeshStandardMaterial({color:0x4a3320, roughness:.9}),
+  darkStone:new THREE.MeshStandardMaterial({color:0x4a4436, roughness:.98}),
+  grassPitch:new THREE.MeshStandardMaterial({color:0x21331c, roughness:1}),
+  water:    new THREE.MeshStandardMaterial({color:0x1b3350, roughness:.15, metalness:.6, transparent:true, opacity:.86, emissive:0x0a1830, emissiveIntensity:.3}),
+  waterLt:  new THREE.MeshStandardMaterial({color:0x2f6f9e, roughness:.2, metalness:.4, transparent:true, opacity:.8, emissive:0x184a66, emissiveIntensity:.35}),
+};
+function banner(hex){ return new THREE.MeshStandardMaterial({color:hex, roughness:.8, side:THREE.DoubleSide, emissive:hex, emissiveIntensity:.10}); }
+function tintStone(hex){ return new THREE.MeshStandardMaterial({color:hex, roughness:.9, emissive:hex, emissiveIntensity:.05}); }
+
+/* ---------- world root ---------- */
+const world = new THREE.Group();
+scene.add(world);
+
+/* collectors for instancing */
+const merlonMx=[], winMx=[], winCoolMx=[];
+const _o = new THREE.Object3D();
+function pushMerlon(x,y,z,rotY=0,s=1){ _o.position.set(x,y,z); _o.rotation.set(0,rotY,0); _o.scale.set(s,s,s); _o.updateMatrix(); merlonMx.push(_o.matrix.clone()); }
+function pushWindow(x,y,z,rotY,w,h,cool=false){ _o.position.set(x,y,z); _o.rotation.set(0,rotY,0); _o.scale.set(w,h,1); _o.updateMatrix(); (cool?winCoolMx:winMx).push(_o.matrix.clone()); }
+
+/* torch registry: emissive sprites everywhere, few real point lights */
+const torchGlows = new THREE.Group(); world.add(torchGlows);
+const torchLights = [];
+function addTorch(x,y,z, live=false, color=0xffa24a, range=42, intensity=2.1){
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.fire, color:0xffca73, blending:THREE.AdditiveBlending, depthWrite:false}));
+  spr.position.set(x,y,z); spr.scale.set(9,12,1); torchGlows.add(spr);
+  const b = new THREE.Mesh(new THREE.CylinderGeometry(.35,.5,2.4,6), M.woodDk);
+  b.position.set(x, y-2.4, z); world.add(b);
+  if(live){
+    const pl = new THREE.PointLight(color, intensity, range, 2.0);
+    pl.position.set(x,y,z); world.add(pl);
+    torchLights.push({light:pl, base:intensity, spr});
+  } else {
+    torchLights.push({light:null, base:1, spr});
   }
-  function salvaDati(){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(dati)); }catch(e){}
-  }
-  function completata(id){
-    var d = dati[id];
-    return !!(d && (d.nome || d.funzione || d.esperienza));
-  }
+}
 
-  // ---- Costruzione marker ----
-  ZONE.forEach(function(z){
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "marker";
-    b.style.left = z.x + "%";
-    b.style.top  = z.y + "%";
-    b.setAttribute("data-id", z.id);
-    b.innerHTML = '<span class="num">'+z.id+'</span>' + CHECK_SVG;
-    b.addEventListener("click", function(){ apriZona(z.id); });
-    aggiornaMarker(b, z.id);
-    b.setAttribute("aria-label", "Zona "+z.id+": " + (completata(z.id) ? "scheda compilata, modifica" : "da esplorare"));
-    z._el = b;
-    mappa.appendChild(b);
-  });
+/* =====================================================================
+   BUILDERS (generici)
+   ===================================================================== */
 
-  function aggiornaMarker(el, id){
-    if(completata(id)){
-      el.classList.add("fatto");
-      el.classList.remove("da-fare");
-    }else{
-      el.classList.add("da-fare");
-      el.classList.remove("fatto");
+/* round tower: body + conical roof + merlature + finestre */
+function roundTower(x,z, baseY, radius, height, roofMat=M.roof, cool=false){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius*1.08, height, 20, 1), M.stoneDk);
+  body.position.set(x, baseY+height/2, z); body.castShadow=body.receiveShadow=true; g.add(body);
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(radius*1.12, radius*1.12, 1.4, 20), M.stoneLt);
+  ring.position.set(x, baseY+height-3, z); g.add(ring);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(radius*1.14, radius*1.14, 3.2, 20, 1, true), M.stone);
+  rim.position.set(x, baseY+height+1.6, z); g.add(rim);
+  const n = Math.max(10, Math.floor(radius*1.7));
+  for(let i=0;i<n;i++){ const a=i/n*TAU; const rr=radius*1.14;
+    pushMerlon(x+Math.cos(a)*rr, baseY+height+4.4, z+Math.sin(a)*rr, -a, 1.0); }
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(radius*0.98, radius*2.9, 20), roofMat);
+  cone.position.set(x, baseY+height+radius*1.45+3, z); cone.castShadow=true; g.add(cone);
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(radius*0.15,8,8), M.gold);
+  finial.position.set(x, baseY+height+radius*2.9+3, z); g.add(finial);
+  const spike = new THREE.Mesh(new THREE.ConeGeometry(radius*0.05, radius*0.5, 6), M.gold);
+  spike.position.set(x, baseY+height+radius*2.9+3+radius*0.35, z); g.add(spike);
+  const bands = Math.max(2, Math.floor(height/16));
+  for(let b=0;b<bands;b++){ const wy = baseY+10 + b*(height-14)/bands;
+    for(let k=0;k<4;k++){ const a=k/4*TAU + b*0.4;
+      pushWindow(x+Math.cos(a)*(radius*1.02), wy, z+Math.sin(a)*(radius*1.02), -a+Math.PI/2, 2.4, 5.2, cool); } }
+  world.add(g);
+  registerCollider(x,z,radius*1.2, baseY, baseY+height+radius*2.3+3);
+  return g;
+}
+
+/* square keep / block tower */
+function squareTower(x,z, baseY, w, d, height, withRoof=true, roofMat=M.roof){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w,height,d), M.stone);
+  body.position.set(x, baseY+height/2, z); body.castShadow=body.receiveShadow=true; g.add(body);
+  const rim = new THREE.Mesh(new THREE.BoxGeometry(w+1.5, 3, d+1.5), M.stoneLt);
+  rim.position.set(x, baseY+height+1.5, z); g.add(rim);
+  edgeMerlons(x,z,w,d, baseY+height+4);
+  if(withRoof) gableRoof(x,z, w, d, baseY+height+3, Math.min(w,d)*0.5, roofMat);
+  const rows = Math.max(2, Math.floor(height/18));
+  for(let r=0;r<rows;r++){ const wy=baseY+12+r*(height-16)/rows; faceWindows(x,z,w,d,wy,2.6,5.4); }
+  world.add(g);
+  registerCollider(x,z, Math.max(w,d)*0.6, baseY, baseY+height+Math.min(w,d)*0.6);
+  return g;
+}
+
+function edgeMerlons(cx,cz,w,d,y){
+  const nx=Math.max(1,Math.floor(w/4)), nz=Math.max(1,Math.floor(d/4));
+  for(let i=0;i<=nx;i++){ const px=cx-w/2 + i*w/nx;
+    pushMerlon(px, y, cz-d/2,0); pushMerlon(px, y, cz+d/2,0); }
+  for(let j=1;j<nz;j++){ const pz=cz-d/2 + j*d/nz;
+    pushMerlon(cx-w/2, y, pz,0); pushMerlon(cx+w/2, y, pz,0); }
+}
+function faceWindows(cx,cz,w,d,wy,ww,wh,cool=false){
+  const cols = Math.max(2, Math.floor(w/9));
+  for(let i=0;i<cols;i++){ const px=cx-w/2 + (i+0.5)*w/cols;
+    pushWindow(px,wy,cz+d/2+0.05,0,ww,wh,cool); pushWindow(px,wy,cz-d/2-0.05,Math.PI,ww,wh,cool); }
+  const colsD = Math.max(2, Math.floor(d/9));
+  for(let i=0;i<colsD;i++){ const pz=cz-d/2 + (i+0.5)*d/colsD;
+    pushWindow(cx+w/2+0.05,wy,pz,Math.PI/2,ww,wh,cool); pushWindow(cx-w/2-0.05,wy,pz,-Math.PI/2,ww,wh,cool); }
+}
+
+/* gable (triangular-prism) roof from two slanted boxes */
+function gableRoof(cx,cz,w,d, baseY, rise, mat=M.roof, axis='d'){
+  const g=new THREE.Group();
+  const len = axis==='d'? d : w;
+  const span = axis==='d'? w : d;
+  const slope = Math.sqrt((span/2)*(span/2) + rise*rise);
+  const ang = Math.atan2(rise, span/2);
+  for(const s of [-1,1]){
+    let panel;
+    if(axis==='d'){   // colmo lungo Z, falde inclinate su X
+      panel = new THREE.Mesh(new THREE.BoxGeometry(slope+1.2, 0.8, len+1.2), mat);
+      panel.position.set(cx + s*span/4, baseY+rise/2, cz);
+      panel.rotation.z = s*(Math.PI/2 - ang);
+    } else {          // colmo lungo X, falde inclinate su Z
+      panel = new THREE.Mesh(new THREE.BoxGeometry(len+1.2, 0.8, slope+1.2), mat);
+      panel.position.set(cx, baseY+rise/2, cz + s*span/4);
+      panel.rotation.x = -s*(Math.PI/2 - ang);
     }
+    panel.castShadow=true;
+    g.add(panel);
   }
+  const ridge=new THREE.Mesh(new THREE.BoxGeometry(axis==='d'?1.4:len, 1.4, axis==='d'?len:1.4), M.woodDk);
+  ridge.position.set(cx, baseY+rise+0.4, cz); g.add(ridge);
+  world.add(g); return g;
+}
 
-  function aggiornaProgresso(){
-    var fatte = ZONE.filter(function(z){ return completata(z.id); }).length;
-    document.getElementById("conteggio").textContent = fatte + " di " + ZONE.length;
-    document.getElementById("barraFill").style.width = (fatte/ZONE.length*100) + "%";
+/* long ridge (hip) roof for rectangular wings */
+function wingRoof(cx,cz,w,d,baseY,rise,mat=M.roofTile){
+  const axis = w>=d ? 'w' : 'd';
+  return gableRoof(cx,cz,w,d,baseY,rise,mat,axis);
+}
+
+/* curtain wall between two points with walkway + merlature */
+function curtainWall(ax,az,bx,bz, baseY, height, thick=6){
+  const dx=bx-ax, dz=bz-az; const len=Math.hypot(dx,dz); const ang=Math.atan2(dz,dx);
+  const g=new THREE.Group();
+  const wall=new THREE.Mesh(new THREE.BoxGeometry(len, height, thick), M.stoneDk);
+  wall.position.set((ax+bx)/2, baseY+height/2, (az+bz)/2); wall.rotation.y=-ang;
+  wall.castShadow=wall.receiveShadow=true; g.add(wall);
+  const cap=new THREE.Mesh(new THREE.BoxGeometry(len, 2.5, thick+2), M.stoneLt);
+  cap.position.set((ax+bx)/2, baseY+height+1.2, (az+bz)/2); cap.rotation.y=-ang; g.add(cap);
+  const n=Math.floor(len/4.2);
+  for(let i=0;i<=n;i++){ const t=i/n; const px=lerp(ax,bx,t), pz=lerp(az,bz,t);
+    const nx=Math.cos(ang+Math.PI/2), nz=Math.sin(ang+Math.PI/2);
+    pushMerlon(px+nx*(thick/2), baseY+height+3.2, pz+nz*(thick/2), -ang);
+    pushMerlon(px-nx*(thick/2), baseY+height+3.2, pz-nz*(thick/2), -ang);
+    if(i%2===0) pushWindow(px, baseY+height*0.5, pz, -ang, 1.0, 3.2, true);
   }
+  world.add(g); return g;
+}
 
-  // ---- Attività di trascinamento ----
-  var CK_SVG = '<svg class="ck" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
-    '<path d="M20 6L9 17l-5-5" stroke="#27500A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* pointed-arch window frame (decorative) */
+function archWindow(x,y,z,rotY,w,h, mat=M.glass){
+  const g=new THREE.Group();
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h), mat);
+  const top=new THREE.Mesh(new THREE.CircleGeometry(w/2, 12, 0, Math.PI), mat); top.position.y=h/2;
+  g.add(pane); g.add(top);
+  const v=new THREE.Mesh(new THREE.BoxGeometry(.4,h+w/2,.4), M.stoneLt); v.position.y=w/4;
+  const hbar=new THREE.Mesh(new THREE.BoxGeometry(w,.4,.4), M.stoneLt);
+  g.add(v); g.add(hbar);
+  g.position.set(x,y,z); g.rotation.y=rotY; world.add(g); return g;
+}
 
-  function mescola(a){
-    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
-    return a;
+/* framed magical picture from a real photo texture */
+function framedPicture(x,y,z,rotY,w,h,url){
+  const g=new THREE.Group();
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(w+3, h+3, 0.8), M.wood); g.add(frame);
+  const gilt=new THREE.Mesh(new THREE.BoxGeometry(w+1.4, h+1.4, 1.0), M.gold); g.add(gilt);
+  const tex=loadTex(url);
+  const mat=new THREE.MeshStandardMaterial({map:tex, emissiveMap:tex, emissive:0xffffff,
+    emissiveIntensity:.5, roughness:.7, metalness:0});
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h), mat); pane.position.z=0.62; g.add(pane);
+  g.position.set(x,y,z); g.rotation.y=rotY; world.add(g); return g;
+}
+
+/* upright banner with house colour + optional character texture */
+function houseBanner(x,y,z,rotY,w,h,hex,url){
+  const g=new THREE.Group();
+  const cloth=new THREE.Mesh(new THREE.PlaneGeometry(w,h), banner(hex)); g.add(cloth);
+  const rod=new THREE.Mesh(new THREE.CylinderGeometry(.4,.4,w+2,8), M.woodDk);
+  rod.rotation.z=Math.PI/2; rod.position.y=h/2+1; g.add(rod);
+  if(url){
+    const tex=loadTex(url);
+    const mat=new THREE.MeshStandardMaterial({map:tex, emissiveMap:tex, emissive:0xffffff,
+      emissiveIntensity:.55, transparent:true, roughness:.8, side:THREE.DoubleSide});
+    const em=new THREE.Mesh(new THREE.PlaneGeometry(w*.82,w*.82), mat);
+    em.position.set(0, h*0.08, 0.2); g.add(em);
   }
+  g.position.set(x,y,z); g.rotation.y=rotY; world.add(g); return g;
+}
 
-  function creaTessera(label, giusta, aiuto, id, nGiuste){
-    var c = document.createElement("button");
-    c.type = "button";
-    c.className = "att-chip";
-    c.dataset.label = label;
-    c.dataset.giusta = giusta ? "1" : "0";
-    if(aiuto) c.dataset.aiuto = aiuto;
-    c.textContent = label;
-    c.addEventListener("pointerdown", function(e){ iniziaDrag(e, c, id, nGiuste); });
-    return c;
+/* candle chandelier / floating candles cluster over an area */
+function floatingCandles(cx,cz,w,d,topY,rows,cols,liveEvery=99){
+  const candleG=new THREE.CylinderGeometry(.5,.6,3,6);
+  const candleM=new THREE.MeshStandardMaterial({color:0xefe4c4, roughness:.7, emissive:0xffcf87, emissiveIntensity:.25});
+  const count=rows*cols;
+  const candles=new THREE.InstancedMesh(candleG, candleM, count);
+  const fpos=[]; let ci=0;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const px=cx-w/2+ (cols>1? c*w/(cols-1):w/2);
+    const pz=cz-d/2+ (rows>1? r*d/(rows-1):d/2);
+    const py=topY + Math.sin(r*1.3+c)*1.6;
+    _o.position.set(px,py,pz); _o.rotation.set(0,0,0); _o.scale.set(1,1,1); _o.updateMatrix();
+    candles.setMatrixAt(ci++, _o.matrix);
+    fpos.push(px, py+2.2, pz);
+    if((ci%liveEvery)===0){ const pl=new THREE.PointLight(0xffb35e,1.2,90,2); pl.position.set(px,py,pz); world.add(pl); torchLights.push({light:pl,base:1.2,spr:null}); }
   }
+  world.add(candles);
+  const fg=new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(fpos,3));
+  world.add(new THREE.Points(fg, new THREE.PointsMaterial({map:TEX.candle, color:0xffdca0, size:6,
+    transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true})));
+}
 
-  function segnaPiazzata(c){
-    c.classList.add("ok");
-    c.dataset.piazzata = "1";
-    if(!c.querySelector(".ck")) c.insertAdjacentHTML("afterbegin", CK_SVG);
-  }
+/* simple hearth (fireplace) with fire glow + point light */
+function hearth(x,y,z,rotY,color){
+  const g=new THREE.Group();
+  const mant=new THREE.Mesh(new THREE.BoxGeometry(14,12,4), M.darkStone); mant.position.y=6; g.add(mant);
+  const hole=new THREE.Mesh(new THREE.BoxGeometry(9,8,3), new THREE.MeshStandardMaterial({color:0x120a06, emissive:0xff6a1e, emissiveIntensity:.7, roughness:1}));
+  hole.position.set(0,4,1); g.add(hole);
+  g.position.set(x,y,z); g.rotation.y=rotY; world.add(g);
+  addTorch(x+Math.sin(rotY)*2, y+4, z+Math.cos(rotY)*2, true, 0xff8a3a, 70, 2.0);
+  return g;
+}
 
-  function costruisciAttivita(zona){
-    attTray.innerHTML = "";
-    Array.prototype.slice.call(attZona.querySelectorAll(".att-chip")).forEach(function(c){ c.remove(); });
-    attFeedback.textContent = "";
-    var att = ATTIVITA[zona.id];
-    if(!att){ attWrap.classList.remove("mostra"); return; }
-    attWrap.classList.add("mostra");
-    attConsegna.textContent = att.consegna;
-    var nGiuste = att.giuste.length;
-    var piazzate = (dati[zona.id] && dati[zona.id].attivita) ? dati[zona.id].attivita : [];
-    var tessere = [];
-    att.giuste.forEach(function(l){ tessere.push({t:l, ok:true}); });
-    att.sbagliate.forEach(function(s){ tessere.push({t:s[0], ok:false, h:s[1]}); });
-    mescola(tessere);
-    tessere.forEach(function(t){
-      var c = creaTessera(t.t, t.ok, t.h, zona.id, nGiuste);
-      if(t.ok && piazzate.indexOf(t.t) >= 0){ segnaPiazzata(c); attZona.appendChild(c); }
-      else{ attTray.appendChild(c); }
-    });
-    aggiornaHint();
-    aggiornaAttProgresso(nGiuste);
-  }
+/* armchair-ish block */
+function chair(x,y,z,rotY,hex){
+  const m=new THREE.MeshStandardMaterial({color:hex, roughness:.9});
+  const g=new THREE.Group();
+  const seat=new THREE.Mesh(new THREE.BoxGeometry(5,2,5),m); seat.position.y=3; g.add(seat);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(5,6,1.4),m); back.position.set(0,6,-2); g.add(back);
+  const arms=new THREE.Mesh(new THREE.BoxGeometry(1.2,3,5),m); arms.position.set(-2.4,5,0); g.add(arms);
+  const arms2=arms.clone(); arms2.position.x=2.4; g.add(arms2);
+  g.position.set(x,y,z); g.rotation.y=rotY; world.add(g); return g;
+}
 
-  function aggiornaHint(){
-    attHint.style.display = attZona.querySelector(".att-chip") ? "none" : "block";
+/* statua 3D di un personaggio-casata su piedistallo (fronte verso +Z a rotY=0) */
+function statue(x, baseY, z, rotY, house){
+  const g=new THREE.Group();
+  const stone=new THREE.MeshStandardMaterial({color:0xcbc3ad, roughness:.92});   // pietra chiara
+  const stoneD=new THREE.MeshStandardMaterial({color:0x9a917a, roughness:.95});
+  const tab=new THREE.MeshStandardMaterial({color:house.hex, roughness:.7, emissive:house.hex, emissiveIntensity:.16});
+  function part(geo,mat,px,py,pz,rx=0,ry=0,rz=0){ const m=new THREE.Mesh(geo,mat);
+    m.position.set(px,py,pz); m.rotation.set(rx,ry,rz); m.castShadow=true; g.add(m); return m; }
+  // piedistallo
+  part(new THREE.BoxGeometry(11,2,11), M.stoneDk, 0,1,0);
+  part(new THREE.CylinderGeometry(3.6,4.4,6,16), M.stoneLt, 0,5,0);
+  part(new THREE.CylinderGeometry(4.2,3.8,1.3,16), M.stone, 0,8.4,0);
+  part(new THREE.BoxGeometry(6.6,1.9,.5), tab, 0,3.6,5.25);  // targhetta col nome (colore casata)
+  const FY=9.1, key=house.key;
+  if(key==='cerogiallo'){
+    part(new THREE.ConeGeometry(3.7,11,16), tab, 0, FY+5.3, 0);          // veste/cappa conica
+    part(new THREE.SphereGeometry(1.7,16,12), stone, 0, FY+9.7, 1.0);    // volto
+    part(new THREE.ConeGeometry(2.35,3.6,16), tab, 0, FY+11.6, 0);       // punta del cappuccio
+    part(new THREE.CylinderGeometry(.28,.28,6.5,8), M.woodDk, 3.1, FY+9.2, 1.6); // torcia
+    const flame=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.fire, color:0xffca73, blending:THREE.AdditiveBlending, depthWrite:false}));
+    flame.position.set(3.1, FY+12.8, 1.6); flame.scale.set(3.8,5,1); g.add(flame);
+    const pl=new THREE.PointLight(0xffb060, 1.2, 50, 2); pl.position.set(3.1, FY+12.8, 1.6); g.add(pl);
+    torchLights.push({light:pl, base:1.2, spr:flame});
+  } else {
+    part(new THREE.CylinderGeometry(1.15,1.0,6,8), stone, -1.5, FY+3, 0);   // gamba
+    part(new THREE.CylinderGeometry(1.15,1.0,6,8), stone,  1.5, FY+3, 0);
+    part(new THREE.CylinderGeometry(2.6,3.1,6.6,12), stone, 0, FY+8.8, 0);  // busto
+    part(new THREE.BoxGeometry(5.4,6,.6), tab, 0, FY+8.8, 2.55);            // tabarro
+    part(new THREE.SphereGeometry(1.25,10,8), stone, -3.0, FY+11.2, 0);     // spalle
+    part(new THREE.SphereGeometry(1.25,10,8), stone,  3.0, FY+11.2, 0);
   }
+  if(key==='aquilablu'){
+    part(new THREE.SphereGeometry(1.95,16,14), stone, 0, FY+13.5, 0);       // testa
+    part(new THREE.SphereGeometry(2.05,16,12,0,Math.PI*2,0,Math.PI/2), stoneD, 0, FY+13.6, 0); // elmo
+    part(new THREE.ConeGeometry(.5,2.6,6), tab, 0, FY+15.6, -0.4, -0.5);    // pennacchio
+    part(new THREE.ConeGeometry(.72,2.4,8), new THREE.MeshStandardMaterial({color:0xcaa15a, roughness:.7}), 0, FY+13.2, 1.9, Math.PI/2); // becco
+    part(new THREE.CylinderGeometry(.7,.7,4.4,8), stone, 3.1, FY+12.8, .6, 0,0,-0.35); // braccio alzato
+    part(new THREE.BoxGeometry(.5,8,.9), stoneD, 3.9, FY+17.5, .6);         // lama spada
+    part(new THREE.BoxGeometry(2.6,.6,1.1), M.gold, 3.9, FY+13.7, .6);      // guardia
+  } else if(key==='quercia'){
+    part(new THREE.BoxGeometry(3,3.2,2.8), new THREE.MeshStandardMaterial({color:0x6a4a2c, roughness:.9}), 0, FY+13.6, 0); // testa lignea
+    for(let i=0;i<5;i++){ const a=(i/5-0.5)*1.4;                            // rami/corona
+      part(new THREE.ConeGeometry(.4,2.6,6), new THREE.MeshStandardMaterial({color:0x5a3f22, roughness:.9}), Math.sin(a)*1.4, FY+16.0, Math.cos(a)*0.6, a*0.5,0,a); }
+    part(new THREE.BoxGeometry(4.4,5.4,.7), tab, -3.4, FY+9.6, 1.9, 0,0.2,0); // scudo
+    part(new THREE.CircleGeometry(1.3,6), new THREE.MeshStandardMaterial({color:0x2f5a34, roughness:.8, side:THREE.DoubleSide}), -3.55, FY+9.6, 2.3, 0,0.2,0); // emblema quercia
+  } else if(key==='tassorosso'){
+    part(new THREE.SphereGeometry(1.95,16,14), stone, 0, FY+13.5, 0);       // testa tasso
+    part(new THREE.BoxGeometry(1.1,3.4,2.2), new THREE.MeshStandardMaterial({color:0x3a3a3a, roughness:.9}), 0, FY+13.9, .9); // striscia
+    part(new THREE.ConeGeometry(.85,2.0,10), stone, 0, FY+13.1, 1.9, Math.PI/2); // muso
+    part(new THREE.SphereGeometry(.6,8,8), stoneD, -1.1, FY+15.0, 0);       // orecchie
+    part(new THREE.SphereGeometry(.6,8,8), stoneD,  1.1, FY+15.0, 0);
+    part(new THREE.BoxGeometry(4.4,5.4,.7), tab, -3.4, FY+9.6, 1.9, 0,0.2,0); // scudo
+    part(new THREE.CylinderGeometry(1.1,1.1,.3,12), M.gold, -3.55, FY+9.6, 2.3, Math.PI/2,0,0.2); // borchia
+  }
+  g.position.set(x,baseY,z); g.rotation.y=rotY; world.add(g);
+  registerCollider(x,z, 4, baseY, baseY+FY+18);
+  return g;
+}
 
-  function contaPiazzate(){ return attZona.querySelectorAll(".att-chip").length; }
+/* =====================================================================
+   LAYOUT DEL CAMPUS (coordinate mondo, fedeli alla pianta del Campus.png)
+   X: ovest(-) -> est(+)   Z: nord(-) -> sud(+)
+   ===================================================================== */
+const BY = 8;                 // quota base del plateau
+const LAY = {
+  castle:   {x:360,  z:-10},        // edificio monastico -> castello col chiostro
+  greatHall:{x:470,  z:-360, w:80, d:150},  // capannone sportivo -> Sala Grande
+  astro:    {x:520,  z:230},        // campanile/cappella -> Torre di Astronomia
+  quidditch:{x:70,   z:-380},       // campo da calcio
+  courts:   {x:180,  z:-170},       // tennis/basket
+  lake:     {x:-320, z:-150, r:165},// piscine esterne -> Lago Nero
+  waterHall:{x:-320, z:70, w:120, d:150}, // piscina coperta a vetri -> Sala d'Acqua
+  plaza:    {x:120,  z:320},        // parcheggio + rotatoria
+};
+const CS = LAY.castle;
+// riquadro del chiostro
+const CLO = {x:CS.x, z:CS.z, ow:250, od:210, iw:150, id:120, wall:46};
+// zone contestuali (etichette HUD) — dichiarate qui perche' i builder vi aggiungono voci
+const ZONES=[];
 
-  function aggiornaAttProgresso(nGiuste){
-    var n = contaPiazzate();
-    if(n === 0){ attFeedback.textContent = ""; return; }
-    if(n >= nGiuste){
-      attFeedback.style.color = "var(--verde-ok)";
-      attFeedback.textContent = "Bravo! Hai trovato tutto ciò che appartiene a questo luogo.";
-    }else{
-      attFeedback.style.color = "var(--verde-ok)";
-      attFeedback.textContent = "Giusto! (" + n + " su " + nGiuste + ")";
-    }
+/* =====================================================================
+   TERRAIN + LAGO
+   ===================================================================== */
+const LAKE_CX=LAY.lake.x, LAKE_CZ=LAY.lake.z, LAKE_R=LAY.lake.r, LAKE_Y=-4;
+// ellisse del plateau che copre tutto il campus costruito
+const PL_CX=140, PL_CZ=-40, PL_RX=560, PL_RZ=520;
+function inPlateau(x,z){ const dx=(x-PL_CX)/PL_RX, dz=(z-PL_CZ)/PL_RZ; return dx*dx+dz*dz; }
+function heightAt(x,z){
+  let h = Math.sin(x*0.0045)*10 + Math.cos(z*0.004)*8 + Math.sin((x+z)*0.0026)*6;
+  const e = inPlateau(x,z);                // <1 dentro, >1 fuori
+  const plat = smooth(0.85, 1.25, e);      // 0 dentro -> 1 fuori
+  h = lerp(BY, h, plat);
+  const dL = Math.hypot(x-LAKE_CX, z-LAKE_CZ);
+  if(dL < LAKE_R){ const t=smooth(LAKE_R, LAKE_R*0.35, dL); h = lerp(h, LAKE_Y-7, t); }
+  return h;
+}
+(function buildTerrain(){
+  const S=3000, N=150;
+  const geo = new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);
+  const pos=geo.attributes.position; const col=[];
+  const cGrass=new THREE.Color(0x27331d), cRock=new THREE.Color(0x4b4335),
+        cSand=new THREE.Color(0x5c5238), cHigh=new THREE.Color(0x6b6350);
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), z=pos.getZ(i); const y=heightAt(x,z); pos.setY(i,y);
+    let c=cGrass.clone();
+    if(y> BY+14) c.lerp(cHigh, smooth(BY+14, 40, y));
+    if(y< 1) c.lerp(cSand, smooth(1, -7, y));
+    c.offsetHSL(0,0, (Math.sin(x*0.3)*Math.cos(z*0.31))*0.02);
+    col.push(c.r,c.g,c.b);
   }
-
-  function salvaAttivita(id){
-    if(!dati[id]) dati[id] = {};
-    dati[id].attivita = Array.prototype.slice.call(attZona.querySelectorAll(".att-chip"))
-      .map(function(c){ return c.dataset.label; });
-    salvaDati();
-  }
-
-  var dragEl=null, dragOffX=0, dragOffY=0, dragId=null, dragN=0;
-  function iniziaDrag(e, el, id, nGiuste){
-    if(el.dataset.piazzata) return;
-    dragEl=el; dragId=id; dragN=nGiuste;
-    var r=el.getBoundingClientRect();
-    dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top;
-    el.classList.add("dragging");
-    el.style.width=r.width+"px"; el.style.left=r.left+"px"; el.style.top=r.top+"px";
-    try{ el.setPointerCapture(e.pointerId); }catch(_){}
-    el.addEventListener("pointermove", muoviDrag);
-    el.addEventListener("pointerup", fineDrag);
-    el.addEventListener("pointercancel", fineDrag);
-  }
-  function sopraZona(e){
-    var z=attZona.getBoundingClientRect();
-    return e.clientX>=z.left && e.clientX<=z.right && e.clientY>=z.top && e.clientY<=z.bottom;
-  }
-  function muoviDrag(e){
-    if(!dragEl) return;
-    dragEl.style.left=(e.clientX-dragOffX)+"px";
-    dragEl.style.top=(e.clientY-dragOffY)+"px";
-    attZona.classList.toggle("hover", sopraZona(e));
-  }
-  function fineDrag(e){
-    if(!dragEl) return;
-    var el=dragEl, giusta=el.dataset.giusta==="1", aiuto=el.dataset.aiuto;
-    el.removeEventListener("pointermove", muoviDrag);
-    el.removeEventListener("pointerup", fineDrag);
-    el.removeEventListener("pointercancel", fineDrag);
-    var dentro = sopraZona(e);
-    el.classList.remove("dragging");
-    el.style.width=""; el.style.left=""; el.style.top="";
-    attZona.classList.remove("hover");
-    if(dentro && giusta){
-      segnaPiazzata(el);
-      attZona.appendChild(el);
-      aggiornaHint();
-      aggiornaAttProgresso(dragN);
-      salvaAttivita(dragId);
-    }else if(dentro && !giusta){
-      attFeedback.style.color = "var(--oro-scuro)";
-      attFeedback.textContent = el.dataset.label + ": " + aiuto + " — riprova.";
-      lampeggia(el);
-    }
-    dragEl=null; dragId=null;
-  }
-  function lampeggia(el){
-    el.style.background="#FAEEDA"; el.style.borderColor="#BA7517"; el.style.color="#854F0B";
-    setTimeout(function(){ el.style.background=""; el.style.borderColor=""; el.style.color=""; }, 750);
-  }
-
-  // In modalità castello si usa la foto trasfigurata (fotoHog); dove non esiste,
-  // nessuna foto (per non rompere l'atmosfera). In modalità reale si usa "foto".
-  function fotoDi(zona){
-    return castleMode ? (zona.fotoHog || null) : (zona.foto || null);
-  }
-  function aggiornaFotoPopup(zona){
-    var f = fotoDi(zona);
-    if(f){
-      elFoto.src = f;
-      elFoto.alt = "Foto del luogo: " + zona.sug;
-      elFotoWrap.classList.add("mostra");
-      modaleBody.classList.remove("senza-foto");
-    }else{
-      elFoto.removeAttribute("src");
-      elFotoWrap.classList.remove("mostra");
-      modaleBody.classList.add("senza-foto");
-    }
-  }
-
-  // ---- Modale ----
-  function apriZona(id){
-    zonaAttiva = ZONE.find(function(z){ return z.id === id; });
-    var d = dati[id] || {};
-    elBadge.textContent = id;
-    elTitolo.textContent = d.nome ? d.nome : ("Zona " + id);
-    aggiornaFotoPopup(zonaAttiva);
-    elNome.value = d.nome || "";
-    elFunzione.value = d.funzione || "";
-    elEsperienza.value = d.esperienza || "";
-    elNome.placeholder = "Es. " + zonaAttiva.sug;
-    costruisciAttivita(zonaAttiva);
-    elSalvato.classList.remove("mostra");
-    overlay.classList.add("aperto");
-    document.body.style.overflow = "hidden";
-    modale.scrollTop = 0;
-    setTimeout(function(){ elNome.focus(); }, 60);
-  }
-
-  function chiudiModale(){
-    overlay.classList.remove("aperto");
-    document.body.style.overflow = "";
-    zonaAttiva = null;
-  }
-
-  function salva(){
-    if(!zonaAttiva) return;
-    var id = zonaAttiva.id;
-    var prec = dati[id] || {};
-    dati[id] = {
-      nome: elNome.value.trim(),
-      funzione: elFunzione.value.trim(),
-      esperienza: elEsperienza.value.trim(),
-      attivita: prec.attivita || []
-    };
-    salvaDati();
-    aggiornaMarker(zonaAttiva._el, id);
-    zonaAttiva._el.setAttribute("aria-label", "Zona "+id+": " + (completata(id) ? "scheda compilata, modifica" : "da esplorare"));
-    elTitolo.textContent = dati[id].nome ? dati[id].nome : ("Zona " + id);
-    aggiornaProgresso();
-    elSalvato.classList.add("mostra");
-    setTimeout(function(){ chiudiModale(); }, 750);
-  }
-
-  document.getElementById("btnSalva").addEventListener("click", salva);
-  document.getElementById("btnAnnulla").addEventListener("click", chiudiModale);
-  document.getElementById("btnChiudi").addEventListener("click", chiudiModale);
-  overlay.addEventListener("click", function(e){ if(e.target === overlay) chiudiModale(); });
-  document.addEventListener("keydown", function(e){
-    if(e.key === "Escape" && overlay.classList.contains("aperto")) chiudiModale();
-  });
-
-  document.getElementById("btnReset").addEventListener("click", function(){
-    if(confirm("Vuoi cancellare tutte le schede e ripartire da capo?")){
-      dati = {};
-      salvaDati();
-      ZONE.forEach(function(z){
-        aggiornaMarker(z._el, z.id);
-        z._el.setAttribute("aria-label", "Zona "+z.id+": da esplorare");
-      });
-      aggiornaProgresso();
-    }
-  });
-
-  // ---- Adatta la mappa alla schermata (nessuno scroll) ----
-  var RATIO = 2482/1728;
-  var mainWrap = document.querySelector(".mappa-scroll");
-  function fitMap(){
-    var stile = getComputedStyle(mainWrap);
-    var padX = parseFloat(stile.paddingLeft) + parseFloat(stile.paddingRight);
-    var padY = parseFloat(stile.paddingTop) + parseFloat(stile.paddingBottom);
-    var availW = mainWrap.clientWidth - padX;
-    var availH = mainWrap.clientHeight - padY;
-    var w = Math.min(availW, availH * RATIO);
-    if(w > 0) mappa.style.width = Math.floor(w) + "px";
-  }
-  window.addEventListener("resize", fitMap);
-  window.addEventListener("orientationchange", fitMap);
-  var imgSfondo = mappa.querySelector("img.sfondo");
-  if(imgSfondo){ imgSfondo.addEventListener("load", fitMap); }
-  fitMap();
-
-  // ---- Popup di benvenuto ----
-  var benvenuto = document.getElementById("benvenuto");
-  benvenuto.classList.add("aperto");
-  document.body.style.overflow = "hidden";
-  function chiudiBenvenuto(){
-    benvenuto.classList.remove("aperto");
-    document.body.style.overflow = "";
-    fitMap();
-  }
-  document.getElementById("btnInizia").addEventListener("click", chiudiBenvenuto);
-  benvenuto.addEventListener("click", function(e){ if(e.target === benvenuto) chiudiBenvenuto(); });
-  document.addEventListener("keydown", function(e){
-    if(e.key === "Escape" && benvenuto.classList.contains("aperto")) chiudiBenvenuto();
-  });
-
-  // ---- Musica di sottofondo (YouTube, solo audio) ----
-  // La traccia dipende dal tema: reale vs castello.
-  var TRACCIA_REALE = "4Eg0GmYe1m4";
-  var TRACCIA_CASTLE = "a7z8HGXVR80";
-  var ytAudio = document.getElementById("ytAudio");
-  var btnMusica = document.getElementById("btnMusica");
-  var lblMusica = btnMusica.querySelector(".lbl");
-  var musicaOn = false;
-  function avviaMusica(){
-    var id = castleMode ? TRACCIA_CASTLE : TRACCIA_REALE;
-    ytAudio.src = "https://www.youtube-nocookie.com/embed/" + id +
-      "?autoplay=1&loop=1&playlist=" + id +
-      "&controls=0&modestbranding=1&playsinline=1&rel=0";
-  }
-  btnMusica.addEventListener("click", function(){
-    musicaOn = !musicaOn;
-    if(musicaOn){
-      avviaMusica();
-      btnMusica.classList.add("attiva");
-      lblMusica.textContent = "Musica attiva";
-      btnMusica.setAttribute("aria-pressed", "true");
-      btnMusica.setAttribute("aria-label", "Disattiva la musica di sottofondo");
-    }else{
-      ytAudio.src = "";
-      btnMusica.classList.remove("attiva");
-      lblMusica.textContent = "Attiva musica";
-      btnMusica.setAttribute("aria-pressed", "false");
-      btnMusica.setAttribute("aria-label", "Attiva la musica di sottofondo");
-    }
-  });
-
-  // ---- Campus Castle: trasfigura mappa, foto e musica ----
-  var MAPPA_REALE = "Campus.png";
-  var MAPPA_CASTLE = "Campus_Hogwarts.png";
-  var sfondo = document.querySelector(".sfondo");
-  var btnCastle = document.getElementById("btnCastle");
-  var lblCastle = btnCastle.querySelector(".lbl");
-  var titoloApp = document.getElementById("titoloApp");
-  btnCastle.addEventListener("click", function(){
-    castleMode = !castleMode;
-    document.body.classList.toggle("castle", castleMode);
-    sfondo.src = castleMode ? MAPPA_CASTLE : MAPPA_REALE;
-    titoloApp.textContent = castleMode ? "Campus Castle" : "Campus Map";
-    document.title = (castleMode ? "Campus Castle" : "Campus Map") + " — Scuola Sacra Famiglia";
-    sfondo.alt = castleMode
-      ? "Il campus trasfigurato in castello"
-      : "Veduta aerea del campus della Scuola Sacra Famiglia";
-    btnCastle.classList.toggle("attiva", castleMode);
-    btnCastle.setAttribute("aria-pressed", castleMode ? "true" : "false");
-    lblCastle.textContent = castleMode ? "Campus reale" : "Campus Castle";
-    if(musicaOn) avviaMusica();
-    if(overlay.classList.contains("aperto") && zonaAttiva) aggiornaFotoPopup(zonaAttiva);
-    fitMap();
-  });
-
-  aggiornaProgresso();
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
+  geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:1}));
+  mesh.receiveShadow=true; world.add(mesh);
 })();
+
+/* lago (acqua) */
+let lakeGeo, lakeMesh;
+(function buildLake(){
+  lakeGeo=new THREE.PlaneGeometry(LAKE_R*2.1, LAKE_R*2.1, 40,40); lakeGeo.rotateX(-Math.PI/2);
+  lakeMesh=new THREE.Mesh(lakeGeo, M.water);
+  lakeMesh.position.set(LAKE_CX, LAKE_Y+1.2, LAKE_CZ); world.add(lakeMesh);
+})();
+
+/* =====================================================================
+   ALBERI (pini istanziati sul perimetro) + filari di cipressi
+   ===================================================================== */
+(function trees(){
+  const trunkG=new THREE.CylinderGeometry(.7,1,7,6);
+  const coneG=new THREE.ConeGeometry(4.2,13,7);
+  const trunkM=new THREE.MeshStandardMaterial({color:0x3a2a1c, roughness:.95});
+  const leafM=new THREE.MeshStandardMaterial({color:0x1f3a24, roughness:.9});
+  const spots=[];
+  for(let i=0;i<260;i++){
+    const a=rand(0,TAU), r=rand(360, 1300);
+    const x=PL_CX+Math.cos(a)*r*0.9, z=PL_CZ+Math.sin(a)*r*0.9;
+    if(Math.hypot(x-LAKE_CX,z-LAKE_CZ)<LAKE_R+30) continue;
+    if(inPlateau(x,z)<0.95) continue;
+    spots.push([x,z]);
+  }
+  const trunk=new THREE.InstancedMesh(trunkG, trunkM, spots.length);
+  const leaves=new THREE.InstancedMesh(coneG, leafM, spots.length); leaves.castShadow=true;
+  spots.forEach((p,i)=>{ const [x,z]=p; const y=heightAt(x,z); const s=rand(.8,1.7);
+    _o.position.set(x,y+3.5*s,z); _o.rotation.set(0,rand(0,TAU),0); _o.scale.set(s,s,s); _o.updateMatrix(); trunk.setMatrixAt(i,_o.matrix);
+    _o.position.set(x,y+11*s,z); _o.updateMatrix(); leaves.setMatrixAt(i,_o.matrix);
+  });
+  world.add(trunk); world.add(leaves);
+
+  // cipressi: due filari (come nel campus)
+  const cypG=new THREE.ConeGeometry(2.6, 26, 8);
+  const cypM=new THREE.MeshStandardMaterial({color:0x1c3320, roughness:.9});
+  const rows=[[-470,-360,-470,120],[ -30,360, 300,360]];
+  const cyps=[];
+  rows.forEach(r=>{ const [ax,az,bx,bz]=r; const n=12;
+    for(let i=0;i<=n;i++){ const t=i/n; cyps.push([lerp(ax,bx,t), lerp(az,bz,t)]); } });
+  const cyp=new THREE.InstancedMesh(cypG, cypM, cyps.length); cyp.castShadow=true;
+  cyps.forEach((p,i)=>{ const [x,z]=p; const y=heightAt(x,z);
+    _o.position.set(x,y+13,z); _o.rotation.set(0,0,0); _o.scale.set(1,rand(.9,1.25),1); _o.updateMatrix(); cyp.setMatrixAt(i,_o.matrix); });
+  world.add(cyp);
+})();
+
+/* =====================================================================
+   COLLIDERS (solo in modalita' muri solidi)
+   ===================================================================== */
+const colliders=[];
+function registerCollider(x,z,r,y0,y1){ colliders.push({x,z,r,y0,y1}); }
+
+/* =====================================================================
+   CASTELLO PRINCIPALE — chiostro quadrangolare + 4 torri d'angolo
+   Le 4 ali ospitano le sale comuni; il cortile interno e' aperto.
+   ===================================================================== */
+
+/* torretta conica decorativa (firma Hogwarts): corpo + coronamento + cono d'ardesia */
+function turret(x,z,baseY,r,h,roofMat=M.roofTeal, win=true){
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(r,r*1.06,h,12), M.stoneDk);
+  body.position.set(x,baseY+h/2,z); body.castShadow=true; world.add(body);
+  const corb=new THREE.Mesh(new THREE.CylinderGeometry(r*1.2,r*1.05,2.2,12), M.stoneLt);
+  corb.position.set(x,baseY+h+1,z); world.add(corb);
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(r*1.22, r*3.3, 12), roofMat);
+  cone.position.set(x, baseY+h+r*1.65+2, z); cone.castShadow=true; world.add(cone);
+  const fin=new THREE.Mesh(new THREE.SphereGeometry(r*0.22,6,6), M.gold);
+  fin.position.set(x, baseY+h+r*3.3+2, z); world.add(fin);
+  if(win){ pushWindow(x, baseY+h*0.62, z+r*1.03, 0, 1.6,3.2, true); pushWindow(x, baseY+h*0.62, z-r*1.03, Math.PI, 1.6,3.2, true); }
+}
+
+(function castle(){
+  const {x,z,ow,od,iw,id,wall}=CLO;
+  const hw=ow/2, hd=od/2, ihw=iw/2, ihd=id/2;
+  // quattro ali (corridoi) attorno al cortile
+  const wingT = (ow-iw)/2;            // spessore ala
+  // ala nord e sud (lungo X)
+  for(const s of [-1,1]){
+    const wy=z + s*(ihd + wingT/2);
+    const b=new THREE.Mesh(new THREE.BoxGeometry(ow, wall, wingT), M.stone);
+    b.position.set(x, BY+wall/2, wy); b.castShadow=b.receiveShadow=true; world.add(b);
+    wingRoof(x, wy, ow+6, wingT+6, BY+wall, 26, M.roofTile);
+    faceWindows(x, wy, ow, wingT, BY+16, 3, 7);
+    faceWindows(x, wy, ow, wingT, BY+30, 3, 6);
+  }
+  // ala est e ovest (lungo Z)
+  for(const s of [-1,1]){
+    const wx=x + s*(ihw + wingT/2);
+    const b=new THREE.Mesh(new THREE.BoxGeometry(wingT, wall, id), M.stone);
+    b.position.set(wx, BY+wall/2, z); b.castShadow=b.receiveShadow=true; world.add(b);
+    wingRoof(wx, z, wingT+6, id+6, BY+wall, 26, M.roofTile);
+    faceWindows(wx, z, wingT, id, BY+16, 3, 7);
+    faceWindows(wx, z, wingT, id, BY+30, 3, 6);
+  }
+  // pavimento del cortile (chiostro)
+  const yard=new THREE.Mesh(new THREE.BoxGeometry(iw, 1.4, id), M.floor);
+  yard.position.set(x, BY+0.7, z); yard.receiveShadow=true; world.add(yard);
+  // loggiato del chiostro ad archi (rif. Campus_Hogwarts): colonne + archi attorno al cortile
+  function arcade(ax,az,bx,bz,n){ const dx=(bx-ax)/n, dz=(bz-az)/n, span=Math.hypot(dx,dz);
+    for(let i=0;i<=n;i++){ const px=ax+dx*i, pz=az+dz*i;
+      const c=new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.6,15,10), M.stoneLt); c.position.set(px,BY+8,pz); world.add(c);
+      if(i<n){ const arc=new THREE.Mesh(new THREE.TorusGeometry(span*0.46,.8,6,12,Math.PI), M.stoneLt);
+        arc.position.set(px+dx/2, BY+15, pz+dz/2); arc.rotation.y=-Math.atan2(dz,dx); world.add(arc); } }
+    const cap=new THREE.Mesh(new THREE.BoxGeometry((Math.abs(bx-ax)||2.5)+2, 1.6, (Math.abs(bz-az)||2.5)+2), M.stone);
+    cap.position.set((ax+bx)/2, BY+16.5, (az+bz)/2); world.add(cap); }
+  arcade(x-ihw,z-ihd, x+ihw,z-ihd, 8);
+  arcade(x-ihw,z+ihd, x+ihw,z+ihd, 8);
+  arcade(x-ihw,z-ihd, x-ihw,z+ihd, 6);
+  arcade(x+ihw,z-ihd, x+ihw,z+ihd, 6);
+  // pozzo centrale con baldacchino (rif. Campus_Hogwarts)
+  const wellR=6;
+  const ring=new THREE.Mesh(new THREE.CylinderGeometry(wellR,wellR+1,4,16), M.stoneLt); ring.position.set(x,BY+2,z); world.add(ring);
+  const wtr=new THREE.Mesh(new THREE.CylinderGeometry(wellR-1.2,wellR-1.2,.5,16), M.waterLt); wtr.position.set(x,BY+3.6,z); world.add(wtr);
+  for(const s of [-1,1]){ const post=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,14,8), M.woodDk); post.position.set(x+s*(wellR-0.5),BY+9,z); world.add(post); }
+  gableRoof(x,z, wellR*2+3, 4, BY+15, 4, M.roofTile, 'w');
+  addTorch(x, BY+7, z, true, 0x8fd0ff, 52, 1.0);
+
+  // quattro statue dei personaggi attorno alla fontana del chiostro
+  const R=44;
+  statue(x, BY+1, z-R,  Math.PI,    {key:'aquilablu',  hex:0x1c3a6e, name:'Aquilablu'});
+  statue(x+R, BY+1, z,  Math.PI/2,  {key:'quercia',    hex:0x1d5c39, name:'Quercia'});
+  statue(x, BY+1, z+R,  0,          {key:'tassorosso', hex:0x7a1f2b, name:'Tassorosso'});
+  statue(x-R, BY+1, z, -Math.PI/2,  {key:'cerogiallo', hex:0xb5892a, name:'Cerogiallo'});
+
+  // quattro torri d'angolo, una per casata: tetto nel colore casata + stendardo del personaggio
+  // NO/NE/SO/SE allineate alle sale comuni: Aquilablu, Quercia, Cerogiallo, Tassorosso
+  const corners=[
+    [-1,-1, 0x1c3a6e, 'aquilaok.png'],  // NO -> Aquilablu
+    [ 1,-1, 0x1d5c39, 'querciaok.png'], // NE -> Quercia
+    [-1, 1, 0xb5892a, 'cerok.png'],     // SO -> Cerogiallo
+    [ 1, 1, 0x7a1f2b, 'tassok.png'],    // SE -> Tassorosso
+  ];
+  corners.forEach(c=>{ const tx=x+c[0]*(hw-6), tz=z+c[1]*(hd-6);
+    roundTower(tx, tz, BY, 13, 100, new THREE.MeshStandardMaterial({color:c[2], roughness:.7, metalness:.15}));
+    // stendardo appeso alla torre, rivolto verso l'esterno (diagonale)
+    houseBanner(tx+c[0]*15, BY+58, tz+c[1]*15, Math.atan2(c[0], c[1]), 9, 18, c[2], c[3]);
+  });
+
+  // finestre a lancetta sulle facciate esterne + torrette coniche sparse (firma Hogwarts)
+  const oN=z-(ihd+wingT), oS=z+(ihd+wingT), oWx=x-(ihw+wingT), oEx=x+(ihw+wingT);
+  for(let i=0;i<7;i++){ const px=x-ow/2+(i+0.5)*ow/7;
+    archWindow(px, BY+18, oN-0.3, Math.PI, 4,10, i%2?M.glass:M.glassCool);
+    archWindow(px, BY+18, oS+0.3, 0, 4,10, i%2?M.glassCool:M.glass); }
+  for(let i=0;i<5;i++){ const pz=z-id/2+(i+0.5)*id/5;
+    archWindow(oWx-0.3, BY+18, pz, -Math.PI/2, 4,10, i%2?M.glass:M.glassCool);
+    archWindow(oEx+0.3, BY+18, pz, Math.PI/2, 4,10, i%2?M.glassCool:M.glass); }
+  const tt=[[x-ow*0.30,oN],[x,oN],[x+ow*0.30,oN],[x-ow*0.30,oS],[x+ow*0.30,oS],
+           [oWx,z-od*0.24],[oWx,z+od*0.24],[oEx,z-od*0.24],[oEx,z+od*0.24]];
+  tt.forEach(p=> turret(p[0],p[1],BY,4.5,wall+10,M.roofTeal));
+
+  // grande arco d'ingresso al chiostro sull'ala sud (verso il piazzale)
+  const doorW=22, doorH=26;
+  // apri un varco: due segmenti + architrave sull'ala sud
+  const sy=z + hd - wingT/2;
+  const seg=(ow-doorW)/2;
+  // (l'ala sud e' gia' piena: sovrappongo l'arcata come portale in rilievo)
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(doorW/2+2, 2.2, 8, 20, Math.PI), M.gold);
+  arch.position.set(x, BY+doorH-2, z+hd+0.5); world.add(arch);
+  addTorch(x-doorW/2-3, BY+18, z+hd+2, true); addTorch(x+doorW/2+3, BY+18, z+hd+2, true);
+
+  registerCollider(x,z, Math.max(ow,od)*0.5, BY, BY+wall);
+})();
+
+/* torre alta di guardia sul lato est del castello */
+roundTower(CS.x+150, CS.z-30, BY, 15, 150, M.roofTeal, true);
+
+/* stemma-scudo di casata (colore + emblema del personaggio) */
+function crest(x,y,z,rotY,hex,tex){
+  const g=new THREE.Group();
+  const back=new THREE.Mesh(new THREE.BoxGeometry(6,7,.5), M.gold); g.add(back);
+  const fieldM=new THREE.MeshStandardMaterial({color:hex, roughness:.7, emissive:hex, emissiveIntensity:.2});
+  const field=new THREE.Mesh(new THREE.BoxGeometry(5,6,.7), fieldM); field.position.z=.25; g.add(field);
+  const tip=new THREE.Mesh(new THREE.ConeGeometry(3.6,3.4,4), fieldM); tip.rotation.set(Math.PI,Math.PI/4,0); tip.position.set(0,-4.2,.25); g.add(tip);
+  const tipB=new THREE.Mesh(new THREE.ConeGeometry(4.3,3.4,4), M.gold); tipB.rotation.set(Math.PI,Math.PI/4,0); tipB.position.set(0,-4.2,0); g.add(tipB);
+  if(tex){ const t=loadTex(tex);
+    const em=new THREE.Mesh(new THREE.PlaneGeometry(4.2,4.2), new THREE.MeshStandardMaterial({map:t,emissiveMap:t,emissive:0xffffff,emissiveIntensity:.55,transparent:true,roughness:.8}));
+    em.position.set(0,.4,.66); g.add(em); }
+  g.position.set(x,y,z); g.rotation.y=rotY; world.add(g); return g;
+}
+/* gufo (finial sul gable) */
+function owl(x,y,z){
+  const g=new THREE.Group(); const m=new THREE.MeshStandardMaterial({color:0xcdbb95, roughness:.9});
+  const body=new THREE.Mesh(new THREE.SphereGeometry(1.6,12,10), m); body.scale.set(1,1.35,1); body.position.y=1.6; g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(1.15,12,10), m); head.position.y=3.5; g.add(head);
+  for(const s of [-1,1]){ const ear=new THREE.Mesh(new THREE.ConeGeometry(.35,1,6), m); ear.position.set(s*.55,4.4,0); g.add(ear);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.34,8,8), new THREE.MeshStandardMaterial({color:0xffcf5a,emissive:0xffb020,emissiveIntensity:.7})); eye.position.set(s*.45,3.6,1.02); g.add(eye); }
+  const beak=new THREE.Mesh(new THREE.ConeGeometry(.22,.7,6), new THREE.MeshStandardMaterial({color:0xc98a2a})); beak.rotation.x=Math.PI/2; beak.position.set(0,3.2,1.1); g.add(beak);
+  g.position.set(x,y,z); world.add(g); return g;
+}
+/* PORTALE GOTICO sulla facciata sud del castello (rif. Campus_front) */
+function entrance(){
+  const cx=CS.x, cz=CS.z+CLO.od/2+2, y=BY;
+  const blockW=48, blockH=42, doorW=20, doorH=30, side=(blockW-doorW)/2;
+  // avancorpo del portale (due lati + architrave -> grande arco)
+  for(const s of [-1,1]){ const m=new THREE.Mesh(new THREE.BoxGeometry(side, blockH, 8), M.stone);
+    m.position.set(cx+s*(doorW/2+side/2), y+blockH/2, cz); m.castShadow=m.receiveShadow=true; world.add(m); }
+  const lint=new THREE.Mesh(new THREE.BoxGeometry(doorW+8, blockH-doorH, 8), M.stone);
+  lint.position.set(cx, y+doorH+(blockH-doorH)/2, cz); world.add(lint);
+  // arco a sesto (torus) + soglia scura
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(doorW/2+2, 2, 8, 20, Math.PI), M.stoneLt);
+  arch.position.set(cx, y+doorH-4, cz+0.3); world.add(arch);
+  const recess=new THREE.Mesh(new THREE.BoxGeometry(doorW, doorH, 2), new THREE.MeshStandardMaterial({color:0x1a1712, roughness:1, emissive:0x2a1c0a, emissiveIntensity:.4}));
+  recess.position.set(cx, y+doorH/2, cz-2); world.add(recess);
+  addTorch(cx-doorW/2-3, y+18, cz+3, true); addTorch(cx+doorW/2+3, y+18, cz+3, true);
+  // gable triangolare ripido sopra il portale
+  const gs=new THREE.Shape(); gs.moveTo(-blockW/2,0); gs.lineTo(blockW/2,0); gs.lineTo(0,30); gs.closePath();
+  const gable=new THREE.Mesh(new THREE.ExtrudeGeometry(gs,{depth:6,bevelEnabled:false}), M.stone);
+  gable.position.set(cx, y+blockH, cz-3); gable.castShadow=true; world.add(gable);
+  // cornici in ardesia lungo i due spioventi del gable
+  for(const s of [-1,1]){ const edge=new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(blockW/2,30)+2, 2, 8), M.roofTile);
+    edge.position.set(cx+s*blockW/4, y+blockH+15, cz); edge.rotation.z = -s*Math.atan2(30, blockW/2)+ (s>0?0:Math.PI); world.add(edge); }
+  // rosone
+  const roseY=y+blockH+14, roseZ=cz+3.4;
+  const glass=new THREE.Mesh(new THREE.CircleGeometry(5.4,24), new THREE.MeshStandardMaterial({color:0x1a2440,emissive:0x7fb0ff,emissiveIntensity:.9,roughness:.4}));
+  glass.position.set(cx,roseY,roseZ-0.15); world.add(glass);
+  const roseRing=new THREE.Mesh(new THREE.TorusGeometry(5.6,.9,8,24), M.gold);
+  roseRing.position.set(cx,roseY,roseZ); world.add(roseRing);
+  for(let i=0;i<6;i++){ const sp=new THREE.Mesh(new THREE.BoxGeometry(11,.5,.5), M.gold);
+    sp.position.set(cx,roseY,roseZ+0.1); sp.rotation.z=i/6*Math.PI; world.add(sp); }
+  const pl=new THREE.PointLight(0x9fc0ff,0.8,60,2); pl.position.set(cx,roseY,roseZ+6); world.add(pl); torchLights.push({light:pl,base:0.8,spr:null});
+  // owl in cima
+  owl(cx, y+blockH+30, cz-2);
+  // torri gemelle coniche ai lati del portale
+  roundTower(cx-blockW/2-8, cz, y, 9, 74, M.roofTeal);
+  roundTower(cx+blockW/2+8, cz, y, 9, 74, M.roofTeal);
+  // stemmi delle 4 casate sulla facciata (2 per lato)
+  crest(cx-doorW/2-10, y+30, cz+4.2, 0, 0x1c3a6e, 'aquilaok.png');
+  crest(cx-doorW/2-10, y+16, cz+4.2, 0, 0x1d5c39, 'querciaok.png');
+  crest(cx+doorW/2+10, y+30, cz+4.2, 0, 0xb5892a, 'cerok.png');
+  crest(cx+doorW/2+10, y+16, cz+4.2, 0, 0x7a1f2b, 'tassok.png');
+  registerCollider(cx,cz, blockW*0.5, y, y+blockH+30);
+}
+entrance();
+
+/* DRAGO che si erge dalla piscina/Lago Nero (rif. Campus_Hogwarts) */
+function dragon(bx,by,bz,rotY){
+  const g=new THREE.Group();
+  const mat=new THREE.MeshStandardMaterial({color:0x5c665f, roughness:.92, metalness:.05});
+  const matD=new THREE.MeshStandardMaterial({color:0x454e48, roughness:.95});
+  // collo/corpo come tubo lungo una curva a S che sale dall'acqua
+  const pts=[ new THREE.Vector3(-16,-2,8), new THREE.Vector3(-7,3,-2), new THREE.Vector3(1,11,2),
+    new THREE.Vector3(5,21,-2), new THREE.Vector3(3,31,3), new THREE.Vector3(8,39,8) ];
+  const curve=new THREE.CatmullRomCurve3(pts);
+  const body=new THREE.Mesh(new THREE.TubeGeometry(curve,64,2.7,12,false), mat); body.castShadow=true; g.add(body);
+  // spuntoni lungo la schiena
+  for(let i=0;i<14;i++){ const p=curve.getPoint(i/14); const sp=new THREE.Mesh(new THREE.ConeGeometry(.7,2.2,5), matD);
+    sp.position.set(p.x, p.y+2.4, p.z); g.add(sp); }
+  // base: spire nell'acqua
+  const coil=new THREE.Mesh(new THREE.TorusGeometry(6,2.4,10,20), mat); coil.rotation.x=Math.PI/2; coil.position.set(-14,0,8); g.add(coil);
+  // testa
+  const head=new THREE.Group(); head.position.set(8,40,9);
+  head.add(new THREE.Mesh(new THREE.BoxGeometry(4,3.4,7), mat));
+  const snout=new THREE.Mesh(new THREE.ConeGeometry(1.5,4,8), mat); snout.rotation.x=Math.PI/2; snout.position.set(0,-.3,5); head.add(snout);
+  const jaw=new THREE.Mesh(new THREE.BoxGeometry(3,1,4), matD); jaw.position.set(0,-1.8,3.5); head.add(jaw);
+  for(const s of [-1,1]){ const horn=new THREE.Mesh(new THREE.ConeGeometry(.6,4,6), matD); horn.position.set(s*1.4,2.4,-2.5); horn.rotation.set(-0.5,0,s*0.3); head.add(horn);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.55,10,8), new THREE.MeshStandardMaterial({color:0xffcf5a,emissive:0xff8a20,emissiveIntensity:.9})); eye.position.set(s*1.6,.8,2.2); head.add(eye); }
+  head.rotation.set(-0.35,0.2,0); g.add(head);
+  const pl=new THREE.PointLight(0xff8a30, 1.4, 90, 2); pl.position.set(8,41,14); g.add(pl); torchLights.push({light:pl,base:1.4,spr:null});
+  // ali membranose
+  for(const s of [-1,1]){ const wing=new THREE.Mesh(new THREE.ConeGeometry(7,2,3, 1, false), matD);
+    wing.scale.set(1,1,2.6); wing.position.set(s*5,26,-1); wing.rotation.set(Math.PI/2,0,s*0.6); g.add(wing); }
+  g.position.set(bx,by,bz); g.rotation.y=rotY; g.scale.set(1.6,1.6,1.6); world.add(g);
+  registerCollider(bx,bz, 18, by, by+70);
+  ZONES.push({name:'Il Drago', sub:'Custode del Lago Nero', x:bx, z:bz, r:90});
+}
+dragon(LAKE_CX+55, LAKE_Y-1, LAKE_CZ+120, 2.3);
+
+/* =====================================================================
+   TORRE DI ASTRONOMIA (ex campanile/cappella, basso-destra)
+   ===================================================================== */
+(function astronomy(){
+  const {x,z}=LAY.astro;
+  squareTower(x, z, BY, 22, 22, 40, false);        // basamento (cappella)
+  roundTower(x, z, BY+38, 12, 150, M.roofTeal, true); // guglia
+  // osservatorio in cima: anello dorato
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(15,1.4,8,24), M.gold);
+  ring.position.set(x, BY+38+150+6, z); ring.rotation.x=Math.PI/2; world.add(ring);
+  addTorch(x, BY+38+150+6, z, true, 0xffe6a0, 120, 3.0);
+})();
+
+/* =====================================================================
+   SALA GRANDE (ex capannone sportivo) — interno esplorabile
+   ===================================================================== */
+const GH = {x:LAY.greatHall.x, z:LAY.greatHall.z, w:LAY.greatHall.w, d:LAY.greatHall.d, wall:40, y:BY};
+(function greatHall(){
+  const {x,z,w,d,wall,y}=GH;
+  const hw=w/2, hd=d/2; const doorW=20, doorH=24;
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(w+2, 2, d+2), M.floor);
+  floor.position.set(x, y+1, z); floor.receiveShadow=true; world.add(floor);
+  const dais=new THREE.Mesh(new THREE.BoxGeometry(w-10, 2.4, 22), M.stoneLt);
+  dais.position.set(x, y+2.2, z-hd+16); dais.receiveShadow=true; world.add(dais);
+  // pareti est/ovest con vetrate ad arco
+  for(const s of [-1,1]){
+    const sw=new THREE.Mesh(new THREE.BoxGeometry(3, wall, d), M.stone);
+    sw.position.set(x+s*hw, y+wall/2, z); sw.castShadow=sw.receiveShadow=true; world.add(sw);
+    const bays=6;
+    for(let i=0;i<bays;i++){ const pz=z-hd + (i+0.5)*d/bays;
+      const bt=new THREE.Mesh(new THREE.BoxGeometry(4, wall+6, 4), M.stoneDk);
+      bt.position.set(x+s*(hw+2), y+(wall+6)/2, pz); bt.castShadow=true; world.add(bt);
+      archWindow(x+s*(hw+1.6), y+wall*0.52, pz, s>0? -Math.PI/2: Math.PI/2, 9, 16, (i%2? M.glass: M.glassCool));
+    }
+  }
+  // parete nord (fondo, dietro il dais)
+  const back=new THREE.Mesh(new THREE.BoxGeometry(w+3, wall, 3), M.stone);
+  back.position.set(x, y+wall/2, z-hd); back.castShadow=back.receiveShadow=true; world.add(back);
+  // parete sud (ingresso) con grande arco aperto
+  const seg=(w-doorW)/2;
+  for(const s of [-1,1]){ const nw=new THREE.Mesh(new THREE.BoxGeometry(seg, wall, 3), M.stone);
+    nw.position.set(x + s*(doorW/2+seg/2), y+wall/2, z+hd); nw.castShadow=true; world.add(nw); }
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(doorW+4, wall-doorH, 4), M.stoneDk);
+  lintel.position.set(x, y+doorH+(wall-doorH)/2, z+hd); world.add(lintel);
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(doorW/2+1.5, 1.6, 8, 20, Math.PI), M.stoneLt);
+  arch.position.set(x, y+doorH-1, z+hd); world.add(arch);
+  // tetto a capanna ripido
+  gableRoof(x,z, w, d, y+wall, 30, M.roofTile, 'd');
+  // costoloni interni
+  for(let i=1;i<9;i++){ const pz=z-hd + i*d/9;
+    const rib=new THREE.Mesh(new THREE.TorusGeometry(hw-2, 1.1, 6, 18, Math.PI), M.darkStone);
+    rib.position.set(x, y+wall-2, pz); rib.rotation.z=Math.PI; world.add(rib); }
+  // tavoli lunghi delle quattro casate
+  const tblM=M.wood, benchM=M.woodDk;
+  const houseCols=[0x1c3a6e,0x1d5c39,0xb5892a,0x7a1f2b];
+  for(let ti=0; ti<4; ti++){ const px=x-hw+14 + ti*(w-28)/3;
+    const tbl=new THREE.Mesh(new THREE.BoxGeometry(8, 2, d-46), tblM);
+    tbl.position.set(px, y+7, z+6); tbl.castShadow=true; world.add(tbl);
+    for(const bs of [-1,1]){ const bench=new THREE.Mesh(new THREE.BoxGeometry(3,4,d-46), benchM);
+      bench.position.set(px+bs*6.5, y+4, z+6); world.add(bench); }
+    const runner=new THREE.Mesh(new THREE.PlaneGeometry(6.6, d-48), banner(houseCols[ti]));
+    runner.rotation.x=-Math.PI/2; runner.position.set(px, y+8.05, z+6); world.add(runner);
+  }
+  // tavolo dei professori sul dais
+  const head=new THREE.Mesh(new THREE.BoxGeometry(w-18, 2.2, 6), M.wood);
+  head.position.set(x, y+9, z-hd+16); world.add(head);
+  // candele fluttuanti + luci
+  floatingCandles(x,z, w-16, d-24, y+wall-4, 7,6, 8);
+  // torce a parete
+  for(let i=0;i<5;i++){ const pz=z-hd+18 + i*(d-36)/4;
+    addTorch(x-hw+4, y+18, pz, i===2); addTorch(x+hw-4, y+18, pz, i===2); }
+  // stendardi delle 4 casate sopra il dais
+  houseCols.forEach((hex,i)=>{ houseBanner(x-hw+16 + i*(w-32)/3, y+wall-9, z-hd+3, 0, 8, 20, hex,
+    ['aquilaok.png','querciaok.png','cerok.png','tassok.png'][i]); });
+  // quadro magico: la mensa reale, accanto all'ingresso
+  framedPicture(x-hw+3.5, y+16, z+hd-30, Math.PI/2, 20, 13, 'Campus_mensa.png');
+  framedPicture(x+hw-3.5, y+16, z+hd-30, -Math.PI/2, 20, 13, 'casepersonaggi.png');
+  registerCollider(x,z, Math.max(w,d)*0.5, y, y+wall);
+  ZONES.push({name:'Sala Grande', sub:'La mensa incantata', x, z, r:110});
+})();
+
+/* =====================================================================
+   SALE COMUNI DELLE 4 CASATE — padiglioni esplorabili attorno al castello
+   ===================================================================== */
+const HOUSES=[
+  {key:'aquilablu', name:'Aquilablu', sub:'Casa dell’Aquila', hex:0x1c3a6e, accent:0x6fa8ff, tex:'aquilaok.png',
+   pic:'Campus_secondaria.png', pos:[CS.x-170, CS.z-150], rot:0},
+  {key:'quercia', name:'Quercia', sub:'Casa della Quercia', hex:0x1d5c39, accent:0x6fd08a, tex:'querciaok.png',
+   pic:'case2.jpg', pos:[CS.x+190, CS.z-150], rot:0},
+  {key:'cerogiallo', name:'Cerogiallo', sub:'Casa della Candela', hex:0xb5892a, accent:0xffcf5a, tex:'cerok.png',
+   pic:'Campus_primaria.png', pos:[CS.x-170, CS.z+150], rot:0},
+  {key:'tassorosso', name:'Tassorosso', sub:'Casa del Tasso', hex:0x7a1f2b, accent:0xff7a6a, tex:'tassok.png',
+   pic:'case4.jpg', pos:[CS.x+190, CS.z+150], rot:0},
+];
+function commonRoom(h){
+  const [x,z]=h.pos; const w=64, d=54, wall=30, y=BY;
+  const hw=w/2, hd=d/2; const doorW=14, doorH=16;
+  // esterno interamente in PIETRA (integrato col castello) — il colore casata resta dentro
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(w+2,2,d+2), M.floorWood);
+  floor.position.set(x,y+1,z); floor.receiveShadow=true; world.add(floor);
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(w*.55,d*.55), banner(h.hex));
+  rug.rotation.x=-Math.PI/2; rug.position.set(x,y+2.05,z); world.add(rug);
+  const inward = (x<CS.x)? 1 : -1;  // apertura rivolta al cortile
+  function wallSeg(cx,cz,ww,dd){ const m=new THREE.Mesh(new THREE.BoxGeometry(ww,wall,dd),M.stone);
+    m.position.set(cx,y+wall/2,cz); m.castShadow=m.receiveShadow=true; world.add(m); }
+  wallSeg(x-hw, z, 3, d); wallSeg(x+hw, z, 3, d);
+  wallSeg(x, z-hd, w, 3); wallSeg(x, z+hd, w, 3);
+  // finestre a lancetta sulla facciata esterna
+  for(let i=0;i<4;i++){ const pz=z-hd+(i+0.5)*d/4; const ox=x-inward*hw;
+    archWindow(ox - inward*0.3, y+16, pz, inward>0? -Math.PI/2 : Math.PI/2, 3.4,8, i%2?M.glass:M.glassCool); }
+  // arco d'ingresso verso il chiostro
+  const ax = x + (inward>0? hw : -hw);
+  const doorArch=new THREE.Mesh(new THREE.TorusGeometry(doorW/2+1.5,1.6,8,20,Math.PI), M.gold);
+  doorArch.position.set(ax, y+doorH-2, z); doorArch.rotation.y=inward>0? Math.PI/2:-Math.PI/2; world.add(doorArch);
+  // tetto d'ardesia ripido + torretta conica d'angolo
+  gableRoof(x,z,w+4,d+4,y+wall,22, M.roofTile, 'w');
+  turret(x+ (inward>0?-1:1)*hw*0.78, z-hd*0.78, y, 4.5, wall+6, M.roofTeal);
+  // camino
+  hearth(x, y, z-hd+3, 0, h.hex);
+  // stemma grande sopra il camino (colore casata + personaggio)
+  houseBanner(x, y+wall-8, z-hd+4.5, 0, 12, 16, h.hex, h.tex);
+  // ritratto del personaggio (texture png) su cornice, a lato
+  framedPicture(x-hw+3.2, y+13, z-6, Math.PI/2, 12, 16, h.tex);
+  // quadro magico: foto reale associata
+  framedPicture(x+hw-3.2, y+13, z-6, -Math.PI/2, 16, 12, h.pic);
+  // poltrone attorno al camino
+  chair(x-8, y+2, z-hd+16, 0.3, h.accent);
+  chair(x+8, y+2, z-hd+16, -0.3, h.accent);
+  chair(x-12, y+2, z, 1.4, h.accent);
+  chair(x+12, y+2, z, -1.4, h.accent);
+  // tavolino
+  const tb=new THREE.Mesh(new THREE.CylinderGeometry(4,4,1,12), M.wood); tb.position.set(x,y+5,z-hd+16); world.add(tb);
+  // statua del personaggio della casata, al centro rivolta verso l'ingresso
+  statue(x, y, z+6, 0, h);
+  // candele diffuse
+  floatingCandles(x,z,w-16,d-16, y+wall-5, 3,4, 6);
+  addTorch(x, y+wall-4, z+hd-4, true, 0xffb060, 55, 1.4);
+  registerCollider(x,z, Math.max(w,d)*0.5, y, y+wall);
+  ZONES.push({name:h.name, sub:h.sub, x, z, r:70});
+}
+
+/* =====================================================================
+   BIBLIOTECA + AULA MAGICA — due sale a ovest del castello
+   ===================================================================== */
+function library(){
+  const x=CS.x-30, z=CS.z-190, w=90, d=60, wall=34, y=BY, hw=w/2, hd=d/2;
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(w+2,2,d+2), M.floorWood);
+  floor.position.set(x,y+1,z); floor.receiveShadow=true; world.add(floor);
+  // pareti
+  const wm=M.stone;
+  [[x-hw,z,3,d],[x+hw,z,3,d],[x,z-hd,w,3]].forEach(p=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(p[2],wall,p[3]),wm);
+    m.position.set(p[0],y+wall/2,p[1]); m.castShadow=m.receiveShadow=true; world.add(m); });
+  // parete sud con arco d'ingresso
+  const doorW=16;
+  for(const s of [-1,1]){ const seg=(w-doorW)/2; const m=new THREE.Mesh(new THREE.BoxGeometry(seg,wall,3),wm);
+    m.position.set(x+s*(doorW/2+seg/2), y+wall/2, z+hd); world.add(m); }
+  gableRoof(x,z,w,d,y+wall,18,M.roofTile,'w');
+  // scaffali alti (istanziati) in file
+  const shelfG=new THREE.BoxGeometry(3, wall-6, 10);
+  const shelfM=new THREE.MeshStandardMaterial({color:0x3a2718, roughness:.9});
+  const books=[]; const rows=4;
+  for(let r=0;r<rows;r++){ const px=x-hw+14 + r*(w-28)/(rows-1);
+    for(let c=0;c<3;c++){ const pz=z-hd+12 + c*(d-24)/2; books.push([px,pz]); } }
+  const shelves=new THREE.InstancedMesh(shelfG, shelfM, books.length); shelves.castShadow=true;
+  books.forEach((p,i)=>{ _o.position.set(p[0], y+(wall-6)/2, p[1]); _o.rotation.set(0,0,0); _o.scale.set(1,1,1); _o.updateMatrix(); shelves.setMatrixAt(i,_o.matrix); });
+  world.add(shelves);
+  // libri colorati (piani emissivi sui lati)
+  books.forEach(p=>{ for(const s of [-1,1]){ const bm=new THREE.Mesh(new THREE.PlaneGeometry(9, wall-8),
+      new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(rand(0,1),.4,.35), roughness:.9, side:THREE.DoubleSide}));
+    bm.position.set(p[0]+s*1.6, y+(wall-6)/2, p[1]); bm.rotation.y=Math.PI/2; world.add(bm); } });
+  floatingCandles(x,z,w-20,d-16, y+wall-5, 3,5, 7);
+  addTorch(x-hw+4, y+18, z, true); addTorch(x+hw-4, y+18, z, true);
+  framedPicture(x, y+18, z-hd+2, 0, 22, 14, 'case.jpg');
+  registerCollider(x,z, Math.max(w,d)*0.5, y, y+wall);
+  ZONES.push({name:'Biblioteca', sub:'Tomi e ballatoi', x, z, r:75});
+}
+function classroomMagic(){
+  // aula di incantesimi = lab informatico reinterpretato
+  const x=CS.x+30, z=CS.z-190, w=80, d=56, wall=30, y=BY, hw=w/2, hd=d/2;
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(w+2,2,d+2), M.floor);
+  floor.position.set(x,y+1,z); floor.receiveShadow=true; world.add(floor);
+  const wm=tintStone(0xb5892a);
+  [[x-hw,z,3,d],[x+hw,z,3,d],[x,z-hd,w,3]].forEach(p=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(p[2],wall,p[3]),wm);
+    m.position.set(p[0],y+wall/2,p[1]); m.castShadow=m.receiveShadow=true; world.add(m); });
+  const doorW=16;
+  for(const s of [-1,1]){ const seg=(w-doorW)/2; const m=new THREE.Mesh(new THREE.BoxGeometry(seg,wall,3),wm);
+    m.position.set(x+s*(doorW/2+seg/2), y+wall/2, z+hd); world.add(m); }
+  gableRoof(x,z,w,d,y+wall,16,M.roofTile,'w');
+  // banchi in file (verso la cattedra a nord)
+  const deskM=M.wood;
+  for(let r=0;r<3;r++)for(let c=0;c<4;c++){ const px=x-hw+16 + c*(w-32)/3; const pz=z-hd+22 + r*10;
+    const dsk=new THREE.Mesh(new THREE.BoxGeometry(9,1.4,5), deskM); dsk.position.set(px,y+6,pz); world.add(dsk);
+    // candela/leggio incantato sul banco
+    const cn=new THREE.Mesh(new THREE.CylinderGeometry(.4,.5,2,6), new THREE.MeshStandardMaterial({color:0xefe4c4, emissive:0xffcf87, emissiveIntensity:.5}));
+    cn.position.set(px, y+8, pz); world.add(cn); }
+  // cattedra + lavagna
+  const cat=new THREE.Mesh(new THREE.BoxGeometry(14,2,5), M.woodDk); cat.position.set(x,y+7,z-hd+8); world.add(cat);
+  framedPicture(x, y+16, z-hd+2, 0, 26, 14, 'Campus_info.png');   // il lab in stile steampunk come "lavagna magica"
+  floatingCandles(x,z,w-18,d-16, y+wall-5, 3,4, 6);
+  addTorch(x-hw+4, y+16, z, true); addTorch(x+hw-4, y+16, z, true);
+  registerCollider(x,z, Math.max(w,d)*0.5, y, y+wall);
+  ZONES.push({name:'Aula Magica', sub:'Incantesimi & Runacom', x, z, r:70});
+}
+
+/* =====================================================================
+   SALA D'ACQUA INCANTATA (ex piscina coperta a vetri) — interno
+   ===================================================================== */
+function waterHall(){
+  const {x,z,w,d}=LAY.waterHall; const wall=28, y=BY, hw=w/2, hd=d/2;
+  // vasca d'acqua
+  const basin=new THREE.Mesh(new THREE.BoxGeometry(w-14,3,d-14), M.stoneLt);
+  basin.position.set(x,y+1.5,z); basin.receiveShadow=true; world.add(basin);
+  const wgeoW = w-18, wgeoD = d-18;
+  const wgeo=new THREE.PlaneGeometry(wgeoW,wgeoD, 24,24); wgeo.rotateX(-Math.PI/2);
+  const wmesh=new THREE.Mesh(wgeo, M.waterLt); wmesh.position.set(x,y+3.4,z); world.add(wmesh);
+  window.__poolGeo=wgeo;
+  // corsie (linee)
+  for(let i=1;i<5;i++){ const lane=new THREE.Mesh(new THREE.BoxGeometry(wgeoW, .2, .4), new THREE.MeshStandardMaterial({color:0xdfe8ff, emissive:0x88aaff, emissiveIntensity:.3}));
+    lane.position.set(x, y+3.6, z-wgeoD/2 + i*wgeoD/5); world.add(lane); }
+  // struttura a vetri (padiglione gabbia + falde vetrate)
+  const frameM=M.stoneLt;
+  // pilastri d'angolo
+  for(const sx of [-1,1])for(const sz of [-1,1]){ const p=new THREE.Mesh(new THREE.BoxGeometry(3,wall,3), frameM);
+    p.position.set(x+sx*hw, y+wall/2, z+sz*hd); world.add(p); }
+  // travi orizzontali
+  const beamT=new THREE.Mesh(new THREE.BoxGeometry(w,2,3), frameM);
+  for(const sz of [-1,1]){ const b=beamT.clone(); b.position.set(x,y+wall,z+sz*hd); world.add(b); }
+  const beamL=new THREE.Mesh(new THREE.BoxGeometry(3,2,d), frameM);
+  for(const sx of [-1,1]){ const b=beamL.clone(); b.position.set(x+sx*hw,y+wall,z); world.add(b); }
+  // pareti vetrate (semi-trasparenti) sui 4 lati, con varco d'ingresso a sud
+  for(const sx of [-1,1]){ const g=new THREE.Mesh(new THREE.PlaneGeometry(d,wall), M.glassPane);
+    g.position.set(x+sx*hw, y+wall/2, z); g.rotation.y=Math.PI/2; world.add(g); }
+  const gN=new THREE.Mesh(new THREE.PlaneGeometry(w,wall), M.glassPane); gN.position.set(x,y+wall/2,z-hd); world.add(gN);
+  // sud: due spicchi lasciando un varco centrale
+  for(const s of [-1,1]){ const seg=(w-18)/2; const g=new THREE.Mesh(new THREE.PlaneGeometry(seg,wall), M.glassPane);
+    g.position.set(x+s*(9+seg/2), y+wall/2, z+hd); world.add(g); }
+  // tetto vetrato a falde
+  gableRoof(x,z,w,d,y+wall,16, new THREE.MeshStandardMaterial({color:0x9fc6e8, transparent:true, opacity:.4, emissive:0x6fa8ff, emissiveIntensity:.25, roughness:.2, side:THREE.DoubleSide}), 'd');
+  // luce d'acqua
+  const pl=new THREE.PointLight(0x6fd0ff, 1.6, 160, 2); pl.position.set(x, y+16, z); world.add(pl); torchLights.push({light:pl,base:1.6,spr:null});
+  // quadro magico
+  framedPicture(x, y+16, z-hd+1.6, 0, 20, 12, 'campo_volley.jpeg');
+  registerCollider(x,z, Math.max(w,d)*0.5, y, y+wall*0.4); // basso: si puo' volare dentro dall'alto/varco
+  ZONES.push({name:'Sala d’Acqua', sub:'Piscina incantata', x, z, r:90});
+}
+
+/* =====================================================================
+   CAMPO DA QUIDDITCH (ex campo da calcio)
+   ===================================================================== */
+function quidditch(){
+  const {x,z}=LAY.quidditch; const rw=70, rd=110;
+  // prato ovale
+  const g=new THREE.Mesh(new THREE.CircleGeometry(1,48), M.grassPitch);
+  g.scale.set(rw, rd, 1); g.rotation.x=-Math.PI/2; g.position.set(x, BY+0.6, z); world.add(g);
+  // anelli (3 per lato)
+  function hoop(px,pz,hgt){ const pole=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.4,hgt,10), M.woodDk);
+    pole.position.set(px,BY+hgt/2,pz); world.add(pole);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(6,1,8,20), M.gold); ring.position.set(px,BY+hgt+6,pz); world.add(ring); }
+  [-1,1].forEach(s=>{ const pz=z+s*(rd-6); [ -16,0,16].forEach((off,i)=>{ hoop(x+off, pz, 44+ (i===1?14:0)); }); });
+  // tribune (gradinate) laterali
+  for(const s of [-1,1]){ for(let k=0;k<4;k++){ const st=new THREE.Mesh(new THREE.BoxGeometry(rw*1.6, 3, 6), M.woodDk);
+    st.position.set(x, BY+3+k*3, z+s*(rw+10+k*4)); world.add(st); } }
+  // torri-bandiera casate agli angoli
+  const hc=[0x1c3a6e,0x1d5c39,0xb5892a,0x7a1f2b];
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach((c,i)=>{ const px=x+c[0]*(rw+6), pz=z+c[1]*(rd*0.5);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.8,1,50,8), M.woodDk); pole.position.set(px,BY+25,pz); world.add(pole);
+    const fl=new THREE.Mesh(new THREE.PlaneGeometry(14,9), banner(hc[i])); fl.position.set(px+7,BY+44,pz); world.add(fl); });
+  ZONES.push({name:'Campo da Quidditch', sub:'Ex campo da calcio', x, z, r:150});
+}
+
+/* =====================================================================
+   CORTILI SPORTIVI (ex tennis/basket) con quadri appesi ai portali
+   ===================================================================== */
+function sportCourts(){
+  const {x,z}=LAY.courts;
+  const cols=[['Campus_basket.png',0xb2622f,-24],['campo_calcio.jpeg',0x2f6a3a,0],['qdv_arena.jpeg',0x123E90,24]];
+  cols.forEach((c,i)=>{ const px=x + (i-1)*46;
+    const slab=new THREE.Mesh(new THREE.BoxGeometry(40,1,40), new THREE.MeshStandardMaterial({color:c[1], roughness:.9}));
+    slab.position.set(px, BY+0.6, z); slab.receiveShadow=true; world.add(slab);
+    // portale con quadro
+    for(const s of [-1,1]){ const pole=new THREE.Mesh(new THREE.CylinderGeometry(1,1.2,26,8), M.stoneDk);
+      pole.position.set(px+s*16, BY+13, z-18); world.add(pole); }
+    const beam=new THREE.Mesh(new THREE.BoxGeometry(36,2,3), M.stoneLt); beam.position.set(px,BY+25,z-18); world.add(beam);
+    framedPicture(px, BY+15, z-16.4, 0, 22, 13, c[0]);
+  });
+  // struttura lignea ad arco gotico sopra il campo da basket (rif. Campus_basket)
+  const bpx=x-46;
+  const legLen=Math.hypot(17,27), legA=Math.atan2(17,27);
+  for(const oz of [-17,-8.5,0,8.5,17]){
+    for(const s of [-1,1]){ const leg=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.4,legLen,8), M.wood);
+      leg.position.set(bpx+s*8.5, BY+13.5, z+oz); leg.rotation.z=s*legA; leg.castShadow=true; world.add(leg); }
+    const tie=new THREE.Mesh(new THREE.BoxGeometry(30,.9,.9), M.woodDk); tie.position.set(bpx, BY+17, z+oz); world.add(tie);
+  }
+  const ridge=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.6,42), M.woodDk); ridge.position.set(bpx, BY+27, z); world.add(ridge);
+  for(const ox of [-13,-6.5,6.5,13]){ const purlin=new THREE.Mesh(new THREE.BoxGeometry(1,1,42), M.wood);
+    purlin.position.set(bpx+ox, BY+13.5+ (27-13.5)*(1-Math.abs(ox)/17), z); world.add(purlin); }
+  // tabellone da basket
+  const board=new THREE.Mesh(new THREE.BoxGeometry(6,4,.4), M.stoneLt); board.position.set(bpx, BY+15, z+17.5); world.add(board);
+  const hoop=new THREE.Mesh(new THREE.TorusGeometry(1.6,.3,8,16), M.gold); hoop.rotation.x=Math.PI/2; hoop.position.set(bpx, BY+12.5, z+15.5); world.add(hoop);
+  ZONES.push({name:'Cortili Sportivi', sub:'Arene di allenamento', x, z, r:90});
+}
+
+/* =====================================================================
+   PIAZZALE DELLE CARROZZE (ex parcheggio + rotatoria)
+   ===================================================================== */
+function plaza(){
+  const {x,z}=LAY.plaza;
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(220,1,150), new THREE.MeshStandardMaterial({color:0x2b2a26, roughness:.95}));
+  slab.position.set(x, BY+0.5, z); slab.receiveShadow=true; world.add(slab);
+  // rotatoria: anello + albero centrale (grande quercia)
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(26,4,10,32), new THREE.MeshStandardMaterial({color:0x3a3934, roughness:.95}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(x+70, BY+0.7, z+40); world.add(ring);
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(2.2,3.2,20,10), new THREE.MeshStandardMaterial({color:0x3a2a1c, roughness:.95}));
+  trunk.position.set(x+70, BY+10, z+40); world.add(trunk);
+  const crown=new THREE.Mesh(new THREE.SphereGeometry(16,12,10), new THREE.MeshStandardMaterial({color:0x25401f, roughness:.9}));
+  crown.position.set(x+70, BY+26, z+40); crown.castShadow=true; world.add(crown);
+  // lampioni-torcia lungo il vialetto
+  for(let i=-2;i<=2;i++){ addTorch(x-80, BY+12, z + i*24, i===0, 0xffb060, 45, 1.4); }
+  // stele d'ingresso con stemma dell'accademia
+  const stele=new THREE.Mesh(new THREE.BoxGeometry(10,22,3), M.stoneLt); stele.position.set(x-95,BY+11,z); world.add(stele);
+  framedPicture(x-95, BY+13, z+1.7, 0, 7, 10, 'CaseSF.jpg');
+  ZONES.push({name:'Piazzale delle Carrozze', sub:'Ingresso al castello', x, z, r:120});
+}
+
+/* =====================================================================
+   PONTE dal piazzale al portale del castello + imbarcadero sul lago
+   ===================================================================== */
+function bridges(){
+  // ponte piazzale -> ala sud del castello
+  const ax=LAY.plaza.x, az=LAY.plaza.z-75, bx=CS.x, bz=CS.z+CLO.od/2+8;
+  const dx=bx-ax, dz=bz-az; const len=Math.hypot(dx,dz), ang=Math.atan2(dz,dx);
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(len,3,14), M.stoneDk);
+  deck.position.set((ax+bx)/2, BY-1, (az+bz)/2); deck.rotation.y=-ang; deck.receiveShadow=true; world.add(deck);
+  for(const s of [-1,1]){ const par=new THREE.Mesh(new THREE.BoxGeometry(len,4,1.6), M.stone);
+    par.position.set((ax+bx)/2 + Math.cos(ang+Math.PI/2)*7*s, BY+2, (az+bz)/2 + Math.sin(ang+Math.PI/2)*7*s);
+    par.rotation.y=-ang; world.add(par); }
+  // scivoli del Lago Nero (ex acquascivoli): tubi a spirale
+  const curvePts=[];
+  for(let i=0;i<=60;i++){ const t=i/60; const a=t*Math.PI*2.4; const r=lerp(26,6,t);
+    curvePts.push(new THREE.Vector3(LAKE_CX+34+Math.cos(a)*r, LAKE_Y+lerp(46,4,t), LAKE_CZ+90+Math.sin(a)*r)); }
+  const curve=new THREE.CatmullRomCurve3(curvePts);
+  const tube=new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 3.2, 10, false),
+    new THREE.MeshStandardMaterial({color:0x2f6f9e, roughness:.3, metalness:.3, emissive:0x184a66, emissiveIntensity:.25}));
+  world.add(tube);
+  // imbarcadero (boathouse) sul bordo del lago
+  const bh=new THREE.Mesh(new THREE.BoxGeometry(22,14,26), M.stoneDk);
+  bh.position.set(LAKE_CX+LAKE_R-30, LAKE_Y+7, LAKE_CZ+40); world.add(bh);
+  gableRoof(LAKE_CX+LAKE_R-30, LAKE_CZ+40, 22, 26, LAKE_Y+14, 8, M.roofTile, 'w');
+  addTorch(LAKE_CX+LAKE_R-30, LAKE_Y+16, LAKE_CZ+52, true, 0xffb060, 60, 1.6);
+  ZONES.push({name:'Lago Nero', sub:'Imbarcadero e cascata', x:LAKE_CX, z:LAKE_CZ, r:180});
+}
+
+/* =====================================================================
+   COSTRUZIONE INTERNI/AREE (i builder aggiungono voci a ZONES)
+   ===================================================================== */
+/* SERRA vetrata (rif. Campus_Hogwarts, in alto a sinistra vicino alle piscine) */
+function greenhouse(){
+  const x=-300, z=-320, w=130, d=58, h=32, hw=w/2, hd=d/2;
+  const base=new THREE.Mesh(new THREE.BoxGeometry(w+4,5,d+4), M.stoneDk); base.position.set(x,BY+2.5,z); base.receiveShadow=true; world.add(base);
+  const glassM=new THREE.MeshStandardMaterial({color:0x9fd0c0, emissive:0x6fd0a0, emissiveIntensity:.28, roughness:.15, metalness:.2, transparent:true, opacity:.4, side:THREE.DoubleSide});
+  for(const sx of [-1,1]){ const g=new THREE.Mesh(new THREE.PlaneGeometry(d,h), glassM); g.position.set(x+sx*hw,BY+5+h/2,z); g.rotation.y=Math.PI/2; world.add(g); }
+  for(const sz of [-1,1]){ const g=new THREE.Mesh(new THREE.PlaneGeometry(w,h), glassM); g.position.set(x,BY+5+h/2,z+sz*hd); world.add(g); }
+  // montanti in pietra
+  for(let i=0;i<=7;i++){ const px=x-hw+i*w/7; for(const sz of [-1,1]){ const p=new THREE.Mesh(new THREE.BoxGeometry(1.6,h,1.6),M.stoneLt); p.position.set(px,BY+5+h/2,z+sz*hd); world.add(p); } }
+  for(const sx of [-1,1]){ const p=new THREE.Mesh(new THREE.BoxGeometry(1.6,h,d),M.stoneLt); p.scale.z=0.02; p.position.set(x+sx*hw,BY+5+h/2,z); world.add(p); }
+  // tetto vetrato a falde
+  gableRoof(x,z,w+4,d+4,BY+5+h,16, new THREE.MeshStandardMaterial({color:0x9fd0c0, transparent:true, opacity:.42, emissive:0x6fd08a, emissiveIntensity:.2, roughness:.2, side:THREE.DoubleSide}), 'w');
+  // piante dentro
+  for(let i=0;i<12;i++){ const px=x-hw+12+(i%6)*(w-24)/5, pz=z-hd+16+Math.floor(i/6)*(d-32);
+    const pot=new THREE.Mesh(new THREE.CylinderGeometry(2,2.6,3,8), M.woodDk); pot.position.set(px,BY+6.5,pz); world.add(pot);
+    const pl=new THREE.Mesh(new THREE.ConeGeometry(3.2,8,7), new THREE.MeshStandardMaterial({color:0x2f7a3a, roughness:.9})); pl.position.set(px,BY+12,pz); pl.castShadow=true; world.add(pl); }
+  const gl=new THREE.PointLight(0x8fe0a0,1.1,150,2); gl.position.set(x,BY+22,z); world.add(gl); torchLights.push({light:gl,base:1.1,spr:null});
+  registerCollider(x,z,Math.max(w,d)*0.5,BY,BY+8);
+  ZONES.push({name:'La Serra', sub:'Erbologia incantata', x, z, r:90});
+}
+
+HOUSES.forEach(commonRoom);
+library();
+classroomMagic();
+waterHall();
+quidditch();
+sportCourts();
+greenhouse();
+plaza();
+bridges();
+
+/* torce esterne sul perimetro del castello */
+(function outerTorches(){
+  const {x,z,ow,od}=CLO; const hw=ow/2, hd=od/2;
+  for(let i=0;i<6;i++){ const t=i/5;
+    addTorch(x-hw + t*ow, BY+wallTop(), z-hd, i%2===0, 0xffa24a, 50, 1.8);
+    addTorch(x-hw + t*ow, BY+wallTop(), z+hd, i%2===0, 0xffa24a, 50, 1.8);
+  }
+})();
+function wallTop(){ return CLO.wall+4; }
+
+/* =====================================================================
+   COSTRUZIONE INSTANCED MESHES (merloni, finestre)
+   ===================================================================== */
+(function buildInstances(){
+  const merlonGeo=new THREE.BoxGeometry(2.4, 3.2, 2.4);
+  const merlons=new THREE.InstancedMesh(merlonGeo, M.stone, merlonMx.length); merlons.castShadow=true;
+  merlonMx.forEach((m,i)=>merlons.setMatrixAt(i,m)); world.add(merlons);
+  const winGeo=new THREE.PlaneGeometry(1,1);
+  const wins=new THREE.InstancedMesh(winGeo, M.glass, winMx.length);
+  winMx.forEach((m,i)=>wins.setMatrixAt(i,m)); world.add(wins);
+  const winsC=new THREE.InstancedMesh(winGeo, M.glassCool, winCoolMx.length);
+  winCoolMx.forEach((m,i)=>winsC.setMatrixAt(i,m)); world.add(winsC);
+})();
+
+/* =====================================================================
+   CIELO: dome shader, stelle, luna
+   ===================================================================== */
+(function sky(){
+  const domeGeo=new THREE.SphereGeometry(3400, 32, 20);
+  const domeMat=new THREE.ShaderMaterial({ side:THREE.BackSide, depthWrite:false,
+    uniforms:{ top:{value:new THREE.Color(0x060b1c)}, bot:{value:new THREE.Color(0x223458)} },
+    vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`varying vec3 vP; uniform vec3 top; uniform vec3 bot;
+      void main(){ float h=normalize(vP).y*0.5+0.5; gl_FragColor=vec4(mix(bot,top,pow(h,0.8)),1.0);}`
+  });
+  scene.add(new THREE.Mesh(domeGeo, domeMat));
+  const sN=1500, sp=[]; for(let i=0;i<sN;i++){
+    const u=Math.random(), v=Math.random(); const th=u*TAU, ph=Math.acos(2*v-1); const r=2700;
+    sp.push(r*Math.sin(ph)*Math.cos(th), Math.abs(r*Math.cos(ph))*0.9+80, r*Math.sin(ph)*Math.sin(th)); }
+  const sg=new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp,3));
+  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({map:TEX.star, size:9, transparent:true,
+    color:0xdfe8ff, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true})));
+  const moonPos=new THREE.Vector3(-1100, 900, -1500);
+  const moon=new THREE.Mesh(new THREE.SphereGeometry(80,24,24), new THREE.MeshBasicMaterial({color:0xf3f0e2}));
+  moon.position.copy(moonPos); scene.add(moon);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.moon, color:0xdfe8ff, blending:THREE.AdditiveBlending, depthWrite:false, transparent:true}));
+  halo.position.copy(moonPos); halo.scale.set(460,460,1); scene.add(halo);
+  window.__moonPos=moonPos;
+})();
+
+/* =====================================================================
+   LUCI
+   ===================================================================== */
+const hemi=new THREE.HemisphereLight(0x2a4570, 0x0d1220, 0.6); scene.add(hemi);
+const moonLight=new THREE.DirectionalLight(0x9fb4e6, 0.9);
+moonLight.position.copy(window.__moonPos).multiplyScalar(0.4);
+moonLight.castShadow=true; moonLight.shadow.mapSize.set(2048,2048);
+const shc=moonLight.shadow.camera; shc.near=50; shc.far=1800; shc.left=shc.bottom=-420; shc.right=shc.top=420;
+moonLight.target.position.set(CS.x, BY+40, CS.z); scene.add(moonLight); scene.add(moonLight.target);
+const fill=new THREE.DirectionalLight(0x3a4a6a, 0.28); fill.position.set(500,300,-200); scene.add(fill);
+
+/* nebbia sul lago */
+(function mist(){
+  const n=100, p=[]; for(let i=0;i<n;i++){ const a=rand(0,TAU), r=rand(0,LAKE_R);
+    p.push(LAKE_CX+Math.cos(a)*r, LAKE_Y+rand(3,16), LAKE_CZ+Math.sin(a)*r); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p,3));
+  const pts=new THREE.Points(g, new THREE.PointsMaterial({map:TEX.mist, size:95, transparent:true,
+    color:0xbfd0e6, opacity:.5, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true}));
+  world.add(pts); window.__mist=pts;
+})();
+
+/* =====================================================================
+   SCOPA (prima persona)
+   ===================================================================== */
+const broom=new THREE.Group();
+(function makeBroom(){
+  const handle=new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,7,8), M.wood);
+  handle.rotation.z=Math.PI/2; handle.rotation.y=0.05; broom.add(handle);
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(.28,8,8), M.gold); tip.position.set(3.6,0,0); broom.add(tip);
+  const bristleM=new THREE.MeshStandardMaterial({color:0x8a6a3a, roughness:.95});
+  for(let i=0;i<14;i++){ const b=new THREE.Mesh(new THREE.CylinderGeometry(.05,.02,2.6,4), bristleM);
+    b.position.set(-4, rand(-.4,.4), rand(-.4,.4)); b.rotation.z=Math.PI/2 + rand(-.25,.25); b.rotation.y=rand(-.25,.25); broom.add(b); }
+  const band=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.5,8), M.gold);
+  band.rotation.z=Math.PI/2; band.position.set(-2.9,0,0); broom.add(band);
+  broom.position.set(0.9, -1.3, -2.2); broom.rotation.set(-0.06, 0.02, 0.0);
+  camera.add(broom); scene.add(camera);
+})();
+let broomVisible=true;
+
+/* =====================================================================
+   CONTROLLI DI VOLO
+   ===================================================================== */
+const state={ yaw:0, pitch:0, roll:0, speed:42, vel:new THREE.Vector3(), keys:{}, locked:false, solid:false };
+const SENS=0.0016;
+const CRUISE=42, VMAX=100;   // velocita' di crociera automatica e massima
+const MOVE_CODES={ArrowUp:1,ArrowDown:1,ArrowLeft:1,ArrowRight:1,Space:1};
+document.addEventListener('keydown', e=>{
+  state.keys[e.code]=true;
+  if(MOVE_CODES[e.code]) e.preventDefault();
+  if(e.code==='KeyF'){ broomVisible=!broomVisible; broom.visible=broomVisible; }
+  if(e.code==='KeyG'){ toggleTP(); }
+});
+document.addEventListener('keyup', e=>{ state.keys[e.code]=false; });
+const canvas=renderer.domElement;
+const lockNote=document.getElementById('lockNote');
+canvas.addEventListener('click', ()=>{ if(!state.locked) canvas.requestPointerLock(); });
+document.addEventListener('pointerlockchange', ()=>{
+  state.locked = (document.pointerLockElement===canvas);
+  lockNote.style.display = state.locked? 'none':'block';
+});
+document.addEventListener('mousemove', e=>{
+  if(!state.locked) return;
+  state.yaw -= e.movementX*SENS; state.pitch -= e.movementY*SENS;
+  state.pitch = clamp(state.pitch, -1.35, 1.35);
+});
+
+/* =====================================================================
+   TELETRASPORTO (menu G)
+   ===================================================================== */
+const TP_POINTS=[
+  {n:'Piazzale', p:[LAY.plaza.x, BY+40, LAY.plaza.z+40], y:0, pt:-0.15},
+  {n:'Sala Grande', p:[GH.x, BY+18, GH.z+GH.d/2+20], y:Math.PI, pt:0},
+  {n:'Aquilablu', p:[HOUSES[0].pos[0], BY+14, HOUSES[0].pos[1]+40], y:Math.PI, pt:0},
+  {n:'Quercia', p:[HOUSES[1].pos[0], BY+14, HOUSES[1].pos[1]+40], y:Math.PI, pt:0},
+  {n:'Cerogiallo', p:[HOUSES[2].pos[0], BY+14, HOUSES[2].pos[1]+40], y:Math.PI, pt:0},
+  {n:'Tassorosso', p:[HOUSES[3].pos[0], BY+14, HOUSES[3].pos[1]+40], y:Math.PI, pt:0},
+  {n:'Biblioteca', p:[CS.x-30, BY+16, CS.z-190+40], y:Math.PI, pt:0},
+  {n:'Aula Magica', p:[CS.x+30, BY+16, CS.z-190+40], y:Math.PI, pt:0},
+  {n:'Sala d’Acqua', p:[LAY.waterHall.x, BY+40, LAY.waterHall.z], y:0, pt:-0.5},
+  {n:'Quidditch', p:[LAY.quidditch.x, BY+60, LAY.quidditch.z+150], y:Math.PI, pt:-0.2},
+  {n:'Lago Nero', p:[LAKE_CX, BY+50, LAKE_CZ+120], y:Math.PI, pt:-0.25},
+  {n:'Torre Astronomia', p:[LAY.astro.x+40, BY+180, LAY.astro.z+40], y:-2.4, pt:-0.3},
+  {n:'Volo panoramico', p:[CS.x, 420, CS.z+520], y:Math.PI, pt:-0.5},
+];
+const tpEl=document.getElementById('tp');
+(function buildTP(){ TP_POINTS.forEach((t,i)=>{ const b=document.createElement('div'); b.className='t'; b.textContent=t.n;
+  b.addEventListener('click', ()=>{ goTo(i); }); tpEl.appendChild(b); }); })();
+function toggleTP(){ tpEl.classList.toggle('show'); }
+function goTo(i){ const t=TP_POINTS[i]; camera.position.set(t.p[0],t.p[1],t.p[2]);
+  state.yaw=t.y; state.pitch=t.pt||0; state.vel.set(0,0,0); state.speed=0; tpEl.classList.remove('show');
+  if(!state.locked) canvas.requestPointerLock(); }
+
+/* =====================================================================
+   HUD refs
+   ===================================================================== */
+const gSpeed=document.getElementById('gSpeed'), gAlt=document.getElementById('gAlt');
+const compassStrip=document.getElementById('compassStrip');
+const zoneEl=document.getElementById('zone'), zoneName=document.getElementById('zoneName'), zoneSub=document.getElementById('zoneSub');
+(function initCompass(){
+  const marks=['N','','NE','','E','','SE','','S','','SO','','O','','NO',''];
+  let html=''; for(let k=0;k<3;k++){ marks.forEach(m=> html+=`<span style="display:inline-block;width:27.5px;text-align:center">${m||'·'}</span>`); }
+  compassStrip.innerHTML=html;
+})();
+let curZone=null;
+function updateZone(){
+  let best=null, bd=1e9;
+  for(const zn of ZONES){ const d=Math.hypot(camera.position.x-zn.x, camera.position.z-zn.z);
+    if(d<zn.r && d<bd){ bd=d; best=zn; } }
+  if(best!==curZone){ curZone=best;
+    if(best){ zoneName.textContent=best.name; zoneSub.textContent=best.sub; zoneEl.classList.add('show'); }
+    else zoneEl.classList.remove('show');
+  }
+}
+
+/* =====================================================================
+   LOOP
+   ===================================================================== */
+const clock=new THREE.Clock();
+let fpsAcc=0, fpsN=0; const fpsEl=document.getElementById('fps');
+const fwd=new THREE.Vector3(), right=new THREE.Vector3(), up=new THREE.Vector3(0,1,0);
+const prev=new THREE.Vector3();
+let zoneTimer=0;
+function frame(){
+  requestAnimationFrame(frame);
+  const dt=Math.min(clock.getDelta(), 0.05); const t=clock.elapsedTime;
+  // sterzata con frecce Sin/Des (o A/D): ruota la scopa
+  const turn=(state.keys.ArrowLeft||state.keys.KeyA?1:0)-(state.keys.ArrowRight||state.keys.KeyD?1:0);
+  state.yaw += turn*1.5*dt;
+  // inclinazione (banking) in curva
+  state.roll = lerp(state.roll, turn*0.26, 1-Math.pow(0.002,dt));
+  camera.rotation.y=state.yaw; camera.rotation.x=state.pitch; camera.rotation.z=state.roll;
+  camera.getWorldDirection(fwd);
+  // avanti/indietro con frecce Su/Giù (o W/S): si vola verso dove si guarda
+  // auto-crociera: la scopa vola da sola verso dove si guarda; Su accelera, Giu' rallenta/ferma
+  const throttle=(state.keys.ArrowUp||state.keys.KeyW?1:0)-(state.keys.ArrowDown||state.keys.KeyS?1:0);
+  state.speed = clamp(state.speed + throttle*55*dt, 0, VMAX);
+  prev.copy(camera.position);
+  state.vel.copy(fwd).multiplyScalar(state.speed);
+  camera.position.addScaledVector(state.vel, dt);
+  const gh=heightAt(camera.position.x, camera.position.z)+3.5;
+  if(camera.position.y<gh){ camera.position.y=gh; if(state.vel.y<0) state.vel.y=0; }
+  if(camera.position.y>1800) camera.position.y=1800;
+  if(state.solid){ for(const c of colliders){ const dx=camera.position.x-c.x, dz=camera.position.z-c.z; const dd=Math.hypot(dx,dz);
+    if(dd < c.r+3 && camera.position.y>c.y0 && camera.position.y<c.y1){ camera.position.copy(prev); state.vel.multiplyScalar(0.2); break; } } }
+  for(let i=0;i<torchLights.length;i++){ const T=torchLights[i];
+    const fl=0.75+0.25*Math.sin(t*13+i*2.1)+0.12*Math.sin(t*29+i);
+    if(T.light) T.light.intensity=T.base*fl; if(T.spr) T.spr.scale.setScalar(9*(0.9+0.15*fl)); }
+  if(broomVisible){ broom.position.y=-1.3+Math.sin(t*6)*0.05; broom.rotation.z=state.roll*0.4; }
+  // increspatura lago + piscina
+  const lp=lakeGeo.attributes.position;
+  for(let i=0;i<lp.count;i++){ const x=lp.getX(i), z=lp.getZ(i); lp.setY(i, Math.sin((x+t*30)*0.04)*0.6 + Math.cos((z+t*22)*0.05)*0.5); }
+  lp.needsUpdate=true;
+  if(window.__poolGeo){ const pp=window.__poolGeo.attributes.position;
+    for(let i=0;i<pp.count;i++){ const x=pp.getX(i), z=pp.getZ(i); pp.setY(i, Math.sin((x+t*24)*0.12)*0.4 + Math.cos((z+t*18)*0.14)*0.3); }
+    pp.needsUpdate=true; }
+  if(window.__mist){ window.__mist.rotation.y += dt*0.02; }
+  moonLight.position.set(camera.position.x-500, camera.position.y+600, camera.position.z-700);
+  moonLight.target.position.set(camera.position.x, camera.position.y-40, camera.position.z);
+  const spd=state.vel.length();
+  gSpeed.innerHTML=Math.round(spd)+'<small> u/s</small>';
+  gAlt.innerHTML=Math.round(camera.position.y-BY)+'<small> u</small>';
+  const deg=((-state.yaw*180/Math.PI)%360+360)%360;
+  compassStrip.style.left=(-deg/22.5*27.5 - 27.5*8 + 110)+'px';
+  zoneTimer+=dt; if(zoneTimer>0.25){ zoneTimer=0; updateZone(); }
+  fpsAcc+=dt; fpsN++; if(fpsAcc>=0.5){ fpsEl.textContent=Math.round(fpsN/fpsAcc)+' fps'; fpsAcc=0; fpsN=0; }
+  renderer.render(scene, camera);
+}
+
+/* =====================================================================
+   RESIZE + GATE DI AVVIO
+   ===================================================================== */
+addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+const enterBtn=document.getElementById('enter'), loadfill=document.getElementById('loadfill'), gate=document.getElementById('gate');
+let prog=0;
+const li=setInterval(()=>{ prog=Math.min(100, prog+rand(12,26)); loadfill.style.width=prog+'%';
+  if(prog>=100){ clearInterval(li); enterBtn.disabled=false; enterBtn.textContent='Prendi la scopa'; } }, 150);
+enterBtn.addEventListener('click', ()=>{ if(enterBtn.disabled) return;
+  gate.classList.add('hidden'); setTimeout(()=>{ gate.style.display='none'; }, 650); canvas.requestPointerLock(); });
+frame();
 </script>
 </body>
 </html>
