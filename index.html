@@ -104,6 +104,7 @@
   body.castle .barra{background:#e7dab9}
   body.castle .barra > span{background:linear-gradient(90deg,#8a6a2f,#d4a017)}
   body.castle .btn-reset,body.castle .btn-musica{background:#fbf7ec}
+  body.castle .btn-musica.attiva{color:var(--blu);border-color:var(--blu)}
   body.castle .sidebar .pie strong{color:#5b3a17}
   body.castle .mappa{box-shadow:0 12px 34px rgba(74,48,16,.4)}
   .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.5}
@@ -265,18 +266,22 @@
   #escApri:hover{background:#5b3a17}
   #escApri:disabled{background:#a9c37a;cursor:default}
   .esc-feedback{min-height:20px;margin-top:10px;font-family:"Lexend",sans-serif;font-weight:600;font-size:.95rem}
-  .esc-body{display:flex;gap:18px;align-items:flex-start}
-  .esc-sx{flex:1 1 auto;min-width:0}
-  /* La porta dell'escape room: chiusa col buco della serratura, si apre girando sul cardine */
-  .esc-porta{flex:0 0 128px;height:178px;position:relative;perspective:750px}
-  .porta-vano,.porta-anta{position:absolute;inset:0;border-radius:62px 62px 10px 10px;border:2px solid #5b3a17}
+  /* La porta dell'escape room: in sovraimpressione sull'immagine, in alto a destra.
+     Chiusa mostra il buco della serratura; si apre girando sul cardine. */
+  .esc-porta{display:none;position:absolute;top:12px;right:12px;width:84px;height:116px;z-index:6;perspective:600px}
+  body.castle .esc-porta{display:block}
+  body.castle .esc-porta:not(.aperta){animation:portaPulsa 1.8s ease-in-out infinite}
+  @keyframes portaPulsa{0%,100%{box-shadow:0 0 0 0 rgba(212,160,23,0)}50%{box-shadow:0 0 0 6px rgba(212,160,23,.32)}}
+  @media (prefers-reduced-motion:reduce){ body.castle .esc-porta:not(.aperta){animation:none} }
+  .porta-vano,.porta-anta{position:absolute;inset:0;border-radius:45px 45px 7px 7px;border:2px solid #5b3a17}
   .porta-vano{
     background:radial-gradient(circle at 50% 42%, #fff4d2, #ecd188 55%, #cba450);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-    color:#5b3a17;font-family:"Lexend",sans-serif;font-weight:700;font-size:1rem;
+    color:#5b3a17;font-family:"Lexend",sans-serif;font-weight:700;font-size:.85rem;
     box-shadow:inset 0 0 22px rgba(120,80,20,.35);
   }
-  .porta-vano svg{width:32px;height:32px}
+  .porta-vano svg{width:26px;height:26px}
+  .porta-buco{right:12px}
   .porta-anta{
     background:
       repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, transparent 2px 30px),
@@ -291,8 +296,8 @@
   @media (prefers-reduced-motion:reduce){ .porta-anta{transition:none} }
 
   /* In Castle: foto orizzontale grande sopra, solo l'enigma sotto (niente trascinamento/campi) */
-  body.castle .modale-body{flex-direction:column;gap:14px}
-  body.castle .col-foto{flex:0 0 auto;width:100%;height:clamp(180px,32vh,300px)}
+  body.castle .modale-body{flex-direction:column;gap:10px}
+  body.castle .col-foto{flex:0 0 auto;width:100%;height:clamp(240px,50vh,430px)}
   body.castle #attivitaWrap{display:none}
   body.castle .escape{display:block}
   body.castle .campo{display:none}
@@ -333,8 +338,6 @@
     .modale{width:min(560px,96vw)}
     .modale-body{flex-direction:column;gap:14px}
     .col-foto{flex:0 0 auto;height:190px}
-    .esc-body{flex-direction:column}
-    .esc-porta{align-self:center}
   }
   @media (max-width:720px){
     body{flex-direction:column}
@@ -448,6 +451,13 @@
           <img id="fotoLuogo" src="" alt="" />
           <figcaption>Guarda la foto e riconosci il luogo</figcaption>
         </figure>
+        <div class="esc-porta" id="escPorta" aria-hidden="true">
+          <div class="porta-vano">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l7 7M18 15l2 2-2 2M15 18l2 2"/></svg>
+            <span>Aperta!</span>
+          </div>
+          <div class="porta-anta"><span class="porta-buco"></span></div>
+        </div>
       </div>
       <div class="col-form">
       <div class="attivita" id="attivitaWrap">
@@ -462,23 +472,12 @@
           <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></svg></span>
           Risolvi l'enigma per aprire la porta
         </p>
-        <div class="esc-body">
-          <div class="esc-sx">
-            <p class="esc-testo" id="escTesto"></p>
-            <div class="esc-serratura">
-              <input type="text" id="escInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Scrivi la parola-chiave..." />
-              <button type="button" id="escApri">Apri</button>
-            </div>
-            <div class="esc-feedback" id="escFeedback" role="status" aria-live="polite"></div>
-          </div>
-          <div class="esc-porta" id="escPorta" aria-hidden="true">
-            <div class="porta-vano">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l7 7M18 15l2 2-2 2M15 18l2 2"/></svg>
-              <span>Aperta!</span>
-            </div>
-            <div class="porta-anta"><span class="porta-buco"></span></div>
-          </div>
+        <p class="esc-testo" id="escTesto"></p>
+        <div class="esc-serratura">
+          <input type="text" id="escInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Scrivi la parola-chiave..." />
+          <button type="button" id="escApri">Apri</button>
         </div>
+        <div class="esc-feedback" id="escFeedback" role="status" aria-live="polite"></div>
       </div>
       <div class="campo">
         <label for="fNome">Come si chiama questo luogo?
