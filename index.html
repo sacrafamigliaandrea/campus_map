@@ -78,6 +78,34 @@
   .btn-musica .ic-on{display:none}
   .btn-musica.attiva .ic-off{display:none}
   .btn-musica.attiva .ic-on{display:inline-flex}
+  .btn-castle{
+    align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
+    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--blu);
+    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:600;
+    padding:9px 16px;border-radius:99px;cursor:pointer;
+  }
+  .btn-castle:hover{border-color:var(--oro)}
+  .btn-castle svg{width:18px;height:18px;display:block}
+  .btn-castle.attiva{background:#6b4f1d;color:#fff;border-color:#6b4f1d}
+  .link-3d{display:none}
+  body.castle .link-3d{
+    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+    text-decoration:none;background:#6b4f1d;color:#fff;border:1.5px solid #6b4f1d;
+    font-family:"Lexend",sans-serif;font-weight:600;font-size:.9rem;
+    padding:9px 16px;border-radius:99px;
+  }
+  body.castle .link-3d:hover{background:#5b3a17}
+  .link-3d svg{width:18px;height:18px;display:block}
+  .link-3d span:nth-child(3) svg{width:15px;height:15px;opacity:.85}
+  /* Tema "castello" (eccezione narrativa: Hogwarts) applicato al toggle */
+  body.castle .sidebar{background:#f5edd9;border-right-color:#8a6a2f}
+  body.castle .sidebar h1{color:#5b3a17}
+  body.castle .progress .conteggio{color:#5b3a17}
+  body.castle .barra{background:#e7dab9}
+  body.castle .barra > span{background:linear-gradient(90deg,#8a6a2f,#d4a017)}
+  body.castle .btn-reset,body.castle .btn-musica{background:#fbf7ec}
+  body.castle .sidebar .pie strong{color:#5b3a17}
+  body.castle .mappa{box-shadow:0 12px 34px rgba(74,48,16,.4)}
   .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.5}
   .sidebar .pie strong{color:var(--blu);font-family:"Lexend",sans-serif;font-weight:600;font-size:.85rem}
   .sidebar .pie .copy{opacity:.75}
@@ -272,7 +300,7 @@
 <aside class="sidebar">
   <img class="logo" src="logo.png" alt="Logo Scuola Sacra Famiglia" />
   <div class="titolo-wrap">
-    <h1>Campus Map</h1>
+    <h1 id="titoloApp">Campus Map</h1>
     <p class="sub">Scopri, dai un nome e racconta ogni angolo della scuola</p>
   </div>
   <div class="progress">
@@ -280,6 +308,21 @@
     <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
   </div>
   <button class="btn-reset" id="btnReset" type="button">Riparti</button>
+  <button class="btn-castle" id="btnCastle" type="button" aria-pressed="false" aria-label="Trasfigura il campus in castello">
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V6h2v3h2v-3h2v3h2v-3h2v3h2v-3h2v3"/><path d="M4 9v12M20 9v12M3 21h18"/><path d="M10 21v-5h4v5"/></svg>
+    </span>
+    <span class="lbl">Campus Castle</span>
+  </button>
+  <a class="link-3d" id="link3d" href="https://campus-castle.vercel.app/" target="_blank" rel="noopener">
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/><path d="M12 12v10"/></svg>
+    </span>
+    <span>Versione 3D</span>
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </span>
+  </a>
   <button class="btn-musica" id="btnMusica" type="button" aria-pressed="false" aria-label="Attiva la musica di sottofondo">
     <span class="ic-off" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
@@ -400,19 +443,19 @@
     // Numerazione "a percorso": si parte dalla chiesa, poi ingressi e scuole,
     // e si sale verso i campi sportivi e gli edifici in alto.
     {id:1,  x:87.00, y:73.50, sug:"La chiesa"},
-    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg"},
-    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg"},
+    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg",   fotoHog:"Campus_front.png"},
+    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg", fotoHog:"Campus_secondaria.png"},
     {id:4,  x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg"},
     {id:5,  x:40.77, y:73.03, sug:"Il parcheggio"},
-    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg"},
+    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg",   fotoHog:"Campus_primaria.png"},
     {id:7,  x:31.27, y:42.82, sug:"Le piscine – piano vasca"},
-    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg"},
-    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg"},
+    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg",      fotoHog:"Campus_basket.png"},
+    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg",             fotoHog:"Campus_mensa.png"},
     {id:10, x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg"},
     {id:11, x:73.85, y:27.49, sug:"L'aula di musica"},
-    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg"},
-    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg"},
-    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg"},
+    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg",           fotoHog:"Campus_info.png"},
+    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg",         fotoHog:"Campus_qdv.png"},
+    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg",      fotoHog:"Campus_calcio.png"},
     {id:15, x:33.28, y:12.67, sug:"Il parco della piscina"},
     {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus"}
   ];
@@ -473,6 +516,7 @@
   var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
   var dati = caricaDati();
   var zonaAttiva = null;
+  var castleMode = false;
 
   var mappa      = document.getElementById("mappa");
   var overlay    = document.getElementById("overlay");
@@ -666,15 +710,16 @@
     setTimeout(function(){ el.style.background=""; el.style.borderColor=""; el.style.color=""; }, 750);
   }
 
-  // ---- Modale ----
-  function apriZona(id){
-    zonaAttiva = ZONE.find(function(z){ return z.id === id; });
-    var d = dati[id] || {};
-    elBadge.textContent = id;
-    elTitolo.textContent = d.nome ? d.nome : ("Zona " + id);
-    if(zonaAttiva.foto){
-      elFoto.src = zonaAttiva.foto;
-      elFoto.alt = "Foto del luogo: " + zonaAttiva.sug;
+  // In modalità castello si usa la foto trasfigurata (fotoHog); dove non esiste,
+  // nessuna foto (per non rompere l'atmosfera). In modalità reale si usa "foto".
+  function fotoDi(zona){
+    return castleMode ? (zona.fotoHog || null) : (zona.foto || null);
+  }
+  function aggiornaFotoPopup(zona){
+    var f = fotoDi(zona);
+    if(f){
+      elFoto.src = f;
+      elFoto.alt = "Foto del luogo: " + zona.sug;
       elFotoWrap.classList.add("mostra");
       modaleBody.classList.remove("senza-foto");
     }else{
@@ -682,6 +727,15 @@
       elFotoWrap.classList.remove("mostra");
       modaleBody.classList.add("senza-foto");
     }
+  }
+
+  // ---- Modale ----
+  function apriZona(id){
+    zonaAttiva = ZONE.find(function(z){ return z.id === id; });
+    var d = dati[id] || {};
+    elBadge.textContent = id;
+    elTitolo.textContent = d.nome ? d.nome : ("Zona " + id);
+    aggiornaFotoPopup(zonaAttiva);
     elNome.value = d.nome || "";
     elFunzione.value = d.funzione || "";
     elEsperienza.value = d.esperienza || "";
@@ -773,17 +827,23 @@
   });
 
   // ---- Musica di sottofondo (YouTube, solo audio) ----
-  var VIDEO_ID = "4Eg0GmYe1m4";
+  // La traccia dipende dal tema: reale vs castello.
+  var TRACCIA_REALE = "4Eg0GmYe1m4";
+  var TRACCIA_CASTLE = "a7z8HGXVR80";
   var ytAudio = document.getElementById("ytAudio");
   var btnMusica = document.getElementById("btnMusica");
   var lblMusica = btnMusica.querySelector(".lbl");
   var musicaOn = false;
+  function avviaMusica(){
+    var id = castleMode ? TRACCIA_CASTLE : TRACCIA_REALE;
+    ytAudio.src = "https://www.youtube-nocookie.com/embed/" + id +
+      "?autoplay=1&loop=1&playlist=" + id +
+      "&controls=0&modestbranding=1&playsinline=1&rel=0";
+  }
   btnMusica.addEventListener("click", function(){
     musicaOn = !musicaOn;
     if(musicaOn){
-      ytAudio.src = "https://www.youtube-nocookie.com/embed/" + VIDEO_ID +
-        "?autoplay=1&loop=1&playlist=" + VIDEO_ID +
-        "&controls=0&modestbranding=1&playsinline=1&rel=0";
+      avviaMusica();
       btnMusica.classList.add("attiva");
       lblMusica.textContent = "Musica attiva";
       btnMusica.setAttribute("aria-pressed", "true");
@@ -795,6 +855,30 @@
       btnMusica.setAttribute("aria-pressed", "false");
       btnMusica.setAttribute("aria-label", "Attiva la musica di sottofondo");
     }
+  });
+
+  // ---- Campus Castle: trasfigura mappa, foto e musica ----
+  var MAPPA_REALE = "Campus.png";
+  var MAPPA_CASTLE = "Campus_Hogwarts.png";
+  var sfondo = document.querySelector(".sfondo");
+  var btnCastle = document.getElementById("btnCastle");
+  var lblCastle = btnCastle.querySelector(".lbl");
+  var titoloApp = document.getElementById("titoloApp");
+  btnCastle.addEventListener("click", function(){
+    castleMode = !castleMode;
+    document.body.classList.toggle("castle", castleMode);
+    sfondo.src = castleMode ? MAPPA_CASTLE : MAPPA_REALE;
+    titoloApp.textContent = castleMode ? "Campus Castle" : "Campus Map";
+    document.title = (castleMode ? "Campus Castle" : "Campus Map") + " — Scuola Sacra Famiglia";
+    sfondo.alt = castleMode
+      ? "Il campus trasfigurato in castello"
+      : "Veduta aerea del campus della Scuola Sacra Famiglia";
+    btnCastle.classList.toggle("attiva", castleMode);
+    btnCastle.setAttribute("aria-pressed", castleMode ? "true" : "false");
+    lblCastle.textContent = castleMode ? "Campus reale" : "Campus Castle";
+    if(musicaOn) avviaMusica();
+    if(overlay.classList.contains("aperto") && zonaAttiva) aggiornaFotoPopup(zonaAttiva);
+    fitMap();
   });
 
   aggiornaProgresso();
