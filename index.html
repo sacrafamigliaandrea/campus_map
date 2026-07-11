@@ -523,22 +523,22 @@
   var ZONE = [
     // Numerazione "a percorso": si parte dalla chiesa, poi ingressi e scuole,
     // e si sale verso i campi sportivi e gli edifici in alto.
-    {id:1,  x:87.00, y:73.50, sug:"La chiesa"},
-    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg",   fotoHog:"Campus_front.png"},
-    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg", fotoHog:"Campus_secondaria.png"},
-    {id:4,  x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg"},
-    {id:5,  x:40.77, y:73.03, sug:"Il parcheggio"},
-    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg",   fotoHog:"Campus_primaria.png"},
-    {id:7,  x:31.27, y:42.82, sug:"Le piscine – piano vasca"},
-    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg",      fotoHog:"Campus_basket.png"},
-    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg",             fotoHog:"Campus_mensa.png"},
-    {id:10, x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg"},
-    {id:11, x:73.85, y:27.49, sug:"L'aula di musica"},
-    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg",           fotoHog:"Campus_info.png"},
-    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg",         fotoHog:"Campus_qdv.png"},
-    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg",      fotoHog:"Campus_calcio.png"},
-    {id:15, x:33.28, y:12.67, sug:"Il parco della piscina"},
-    {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus"}
+    {id:1,  x:87.00, y:73.50, sug:"La chiesa",                                                    fotoHog:"Castle/Castle_1.png"},
+    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg",   fotoHog:"Castle/Castle_2.png"},
+    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg", fotoHog:"Castle/Castle_3.png"},
+    {id:4,  x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg",  fotoHog:"Castle/Castle_4.png"},
+    {id:5,  x:40.77, y:73.03, sug:"Il parcheggio",                                                fotoHog:"Castle/Castle_5.png"},
+    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg",   fotoHog:"Castle/Castle_6.png"},
+    {id:7,  x:31.27, y:42.82, sug:"Le piscine – piano vasca",                                     fotoHog:"Castle/Castle_7.png"},
+    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg",      fotoHog:"Castle/Castle_8.png"},
+    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg",             fotoHog:"Castle/Castle_9.png"},
+    {id:10, x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg",      fotoHog:"Castle/Castle_10.png"},
+    {id:11, x:73.85, y:27.49, sug:"L'aula di musica",                                             fotoHog:"Castle/Castle_11.png"},
+    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg",           fotoHog:"Castle/Castle_12.png"},
+    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg",         fotoHog:"Castle/Castle_13.png"},
+    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg",      fotoHog:"Castle/Castle_14.png"},
+    {id:15, x:33.28, y:12.67, sug:"Il parco della piscina",                                       fotoHog:"Castle/Castle_15.png"},
+    {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus",                                            fotoHog:"Castle/Castle_16.png"}
   ];
 
   // Attività di trascinamento per ogni luogo (10 tessere: le "giuste" appartengono
@@ -853,6 +853,43 @@
   }
 
   // ---- Escape room ----
+  // Suono "magico" sintetizzato (arpeggio scintillante) al momento dell'apertura.
+  var audioCtx = null;
+  function suonoMagico(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      if(!audioCtx) audioCtx = new AC();
+      if(audioCtx.state === "suspended") audioCtx.resume();
+      var ctx = audioCtx, now = ctx.currentTime;
+      var note = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // Do-Mi-Sol-Do-Mi
+      note.forEach(function(f, i){
+        var t = now + i * 0.09;
+        var osc = ctx.createOscillator(); osc.type = "triangle"; osc.frequency.value = f;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+        osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t + 0.65);
+        var arm = ctx.createOscillator(); arm.type = "sine"; arm.frequency.value = f * 2;
+        var g2 = ctx.createGain();
+        g2.gain.setValueAtTime(0.0001, t);
+        g2.gain.exponentialRampToValueAtTime(0.07, t + 0.02);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        arm.connect(g2); g2.connect(ctx.destination); arm.start(t); arm.stop(t + 0.45);
+      });
+      // scintillio finale ascendente
+      var sw = ctx.createOscillator(); sw.type = "sine";
+      sw.frequency.setValueAtTime(1046.5, now + 0.45);
+      sw.frequency.exponentialRampToValueAtTime(2093, now + 0.95);
+      var sg = ctx.createGain();
+      sg.gain.setValueAtTime(0.0001, now + 0.45);
+      sg.gain.exponentialRampToValueAtTime(0.09, now + 0.5);
+      sg.gain.exponentialRampToValueAtTime(0.0001, now + 1.0);
+      sw.connect(sg); sg.connect(ctx.destination); sw.start(now + 0.45); sw.stop(now + 1.05);
+    }catch(e){}
+  }
+
   function mostraPortaAperta(animata){
     escFeedback.style.color = "#3b6d11";
     escFeedback.textContent = "Porta aperta! Hai risolto l'enigma.";
@@ -860,6 +897,7 @@
     escApri.disabled = true;
     escApri.textContent = "Aperta";
     if(animata){
+      suonoMagico();
       // forza un reflow così la transizione parte anche subito dopo il reset
       void escPorta.offsetWidth;
     }
