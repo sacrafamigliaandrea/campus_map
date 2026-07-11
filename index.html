@@ -266,6 +266,22 @@
   #escApri:hover{background:#5b3a17}
   #escApri:disabled{background:#a9c37a;cursor:default}
   .esc-feedback{min-height:20px;margin-top:10px;font-family:"Lexend",sans-serif;font-weight:600;font-size:.95rem}
+  .esc-pergamena{
+    margin-top:10px;display:inline-flex;align-items:center;gap:8px;
+    background:transparent;border:1.5px solid #c9a227;color:#5b3a17;
+    font-family:"Lexend",sans-serif;font-weight:600;font-size:.9rem;
+    padding:8px 14px;border-radius:99px;cursor:pointer;
+  }
+  .esc-pergamena:hover{background:#f7efdd}
+  .esc-pergamena svg{width:18px;height:18px;display:block}
+  .esc-pergamena .chev svg{width:16px;height:16px}
+  .esc-pergamena .chev{display:inline-flex;transition:transform .2s ease}
+  .esc-pergamena[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .esc-lore{
+    margin-top:10px;background:#f7efdd;border:1px solid #e6d6a8;border-radius:12px;
+    padding:12px 16px;color:var(--inchiostro);font-size:1rem;line-height:1.55;font-style:italic;
+  }
+  .esc-lore[hidden]{display:none}
   /* La porta dell'escape room: in sovraimpressione sull'immagine, in alto a destra.
      Chiusa mostra il buco della serratura; si apre girando sul cardine. */
   .esc-porta{display:none;position:absolute;top:12px;right:12px;width:84px;height:116px;z-index:6;perspective:600px}
@@ -297,11 +313,11 @@
 
   /* In Castle: foto orizzontale grande sopra, solo l'enigma sotto (niente trascinamento/campi) */
   body.castle .modale-body{flex-direction:column;gap:10px}
-  body.castle .col-foto{flex:0 0 auto;width:100%;height:clamp(240px,50vh,430px)}
+  body.castle .col-foto{flex:0 0 auto;width:100%;height:clamp(260px,56vh,480px)}
   body.castle #attivitaWrap{display:none}
   body.castle .escape{display:block}
   body.castle .campo{display:none}
-  body.castle #btnSalva,body.castle #salvatoMsg{display:none}
+  body.castle .azioni{display:none}
   body.castle .marker.fatto{background:#6b4f1d}
   .campo{margin-bottom:0}
   .campo label{
@@ -478,6 +494,12 @@
           <button type="button" id="escApri">Apri</button>
         </div>
         <div class="esc-feedback" id="escFeedback" role="status" aria-live="polite"></div>
+        <button class="esc-pergamena" id="btnPergamena" type="button" aria-expanded="false" aria-controls="escLore">
+          <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H8a3 3 0 0 1-3-3V4z"/><path d="M8 8h7M8 11h7M8 14h5"/></svg></span>
+          Dal mondo magico
+          <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <div class="esc-lore" id="escLore" hidden></div>
       </div>
       <div class="campo">
         <label for="fNome">Come si chiama questo luogo?
@@ -504,7 +526,6 @@
           </svg>
           Scheda salvata
         </span>
-        <button class="btn btn-secondario" id="btnAnnulla" type="button">Chiudi</button>
         <button class="btn btn-primario" id="btnSalva" type="button">Salva la scheda</button>
       </div>
       </div>
@@ -613,6 +634,26 @@
     15:{ testo:"Erba, alberi e cielo aperto: tra un tuffo e l'altro qui ci si sdraia a prendere il...", risposte:["sole"], indizio:"Scalda, illumina e abbronza." },
     16:{ testo:"Grande e capiente, ogni mattina porto tanti studenti a scuola e la sera torno a riposare nel mio garage. Chi sono?", risposte:["bus","autobus","pullman","corriera"], indizio:"Il mezzo che porta molti bambini a scuola." }
   };
+  // Micro-testi ORIGINALI in atmosfera "maghi e castello" (non tratti dai libri):
+  // ogni luogo è legato a un elemento del mondo magico.
+  var LORE = {
+    1:"Sotto le volte a sesto acuto il tempo sembra rallentare. Tra vetrate istoriate e sfere celesti che ruotano lente, i giovani maghi imparano che il silenzio è il primo di tutti gli incantesimi.",
+    2:"I grandi portoni di quercia si aprono cigolando all'alba, mentre un gufo veglia dall'arco. Chi varca questa soglia lascia fuori il mondo di tutti i giorni ed entra in quello delle sorprese.",
+    3:"Corridoi di pietra dove — si dice — le scale cambiano posto quando nessuno guarda. Qui i ragazzi più grandi studiano le arti difficili: numeri, lingue antiche e la pazienza di sbagliare per capire.",
+    4:"Oltre questa porta l'acqua è sorvegliata da creature scolpite nella pietra. Prima di immergerti ricorda la regola dei maghi prudenti: nessuno sfida il lago da solo.",
+    5:"Dove altri parcheggiano automobili, i maghi allineano carrozze senza cavalli e scope lucide. Ogni viaggio comincia e finisce qui, tra ruote e piccoli incantesimi di ritorno.",
+    6:"Le aule dei più piccoli profumano di inchiostro e meraviglia. È qui che si impara la magia più potente di tutte: leggere, perché ogni libro è una porta che si apre.",
+    7:"L'acqua turchese riflette torri e nuvole. Si racconta che un lungo serpente d'argento dorma sul fondo: nuota con rispetto e la vasca ti restituirà la calma.",
+    8:"Sotto archi di legno intrecciato la palla rimbalza come sospesa da un incantesimo. Non serve una scopa per volare: basta uno slancio, e il canestro diventa un anello del Quidditch.",
+    9:"Lunghe tavole imbandite e lampade che ondeggiano piano: qui il pranzo è un piccolo banchetto. Nel mondo dei maghi si dice che il cibo condiviso valga più di qualunque pozione.",
+    10:"La rete divide il campo come un confine incantato. La palla lo attraversa senza sfiorarlo, leggera, in una sfida tra squadre degna di una coppa delle Case.",
+    11:"Strumenti che sembrano suonare da soli e note che restano sospese nell'aria. La musica, dicono i maghi, è l'unica magia che tutti sanno fare fin dal primo giorno.",
+    12:"Ingranaggi d'ottone e schermi luminosi convivono tra tubi e pergamene. Qui la magia moderna ha un nome curioso: si chiama algoritmo, una formula fatta di passi precisi.",
+    13:"Sotto il grande tendone nascono i sogni delle squadre. Tribune gremite, bandiere delle Case e una coppa che aspetta: è l'arena dove il coraggio conta più della fortuna.",
+    14:"Anelli sospesi e un prato immenso: qui il pallone insegue la gloria tra due porte. Con un po' di fantasia, ogni gol diventa la meta decisiva di una partita di Quidditch.",
+    15:"Alberi contorti, fiori che brillano al crepuscolo e panche di pietra tiepida. È il giardino dove i maghi riposano tra un'avventura e l'altra, ascoltando il vento raccontare storie.",
+    16:"Qui riposano i grandi mezzi che ogni mattina portano gli studenti al castello. Nel mondo magico li chiamerebbero carrozze fatate: partono puntuali, con un piccolo sobbalzo d'incanto."
+  };
   function normalizza(s){
     return (s || "").toLowerCase()
       .replace(/[’']/g, " ")
@@ -650,6 +691,8 @@
   var escApri    = document.getElementById("escApri");
   var escFeedback= document.getElementById("escFeedback");
   var escPorta   = document.getElementById("escPorta");
+  var btnPergamena = document.getElementById("btnPergamena");
+  var escLore    = document.getElementById("escLore");
 
   var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
     '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -910,6 +953,9 @@
     escApri.disabled = false;
     escInput.disabled = false;
     escInput.value = "";
+    escLore.textContent = LORE[zona.id] || "";
+    escLore.hidden = true;
+    btnPergamena.setAttribute("aria-expanded", "false");
     escPorta.classList.remove("aperta");
     if(dati[zona.id] && dati[zona.id].escapeOk) mostraPortaAperta(false);
   }
@@ -938,6 +984,12 @@
   escApri.addEventListener("click", verificaEscape);
   escInput.addEventListener("keydown", function(ev){
     if(ev.key === "Enter"){ ev.preventDefault(); verificaEscape(); }
+  });
+  btnPergamena.addEventListener("click", function(){
+    var apri = escLore.hidden;
+    escLore.hidden = !apri;
+    btnPergamena.setAttribute("aria-expanded", apri ? "true" : "false");
+    if(apri) escLore.scrollIntoView({block:"nearest", behavior:"smooth"});
   });
 
   // ---- Modale ----
@@ -986,7 +1038,6 @@
   }
 
   document.getElementById("btnSalva").addEventListener("click", salva);
-  document.getElementById("btnAnnulla").addEventListener("click", chiudiModale);
   document.getElementById("btnChiudi").addEventListener("click", chiudiModale);
   overlay.addEventListener("click", function(e){ if(e.target === overlay) chiudiModale(); });
   document.addEventListener("keydown", function(e){
