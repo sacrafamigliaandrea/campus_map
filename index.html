@@ -265,6 +265,30 @@
   #escApri:hover{background:#5b3a17}
   #escApri:disabled{background:#a9c37a;cursor:default}
   .esc-feedback{min-height:20px;margin-top:10px;font-family:"Lexend",sans-serif;font-weight:600;font-size:.95rem}
+  .esc-body{display:flex;gap:18px;align-items:flex-start}
+  .esc-sx{flex:1 1 auto;min-width:0}
+  /* La porta dell'escape room: chiusa col buco della serratura, si apre girando sul cardine */
+  .esc-porta{flex:0 0 128px;height:178px;position:relative;perspective:750px}
+  .porta-vano,.porta-anta{position:absolute;inset:0;border-radius:62px 62px 10px 10px;border:2px solid #5b3a17}
+  .porta-vano{
+    background:radial-gradient(circle at 50% 42%, #fff4d2, #ecd188 55%, #cba450);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    color:#5b3a17;font-family:"Lexend",sans-serif;font-weight:700;font-size:1rem;
+    box-shadow:inset 0 0 22px rgba(120,80,20,.35);
+  }
+  .porta-vano svg{width:32px;height:32px}
+  .porta-anta{
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, transparent 2px 30px),
+      linear-gradient(180deg,#9a7833,#6b4f1d);
+    transform-origin:left center;backface-visibility:hidden;
+    transition:transform 1.1s cubic-bezier(.2,.75,.2,1), box-shadow 1.1s ease;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .porta-buco{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:#f0d17a;box-shadow:0 0 0 2px #4a2f12}
+  .porta-buco::after{content:"";position:absolute;left:50%;top:9px;transform:translateX(-50%);width:4px;height:11px;border-radius:0 0 2px 2px;background:#f0d17a}
+  .esc-porta.aperta .porta-anta{transform:rotateY(-118deg);box-shadow:12px 8px 22px rgba(0,0,0,.35)}
+  @media (prefers-reduced-motion:reduce){ .porta-anta{transition:none} }
 
   /* In Castle: foto orizzontale grande sopra, solo l'enigma sotto (niente trascinamento/campi) */
   body.castle .modale-body{flex-direction:column;gap:14px}
@@ -309,6 +333,8 @@
     .modale{width:min(560px,96vw)}
     .modale-body{flex-direction:column;gap:14px}
     .col-foto{flex:0 0 auto;height:190px}
+    .esc-body{flex-direction:column}
+    .esc-porta{align-self:center}
   }
   @media (max-width:720px){
     body{flex-direction:column}
@@ -333,7 +359,7 @@
   <img class="logo" src="logo.png" alt="Logo Scuola Sacra Famiglia" />
   <div class="titolo-wrap">
     <h1 id="titoloApp">Campus Map</h1>
-    <p class="sub">Scopri, dai un nome e racconta ogni angolo della scuola</p>
+    <p class="sub" id="sottotitoloApp">Scopri, dai un nome e racconta ogni angolo della scuola</p>
   </div>
   <div class="progress">
     <span class="conteggio" id="conteggio">0 di 16</span>
@@ -436,12 +462,23 @@
           <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.3"/></svg></span>
           Risolvi l'enigma per aprire la porta
         </p>
-        <p class="esc-testo" id="escTesto"></p>
-        <div class="esc-serratura">
-          <input type="text" id="escInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Scrivi la parola-chiave..." />
-          <button type="button" id="escApri">Apri</button>
+        <div class="esc-body">
+          <div class="esc-sx">
+            <p class="esc-testo" id="escTesto"></p>
+            <div class="esc-serratura">
+              <input type="text" id="escInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Scrivi la parola-chiave..." />
+              <button type="button" id="escApri">Apri</button>
+            </div>
+            <div class="esc-feedback" id="escFeedback" role="status" aria-live="polite"></div>
+          </div>
+          <div class="esc-porta" id="escPorta" aria-hidden="true">
+            <div class="porta-vano">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l7 7M18 15l2 2-2 2M15 18l2 2"/></svg>
+              <span>Aperta!</span>
+            </div>
+            <div class="porta-anta"><span class="porta-buco"></span></div>
+          </div>
         </div>
-        <div class="esc-feedback" id="escFeedback" role="status" aria-live="polite"></div>
       </div>
       <div class="campo">
         <label for="fNome">Come si chiama questo luogo?
@@ -613,6 +650,7 @@
   var escInput   = document.getElementById("escInput");
   var escApri    = document.getElementById("escApri");
   var escFeedback= document.getElementById("escFeedback");
+  var escPorta   = document.getElementById("escPorta");
 
   var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
     '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -815,12 +853,17 @@
   }
 
   // ---- Escape room ----
-  function mostraPortaAperta(){
+  function mostraPortaAperta(animata){
     escFeedback.style.color = "#3b6d11";
     escFeedback.textContent = "Porta aperta! Hai risolto l'enigma.";
     escInput.disabled = true;
     escApri.disabled = true;
     escApri.textContent = "Aperta";
+    if(animata){
+      // forza un reflow così la transizione parte anche subito dopo il reset
+      void escPorta.offsetWidth;
+    }
+    escPorta.classList.add("aperta");
   }
   function costruisciEscape(zona){
     var e = ENIGMI[zona.id];
@@ -830,7 +873,8 @@
     escApri.disabled = false;
     escInput.disabled = false;
     escInput.value = "";
-    if(dati[zona.id] && dati[zona.id].escapeOk) mostraPortaAperta();
+    escPorta.classList.remove("aperta");
+    if(dati[zona.id] && dati[zona.id].escapeOk) mostraPortaAperta(false);
   }
   function verificaEscape(){
     if(!zonaAttiva) return;
@@ -844,7 +888,7 @@
       if(!dati[id]) dati[id] = {};
       dati[id].escapeOk = true;
       salvaDati();
-      mostraPortaAperta();
+      mostraPortaAperta(true);
       aggiornaMarker(zonaAttiva._el, id);
       aggiornaProgresso();
     }else{
@@ -995,11 +1039,15 @@
   var btnCastle = document.getElementById("btnCastle");
   var lblCastle = btnCastle.querySelector(".lbl");
   var titoloApp = document.getElementById("titoloApp");
+  var sottotitoloApp = document.getElementById("sottotitoloApp");
+  var SUB_REALE = "Scopri, dai un nome e racconta ogni angolo della scuola";
+  var SUB_CASTLE = "Risolvi l'enigma di ogni luogo e apri tutte le porte del castello";
   btnCastle.addEventListener("click", function(){
     castleMode = !castleMode;
     document.body.classList.toggle("castle", castleMode);
     sfondo.src = castleMode ? MAPPA_CASTLE : MAPPA_REALE;
     titoloApp.textContent = castleMode ? "Campus Castle" : "Campus Map";
+    sottotitoloApp.textContent = castleMode ? SUB_CASTLE : SUB_REALE;
     document.title = (castleMode ? "Campus Castle" : "Campus Map") + " — Scuola Sacra Famiglia";
     sfondo.alt = castleMode
       ? "Il campus trasfigurato in castello"
