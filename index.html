@@ -697,12 +697,16 @@
   var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
     '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+  // I progressi vivono solo nella SESSIONE del browser: si conservano se lo
+  // studente ricarica la pagina, ma si cancellano alla chiusura della scheda/
+  // del browser, così il prossimo studente riparte con la mappa pulita.
   function caricaDati(){
-    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){} // rimuove eventuali dati persistenti vecchi
+    try{ return JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {}; }
     catch(e){ return {}; }
   }
   function salvaDati(){
-    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(dati)); }catch(e){}
+    try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dati)); }catch(e){}
   }
   function completata(id){
     var d = dati[id];
