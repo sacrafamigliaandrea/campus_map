@@ -664,72 +664,217 @@
 
   // Escape room (versione Castle): un enigma per luogo, legato a ciò che vi si fa/studia.
   // Gli articoli iniziali (il/lo/la/l'...) sono tollerati automaticamente.
-  // Tre enigmi per zona. Le risposte sono parole nascoste nel racconto "Dal mondo magico".
+  // Pool di 12 enigmi per zona: a ogni accesso se ne pescano 3 a caso.
+  // Tutte le risposte sono parole presenti nel racconto "Dal mondo magico".
   var ENIGMI = {
     1:{ domande:[
       {t:"Regna nella Sala delle Ore e non fa rumore: il primo, invisibile incantesimo.", r:["silenzio","raccoglimento"]},
       {t:"Di ottone, ruotano appese alle volte disegnando pianeti.", r:["sfere","sfera"]},
-      {t:"Alta sopra il mago, lascia entrare la luce colorata.", r:["vetrata"]} ]},
+      {t:"Alta sopra il mago, lascia entrare la luce colorata.", r:["vetrata"]},
+      {t:"Il metallo lucente di cui sono fatte le sfere celesti.", r:["ottone"]},
+      {t:"Le sfere di ottone li disegnano nel loro girare lento.", r:["pianeti","pianeta"]},
+      {t:"Momento di silenzio interiore: il primo incantesimo che si impara qui.", r:["raccoglimento"]},
+      {t:"Di pietra chiara, è la grande sala dove il tempo rallenta.", r:["cattedrale"]},
+      {t:"Le sfere disegnano pianeti e queste, con la coda, che nessun telescopio vide.", r:["comete","cometa"]},
+      {t:"Strumento per guardare le stelle: eppure non vide mai quelle comete.", r:["telescopio"]},
+      {t:"Qui non serve: si impara il silenzio, non gli incantesimi da lanciare con essa.", r:["bacchetta"]},
+      {t:"Della Casa AquilaBlu, vi entrò furioso e ne uscì più saggio.", r:["mago"]},
+      {t:"Sotto la vetrata, a poco a poco, il loro fragore si spense.", r:["pensieri","pensiero"]} ]},
     2:{ domande:[
       {t:"Grigio e saggio, veglia dall'arco e porta le lettere.", r:["gufo"]},
       {t:"Il legno antico di cui sono fatti i grandi portoni.", r:["quercia"]},
-      {t:"La varchi ed entri nell'avventura.", r:["soglia"]} ]},
+      {t:"La varchi ed entri nell'avventura.", r:["soglia"]},
+      {t:"Di pietra, sopra di esso veglia il gufo grigio.", r:["arco"]},
+      {t:"Il gufo le consegna ogni mattina.", r:["lettere","posta"]},
+      {t:"Grandi e di quercia, si aprono quasi da soli all'alba.", r:["portoni","portone"]},
+      {t:"Due buoni potrebbero passare a braccetto tra i portoni, tanto sono alti.", r:["giganti","gigante"]},
+      {t:"Poco prima di essa i portoni cigolano e si aprono quasi da soli.", r:["alba"]},
+      {t:"Qui perfino una di esse può cambiare idea e portarti altrove.", r:["scala"]},
+      {t:"Più grande, della Casa TassoRosso, prende per mano il piccolo intimorito.", r:["compagno"]},
+      {t:"Ciò che comincia una volta varcata la soglia.", r:["avventura"]},
+      {t:"Varcare la soglia è un piccolo di questi.", r:["rito"]} ]},
     3:{ domande:[
       {t:"Si dice che si spostino quando nessuno le guarda.", r:["scale"]},
       {t:"La materia più ostica di tutte: serve per capire davvero.", r:["pazienza"]},
-      {t:"Si accesero tutte insieme, come un applauso silenzioso.", r:["candele"]} ]},
+      {t:"Si accesero tutte insieme, come un applauso silenzioso.", r:["candele"]},
+      {t:"Le lingue antiche ne profumano.", r:["pergamena"]},
+      {t:"La studentessa la ripeté un intero inverno prima di riuscirci.", r:["formula"]},
+      {t:"Di pietra, sono un labirinto dove le scale cambiano posto.", r:["corridoi","corridoio"]},
+      {t:"L'ala dei più grandi è un affascinante...", r:["labirinto"]},
+      {t:"Una porta si affaccia un giorno su di esso, il giorno dopo altrove.", r:["cortile"]},
+      {t:"Polverose, riempiono una stanza dell'ala dei grandi.", r:["mappe","mappa"]},
+      {t:"Sembrano indovinelli, tra le arti difficili da studiare.", r:["numeri","numero"]},
+      {t:"La studentessa ne passò uno intero a ripetere la formula.", r:["inverno"]},
+      {t:"Qui il coraggio non è affrontarlo: è ricominciare dopo aver fallito.", r:["drago"]} ]},
     4:{ domande:[
       {t:"Ai piedi, prima di scendere alle vasche.", r:["ciabatte"]},
       {t:"Fredda, lava via la fretta prima del tuffo.", r:["doccia"]},
-      {t:"Il coraggio non è tuffarsi per primo, ma aspettare un...", r:["compagno"]} ]},
+      {t:"Il coraggio non è tuffarsi per primo, ma aspettare un...", r:["compagno"]},
+      {t:"Scolpiti nella pietra, mezzi uomini e mezzi pesci, sorvegliano l'acqua.", r:["tritoni","tritone"]},
+      {t:"Inciso sopra l'ingresso: 'l'acqua premia chi la rispetta'.", r:["motto"]},
+      {t:"Nella quale sono scolpite le creature che sorvegliano l'acqua.", r:["pietra"]},
+      {t:"Oltre la porta bassa comincia il suo regno.", r:["acqua"]},
+      {t:"Nel cerimoniale prima del bagno, le si lasciano ai piedi.", r:["scarpe","scarpa"]},
+      {t:"Il ragazzo troppo sicuro volle sfidarla da solo, di notte.", r:["vasca"]},
+      {t:"Ciò che provò il ragazzo imprudente: gli insegnò più di cento lezioni.", r:["paura"]},
+      {t:"Giganti, scolpiti nella pietra insieme a tritoni e serpenti.", r:["cavallucci","cavalluccio"]},
+      {t:"La ricompensa di chi rispetta l'acqua: la leggerezza di ___ senza pensieri.", r:["galleggiare"]} ]},
     5:{ domande:[
       {t:"Senza cavalli, aspettano pazienti nella Corte delle Partenze.", r:["carrozze","carrozza"]},
       {t:"Lucide, allineate al muro come ombrelli: servono a volare.", r:["scope","scopa"]},
-      {t:"Bianche, sul selciato segnano il posto di ogni mezzo.", r:["rune"]} ]},
+      {t:"Bianche, sul selciato segnano il posto di ogni mezzo.", r:["rune"]},
+      {t:"Su di esso le rune bianche segnano i posti.", r:["selciato"]},
+      {t:"Le carrozze del castello ne fanno a meno: sono 'senza...'.", r:["cavalli","cavallo"]},
+      {t:"La sera si svuota, e resta solo il vento a spostare le foglie.", r:["cortile"]},
+      {t:"La sera, nella corte vuota, solo lui sposta le foglie.", r:["vento"]},
+      {t:"Nel cortile deserto, il vento le sposta.", r:["foglie","foglia"]},
+      {t:"Impolverata, nessuno ha ancora osato trasformarla in qualcosa di magico.", r:["automobile","auto"]},
+      {t:"La vecchia carrozza torna in fondo alla fila come un cavallo cerca la sua...", r:["stalla"]},
+      {t:"Chi attraversa il cortile la mattina lo porta in spalla, e già fa magia.", r:["zaino"]},
+      {t:"Comincia e finisce nello stesso posto: ogni grande...", r:["avventura"]} ]},
     6:{ domande:[
       {t:"La magia più potente, che nessuna bacchetta fa per te.", r:["leggere","lettura"]},
       {t:"Scarabocchi ostinati che si mettono in fila e formano parole.", r:["lettere"]},
-      {t:"Ogni ___ è una stanza segreta in cui entrare quando vuoi.", r:["libro"]} ]},
+      {t:"Ogni ___ è una stanza segreta in cui entrare quando vuoi.", r:["libro"]},
+      {t:"Le aule dei più piccoli ne profumano, fresco.", r:["inchiostro"]},
+      {t:"Guida i più piccoli e ripete che ogni libro è una porta.", r:["maestra"]},
+      {t:"Quando le lettere si mettono in fila, ne formano una: apre una porta.", r:["parola"]},
+      {t:"Basse e calde, con banchi fatti per gambe che non toccano terra.", r:["aule","aula"]},
+      {t:"Nelle aule, sembrano fatti apposta per i più piccoli.", r:["banchi","banco"]},
+      {t:"Buffi, disegnati alle pareti insieme agli alfabeti colorati.", r:["draghi","drago"]},
+      {t:"Colorati, alle pareti insieme ai draghi buffi.", r:["alfabeti","alfabeto"]},
+      {t:"I più piccoli del castello, che qui imparano a leggere.", r:["bambini","bambino"]},
+      {t:"L'aria delle aule dei piccoli profuma di inchiostro e di...", r:["meraviglia"]} ]},
     7:{ domande:[
       {t:"Arrotolato come un gomitolo d'argento, dorme sul fondo della vasca.", r:["serpente"]},
       {t:"Una dopo l'altra, ti fanno attraversare la vasca.", r:["bracciata","bracciate"]},
-      {t:"È ciò che l'acqua restituisce a chi la rispetta.", r:["calma"]} ]},
+      {t:"È ciò che l'acqua restituisce a chi la rispetta.", r:["calma"]},
+      {t:"Il colore-metallo del serpente che dorme sul fondo.", r:["argento"]},
+      {t:"Là in basso, dove riposa il serpente d'acqua.", r:["fondo"]},
+      {t:"Turchese, di giorno riflette torri e nuvole.", r:["vasca"]},
+      {t:"Bracciata dopo bracciata la attraversi, senza toccare il fondo.", r:["acqua"]},
+      {t:"Il colore dell'acqua della grande vasca.", r:["turchese"]},
+      {t:"Di giorno la vasca le riflette, insieme alle nuvole.", r:["torri","torre"]},
+      {t:"L'acqua turchese le riflette, insieme alle torri.", r:["nuvole","nuvola"]},
+      {t:"Al prepotente, dicono, diventano stranamente pesanti.", r:["gambe","gamba"]},
+      {t:"Il serpente d'argento dorme sul fondo arrotolato come uno di questi.", r:["gomitolo"]} ]},
     8:{ domande:[
       {t:"La palla passa nel cerchio con la retina: hai fatto un...", r:["canestro"]},
       {t:"Ti tiene un istante sospeso a mezz'aria, senza scopa.", r:["slancio"]},
-      {t:"Anche il giocatore più bravo, senza di essa, perde.", r:["squadra"]} ]},
+      {t:"Anche il giocatore più bravo, senza di essa, perde.", r:["squadra"]},
+      {t:"Di legno intrecciato, formano la volta sopra il campo.", r:["travi","trave"]},
+      {t:"È di tutti: la regola non scritta del campo.", r:["palla"]},
+      {t:"Prima della partita si stringono la mano.", r:["capitani","capitano"]},
+      {t:"Un istante di slancio e resti sospeso a mezz'aria grazie a esso.", r:["salto"]},
+      {t:"La palla ci passa dentro, con la retina: è il canestro.", r:["cerchio"]},
+      {t:"Il cerchio del canestro non è diverso da quelli del Quidditch.", r:["anelli","anello"]},
+      {t:"Insieme al coraggio, premia chi la unisce nel tiro.", r:["precisione"]},
+      {t:"Non è di chi la fa da solo, ma di chi la costruisce insieme.", r:["vittoria"]},
+      {t:"Le travi intrecciate della volta sono fatte di questo.", r:["legno"]} ]},
     9:{ domande:[
       {t:"Arriva fumante sui vassoi a mezzogiorno.", r:["pranzo"]},
       {t:"Chi impara a condividerlo, condivide tutto il resto.", r:["pane"]},
-      {t:"Al nuovo studente lasciano il posto migliore, vicino alla...", r:["finestra"]} ]},
+      {t:"Al nuovo studente lasciano il posto migliore, vicino alla...", r:["finestra"]},
+      {t:"Lunghe e di legno scuro, corrono da parete a parete.", r:["tavole","tavola"]},
+      {t:"Ondeggiano piano dall'alto, come sospese da un incantesimo.", r:["lampade","lampada"]},
+      {t:"Ciò che diventa il pranzo quando è fatto in compagnia.", r:["banchetto"]},
+      {t:"Il pranzo fumante arriva su di essi a mezzogiorno.", r:["vassoi","vassoio"]},
+      {t:"L'ora in cui la sala si riempie di voci e di profumo di pranzo.", r:["mezzogiorno"]},
+      {t:"Condiviso, si dice valga più di qualunque pozione.", r:["cibo"]},
+      {t:"Nessuna medicina scalda quanto un pasto in compagnia, neppure una...", r:["pozione"]},
+      {t:"Insieme alle voci, riempiono la sala a mezzogiorno.", r:["risate","risata"]},
+      {t:"Fatto in compagnia, scalda più di ogni medicina.", r:["pasto"]} ]},
     10:{ domande:[
       {t:"Sottile, la palla la deve scavalcare senza sfiorarla.", r:["rete"]},
       {t:"Conta più della forza: ti fidi del compagno.", r:["fiducia"]},
-      {t:"Se ne manca uno solo, il punto è perduto.", r:["passaggio"]} ]},
+      {t:"Se ne manca uno solo, il punto è perduto.", r:["passaggio"]},
+      {t:"Insieme alla fiducia, conta più della forza bruta.", r:["tempismo"]},
+      {t:"La squadra mista di tutte le Case riuscì a vincerla.", r:["coppa"]},
+      {t:"Leggera come quella di un gufo: così vola la palla.", r:["piuma"]},
+      {t:"La rete sottile lo taglia in due metà perfette.", r:["campo"]},
+      {t:"Deve scavalcare la rete senza sfiorarla, leggera come una piuma.", r:["palla"]},
+      {t:"Qui non conta quella bruta, ma il tempismo e la fiducia.", r:["forza"]},
+      {t:"Mista, di tutte e quattro le Case, vinse la coppa fidandosi.", r:["squadra"]},
+      {t:"Su di esso, alla rete, qualcuno ha inciso una frase.", r:["palo"]},
+      {t:"Se manca anche un solo passaggio, è perduto.", r:["punto"]} ]},
     11:{ domande:[
       {t:"Restano sospese nell'aria; senza di esse, niente canzoni.", r:["note"]},
       {t:"Arpe, flauti, tamburi appesi alle pareti.", r:["strumenti"]},
-      {t:"Nelle sere di festa i quattro delle Case si sfidano cantando.", r:["cori","coro"]} ]},
+      {t:"Nelle sere di festa i quattro delle Case si sfidano cantando.", r:["cori","coro"]},
+      {t:"A volte se ne sente una vibrare da sola, nella sala vuota.", r:["corda"]},
+      {t:"Basta questa, un fiato, un battito di mani: la magia che tutti sanno.", r:["voce"]},
+      {t:"Ogni Casa ne ha una; intrecciate, diventano un suono più bello.", r:["melodia","melodie"]},
+      {t:"Insieme a flauti e tamburi, appese alle pareti.", r:["arpe","arpa"]},
+      {t:"Insieme ad arpe e tamburi, tra gli strumenti appesi.", r:["flauti","flauto"]},
+      {t:"Insieme ad arpe e flauti, si suonano nell'Aula delle Note.", r:["tamburi","tamburo"]},
+      {t:"Basta una voce, questo, un battito di mani per fare musica.", r:["fiato"]},
+      {t:"Ogni Casa ha il suo, e nelle sere di festa lo intona.", r:["canto"]},
+      {t:"Quattro melodie intrecciate ne formano uno più bello di tutti.", r:["suono"]} ]},
     12:{ domande:[
       {t:"Una formula di passi precisi: l'incantesimo senza bacchetta.", r:["algoritmo"]},
       {t:"La differenza tra un incantesimo e un capriccio, dice il professore.", r:["ordine"]},
-      {t:"Il metallo dei tubi che corrono lungo le pareti.", r:["ottone"]} ]},
+      {t:"Il metallo dei tubi che corrono lungo le pareti.", r:["ottone"]},
+      {t:"Luminosi, ronzano piano accanto alle pergamene.", r:["schermi","schermo"]},
+      {t:"Lucide, stanno sui banchi accanto alle pergamene ingiallite.", r:["tastiere","tastiera"]},
+      {t:"Mezzo inventore e mezzo mago, ripete la regola dell'ordine.", r:["professore"]},
+      {t:"Di ottone, corrono lungo le pareti accanto agli schermi.", r:["tubi","tubo"]},
+      {t:"Ingiallite, riposano sui banchi vicino alle tastiere lucide.", r:["pergamene","pergamena"]},
+      {t:"Se metti i passi in fila con pazienza, obbedisce come per magia.", r:["macchina"]},
+      {t:"L'algoritmo ne è una, fatta di passi precisi come una pozione.", r:["formula"]},
+      {t:"Se la capisci davvero, è una forma di magia coi suoi pericoli.", r:["tecnologia"]},
+      {t:"Su di essi le pergamene ingiallite riposano vicino alle tastiere.", r:["banchi","banco"]} ]},
     13:{ domande:[
       {t:"Aspetta paziente sul piedistallo al centro dell'Arena.", r:["coppa"]},
-      {t:"Sotto la Coppa è inciso che conta più della fortuna.", r:["coraggio"]},
-      {t:"Pendono dall'alto coi colori delle quattro Case.", r:["bandiere"]} ]},
+      {t:"Conta più della fortuna.", r:["coraggio"]},
+      {t:"Pendono dall'alto coi colori delle quattro Case.", r:["bandiere","bandiera"]},
+      {t:"Grande, copre l'Arena dove nascono i sogni.", r:["tendone"]},
+      {t:"Di legno consumato da mille tifosi.", r:["tribune","tribuna"]},
+      {t:"Su di esso, al centro, aspetta paziente la Coppa.", r:["piedistallo"]},
+      {t:"Sotto il grande tendone dell'Arena nascono quelli delle squadre.", r:["sogni","sogno"]},
+      {t:"Si sfidano nei tornei più attesi dell'anno, sotto il tendone.", r:["squadre","squadra"]},
+      {t:"Mille di loro hanno consumato il legno delle tribune.", r:["tifosi","tifoso"]},
+      {t:"I più attesi dell'anno, di cui si parla per mesi.", r:["tornei","torneo"]},
+      {t:"Si alzò in piedi ad applaudire i perdenti più dei vincitori.", r:["pubblico"]},
+      {t:"Una squadra data per perdente vi arrivò, contro i campioni imbattuti.", r:["finale"]} ]},
     14:{ domande:[
       {t:"Quando la palla varca la linea nella rete, lo si grida forte.", r:["gol","goal"]},
-      {t:"Sospesi in alto, con un po' di fantasia sono quelli del Quidditch.", r:["anelli"]},
-      {t:"Col vento, di notte, rotola da solo cercando compagni.", r:["pallone"]} ]},
+      {t:"Sospesi in alto, con un po' di fantasia sono quelli del Quidditch.", r:["anelli","anello"]},
+      {t:"Col vento, di notte, rotola da solo cercando compagni.", r:["pallone"]},
+      {t:"Immenso e verde, ci si corre sopra tra due porte.", r:["prato"]},
+      {t:"Due, agli estremi del campo: la palla deve entrarci.", r:["porte","porta"]},
+      {t:"Il sole tramonta dietro di esse, del castello.", r:["torri","torre"]},
+      {t:"Il più spettacolare del castello, con gli anelli sospesi.", r:["campo"]},
+      {t:"Con un po' di fantasia, ogni gol diventa quella decisiva del Quidditch.", r:["meta"]},
+      {t:"Ogni gol, con fantasia, è la meta decisiva di una di Quidditch.", r:["partita"]},
+      {t:"Nelle notti in cui soffia forte, il pallone rotola da solo.", r:["vento"]},
+      {t:"Da soli si corre più veloci, ma con essa si va più lontano.", r:["squadra"]},
+      {t:"Quando tramonta dietro le torri, vincitori e vinti tornano insieme.", r:["sole"]} ]},
     15:{ domande:[
-      {t:"Al calar del sole si accendono di luce tenue, come lanterne.", r:["fiori"]},
+      {t:"Al calar del sole si accendono di luce tenue, come lanterne.", r:["fiori","fiore"]},
       {t:"Di pietra, nell'angolo nascosto, porta una frase incisa.", r:["panca"]},
-      {t:"Ci si siede, si respira, e si lasciano sistemare da soli.", r:["pensieri"]} ]},
+      {t:"Ci si siede, si respira, e si lasciano sistemare da soli.", r:["pensieri","pensiero"]},
+      {t:"Crescono contorti come vecchi saggi.", r:["alberi","albero"]},
+      {t:"Tiepida, ci si sdraia sopra tra un tuffo e l'altro.", r:["erba"]},
+      {t:"Le si guarda distesi, e arriva la soluzione a un problema.", r:["nuvole","nuvola"]},
+      {t:"Al crepuscolo i fiori si accendono di una tenue...", r:["luce"]},
+      {t:"I fiori, al calar del sole, sembrano piccole...", r:["lanterne","lanterna"]},
+      {t:"Passa tra i rami e sembra raccontare vecchie storie.", r:["vento"]},
+      {t:"Il vento vi passa in mezzo e sembra raccontare storie.", r:["rami","ramo"]},
+      {t:"Del Crepuscolo: aiuta a pensare tra un'avventura e l'altra.", r:["giardino"]},
+      {t:"Molti ne trovarono la soluzione qui, guardando le nuvole.", r:["problema"]} ]},
     16:{ domande:[
       {t:"Enormi e un po' sbuffanti, i maghi le chiamano fatate.", r:["carrozze","carrozza"]},
       {t:"Guida il mezzo e rallenta appena per i ritardatari.", r:["autista"]},
-      {t:"Dove la vecchia carrozza rientra a riposare.", r:["garage"]} ]}
+      {t:"Dove la vecchia carrozza rientra a riposare.", r:["garage"]},
+      {t:"La carrozza le conosce tutte, e ogni bambino.", r:["fermata","fermate"]},
+      {t:"Si appannano di risate durante il viaggio.", r:["finestrini","finestrino"]},
+      {t:"Tra essa appare il castello in lontananza, come un sogno.", r:["nebbia"]},
+      {t:"In fondo ad esso, dove la strada incontra i campi, riposano i mezzi.", r:["viale"]},
+      {t:"Grandi, ogni mattina portano gli studenti al castello.", r:["mezzi","mezzo"]},
+      {t:"Ogni mattina le carrozze fatate li portano al castello.", r:["studenti","studente"]},
+      {t:"All'ora in cui si parte, con lo zaino in spalla e gli occhi pieni di sonno.", r:["alba"]},
+      {t:"All'alba gli occhi ne sono ancora pieni quando si parte.", r:["sonno"]},
+      {t:"Alla sera, qualcuno dorme appoggiato ad esso.", r:["vetro"]} ]}
   };
   // Micro-testi ORIGINALI in atmosfera "maghi e castello" (non tratti dai libri):
   // ogni luogo è legato a un elemento del mondo magico.
@@ -758,6 +903,38 @@
       .replace(/\s+/g, " ")
       .trim()
       .replace(/^(l|lo|la|il|i|gli|le|un|uno|una) /, "");
+  }
+
+  // ---- Selezione casuale: 3 enigmi su 6 per ogni zona (partita unica) ----
+  // Stabile nella sessione (così i progressi combaciano), rimescolata a ogni
+  // nuovo accesso e con "Riparti", così ogni studente vive un percorso diverso.
+  var SEL_KEY = "campus_castle_sel";
+  function generaSelezione(){
+    var s = {};
+    ZONE.forEach(function(z){
+      var e = ENIGMI[z.id];
+      var n = e ? e.domande.length : 0;
+      var idx = []; for(var i=0;i<n;i++){ idx.push(i); }
+      for(var k=idx.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=idx[k]; idx[k]=idx[j]; idx[j]=t; }
+      s[z.id] = idx.slice(0, Math.min(3, n));
+    });
+    return s;
+  }
+  function caricaSelezione(){
+    try{ var raw = sessionStorage.getItem(SEL_KEY); if(raw){ return JSON.parse(raw); } }catch(e){}
+    var s = generaSelezione();
+    try{ sessionStorage.setItem(SEL_KEY, JSON.stringify(s)); }catch(e){}
+    return s;
+  }
+  var SELEZIONE = caricaSelezione();
+  function nuovaSelezione(){
+    SELEZIONE = generaSelezione();
+    try{ sessionStorage.setItem(SEL_KEY, JSON.stringify(SELEZIONE)); }catch(e){}
+  }
+  function domandeDi(zona){
+    var e = ENIGMI[zona.id]; if(!e) return [];
+    var sel = (SELEZIONE && SELEZIONE[zona.id]) ? SELEZIONE[zona.id] : [0,1,2];
+    return sel.map(function(i){ return e.domande[i]; }).filter(Boolean);
   }
 
   var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
@@ -1134,7 +1311,7 @@
     escPorta.classList.add("aperta");
   }
   function costruisciEscape(zona){
-    var e = ENIGMI[zona.id];
+    var dom = domandeDi(zona);
     escCols.innerHTML = "";
     escInputs = []; escGears = [];
     escFeedback.textContent = "";
@@ -1142,8 +1319,8 @@
     escApri.disabled = false;
     escPorta.classList.remove("aperta");
     var risolto = !!(dati[zona.id] && dati[zona.id].escapeOk);
-    if(e){
-      e.domande.forEach(function(d, i){
+    if(dom.length){
+      dom.forEach(function(d, i){
         var col = document.createElement("div");
         col.className = "esc-col";
         var p = document.createElement("p");
@@ -1168,10 +1345,10 @@
   }
   function verificaEscape(){
     if(!zonaAttiva) return;
-    var e = ENIGMI[zonaAttiva.id];
-    if(!e) return;
-    var tot = e.domande.length, giuste = 0, nuove = [];
-    e.domande.forEach(function(d, i){
+    var dom = domandeDi(zonaAttiva);
+    if(!dom.length) return;
+    var tot = dom.length, giuste = 0, nuove = [];
+    dom.forEach(function(d, i){
       var inp = escInputs[i];
       if(!inp) return;
       if(inp.classList.contains("ok")){ giuste++; return; }
@@ -1201,7 +1378,7 @@
       }
     }else{
       escFeedback.style.color = "var(--oro-scuro)";
-      escFeedback.textContent = "Ne hai indovinate " + giuste + " su " + tot + ". Gli indizi sono nascosti nel racconto: tocca la chiave in basso a sinistra.";
+      escFeedback.textContent = "Ne hai indovinate " + giuste + " su " + tot + ". Gli indizi sono nascosti nel racconto: tocca la pergamena in basso a sinistra.";
     }
   }
   escApri.addEventListener("click", verificaEscape);
@@ -1296,6 +1473,7 @@
     if(confirm("Vuoi cancellare tutte le schede e ripartire da capo?")){
       dati = {};
       traguardoMostrato = false;
+      nuovaSelezione();
       salvaDati();
       ZONE.forEach(function(z){
         aggiornaMarker(z._el, z.id);
