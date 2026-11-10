@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Eco-Campus — La fattoria del riciclo</title>
+<title>Eco-Campus — Il giro dei camioncini</title>
 <link rel="icon" href="logo.svg" />
 <link rel="apple-touch-icon" href="logo.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,69 +31,96 @@
 
   /* ====================== Il campus ====================== */
   #gioco{position:fixed;inset:0;overflow:hidden}
-  #scena{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:18px;overflow:hidden;
-    box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scena{position:absolute;left:50%;top:62px;transform:translateX(-50%);border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.45)}
   #scena .sfondo{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none;filter:saturate(1.08)}
+  #strade{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
   .isola{position:absolute;transform:translate(-50%,-50%);border:0;background:transparent;padding:0;z-index:3}
-  .isola .disco{width:54px;height:54px;border-radius:50%;background:#fff;border:3px solid var(--blu);display:flex;align-items:center;justify-content:center;
+  .isola .disco{width:50px;height:50px;border-radius:50%;background:#fff;border:3px solid var(--blu);display:flex;align-items:center;justify-content:center;
     box-shadow:0 6px 14px rgba(12,44,104,.4);transition:transform .15s}
   .isola:hover .disco,.isola:focus-visible .disco{transform:scale(1.1)}
   .isola:focus-visible{outline:none}
   .isola:focus-visible .disco{box-shadow:0 0 0 4px var(--oro)}
-  .isola.qui .disco{border-color:var(--oro);box-shadow:0 0 0 4px rgba(212,160,23,.5)}
+  .isola.completa .disco{border-color:var(--verde);background:var(--verde-chiaro)}
+  .isola .spunta{position:absolute;left:-8px;top:-8px;width:22px;height:22px;border-radius:50%;background:var(--verde);border:2px solid #fff;display:none;align-items:center;justify-content:center}
+  .isola .spunta svg{width:13px;height:13px}
+  .isola.completa .spunta{display:flex}
   .isola .nome{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:3px;white-space:nowrap;
-    font-family:var(--font-ui);font-size:.74rem;font-weight:600;color:#fff;background:rgba(12,44,104,.9);padding:2px 9px;border-radius:99px}
-  .isola .puntini{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;display:flex;gap:3px}
-  .isola .puntini i{width:11px;height:11px;border-radius:3px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-  .isola .conta{position:absolute;right:-8px;top:-8px;min-width:24px;height:24px;border-radius:99px;background:var(--oro);color:#1F2430;
-    font-family:var(--font-ui);font-weight:700;font-size:.85rem;display:none;align-items:center;justify-content:center;padding:0 6px;border:2px solid #fff;
-    animation:salta 1.1s ease-in-out infinite}
-  .isola.ha-rifiuti .conta{display:flex}
+    font-family:var(--font-ui);font-size:.72rem;font-weight:600;color:#fff;background:rgba(12,44,104,.9);padding:2px 9px;border-radius:99px}
+  /* i cestini dell'isola: un quadratino per frazione, con il numero di rifiuti dentro */
+  .isola .bidoni{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;display:flex;gap:2px}
+  .isola .bidoni i{min-width:17px;height:17px;border-radius:5px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);background:var(--c);color:#fff;
+    font-family:var(--font-ui);font-style:normal;font-weight:700;font-size:.62rem;display:flex;align-items:center;justify-content:center;padding:0 2px}
+  .isola .bidoni i.pieno{outline:2px solid var(--oro);outline-offset:1px}
+  .isola .terra{position:absolute;right:-10px;bottom:-4px;min-width:22px;height:22px;border-radius:99px;background:#fff3cf;border:2px solid var(--oro);color:#8a5a00;
+    font-family:var(--font-ui);font-weight:700;font-size:.72rem;display:none;align-items:center;justify-content:center;padding:0 5px}
+  .isola.sporca .terra{display:flex}
+  .isola.meta .disco{border-color:var(--oro);box-shadow:0 0 0 5px rgba(212,160,23,.55);animation:salta 1s ease-in-out infinite}
   @keyframes salta{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-  .isola.orto .disco{width:66px;height:66px;border-color:var(--verde);background:var(--verde-chiaro)}
-  .eroe{position:absolute;width:7.2%;transform:translate(-50%,-88%);z-index:5;pointer-events:none;filter:drop-shadow(0 6px 5px rgba(0,0,0,.4))}
-  .eroe img{display:block;width:100%;height:auto}
-  .eroe.sx img{transform:scaleX(-1)}
-  .eroe.cammina img{animation:passo .3s ease-in-out infinite alternate}
-  @keyframes passo{from{translate:0 0;rotate:-3deg}to{translate:0 -6%;rotate:3deg}}
-  .png{position:absolute;width:5.4%;transform:translate(-50%,-88%);z-index:4;border:0;background:transparent;padding:0;filter:drop-shadow(0 5px 4px rgba(0,0,0,.4))}
+  .isola.orto .disco{width:62px;height:62px;border-color:var(--verde);background:var(--verde-chiaro);padding:6px}
+  .isola .conta{position:absolute;right:-8px;top:-8px;min-width:24px;height:24px;border-radius:99px;background:var(--oro);color:#1F2430;font-family:var(--font-ui);font-weight:700;
+    font-size:.85rem;display:none;align-items:center;justify-content:center;padding:0 6px;border:2px solid #fff}
+  /* impianti ai bordi della mappa */
+  .impianto{position:absolute;transform:translate(-50%,-50%);border:0;background:transparent;padding:0;z-index:3;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .impianto .disco{width:54px;height:54px;border-radius:14px;background:#fff;border:3px solid var(--c);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(0,0,0,.4)}
+  .impianto .disco svg{width:38px;height:38px}
+  .impianto .nome{font-family:var(--font-ui);font-size:.7rem;font-weight:700;color:#fff;background:var(--c);padding:2px 8px;border-radius:99px;white-space:nowrap;border:1.5px solid #fff}
+  .impianto.sopra{flex-direction:column-reverse}
+  .impianto.meta .disco{box-shadow:0 0 0 5px rgba(212,160,23,.6);animation:salta 1s ease-in-out infinite}
+  .impianto:focus-visible{outline:3px solid var(--oro);outline-offset:3px;border-radius:14px}
+  /* camioncini */
+  .camion{position:absolute;width:6.2%;transform:translate(-50%,-70%);z-index:5;pointer-events:none;filter:drop-shadow(0 5px 4px rgba(0,0,0,.45));transition:filter .2s}
+  .camion svg{display:block;width:100%;height:auto;overflow:visible}
+  .camion.sx svg{transform:scaleX(-1)}
+  .camion.attivo{z-index:6;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 5px 4px rgba(0,0,0,.45))}
+  .camion.moto svg{animation:rolla .25s ease-in-out infinite alternate}
+  @keyframes rolla{from{translate:0 0}to{translate:0 -3%}}
+  .camion .carico{position:absolute;left:8%;top:-16%;min-width:20px;height:20px;border-radius:99px;background:#fff;border:2px solid var(--k);color:var(--inchiostro);
+    font-family:var(--font-ui);font-weight:700;font-size:.66rem;display:none;align-items:center;justify-content:center;padding:0 4px}
+  .camion.carico-si .carico{display:flex}
+  .png{position:absolute;width:5%;transform:translate(-50%,-88%);z-index:4;border:0;background:transparent;padding:0;filter:drop-shadow(0 5px 4px rgba(0,0,0,.4))}
   .png img{display:block;width:100%;height:auto}
   .png:focus-visible{outline:3px solid var(--oro);outline-offset:3px;border-radius:12px}
-  .png .fumetto{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:var(--oro);
+  .png .fumetto{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:var(--oro);
     border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);font-weight:800;color:#1F2430;animation:salta 1.3s ease-in-out infinite}
-  .deco{position:absolute;width:5.6%;transform:translate(-50%,-80%);z-index:2;pointer-events:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35));animation:spunta .5s cubic-bezier(.2,1.6,.4,1)}
+  .deco{position:absolute;width:5.6%;transform:translate(-50%,-80%);z-index:2;pointer-events:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35))}
   .deco svg{width:100%;height:auto;display:block}
-  @keyframes spunta{from{transform:translate(-50%,-80%) scale(.2)}to{transform:translate(-50%,-80%) scale(1)}}
 
   /* ====================== HUD ====================== */
-  .hud-top{position:absolute;left:12px;right:12px;top:10px;z-index:10;display:flex;gap:10px;align-items:center;pointer-events:none;flex-wrap:wrap}
+  .hud-top{position:absolute;left:12px;right:12px;top:10px;z-index:10;display:flex;gap:8px;align-items:center;pointer-events:none;flex-wrap:wrap}
   .hud-top > *{pointer-events:auto}
-  .chip{background:var(--carta);border:2px solid var(--blu);border-radius:14px;padding:6px 12px;display:flex;align-items:center;gap:8px;box-shadow:var(--ombra);
-    font-family:var(--font-ui);font-weight:700}
+  .chip{background:var(--carta);border:2px solid var(--blu);border-radius:14px;padding:6px 12px;display:flex;align-items:center;gap:8px;box-shadow:var(--ombra);font-family:var(--font-ui);font-weight:700}
   .chip.giorno{background:var(--blu);color:#fff;border-color:#fff}
-  .chip.giorno small{display:block;font-weight:500;font-size:.68rem;opacity:.85;letter-spacing:.06em;text-transform:uppercase}
-  .risorse{display:flex;gap:6px}
+  .chip.giorno small{display:block;font-weight:500;font-size:.66rem;opacity:.85;letter-spacing:.06em;text-transform:uppercase}
+  .chip.autista{padding:3px 12px 3px 4px}
+  .chip.autista img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#fff}
+  .chip.autista span{font-size:.82rem}
+  .risorse{display:flex;gap:5px}
   .ris{background:var(--carta);border:2px solid var(--c);border-radius:12px;padding:3px 9px 3px 5px;display:flex;align-items:center;gap:5px;box-shadow:var(--ombra);
-    font-family:var(--font-ui);font-weight:700;font-size:1.05rem;min-width:64px}
-  .ris .ico{width:30px;height:30px}
+    font-family:var(--font-ui);font-weight:700;font-size:1.05rem;min-width:60px}
+  .ris .ico{width:28px;height:28px}
   .ris.foglie{border-color:var(--verde);background:var(--verde-chiaro);color:#14532d}
-  .ris.su{animation:su .5s ease}
-  @keyframes su{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .carb{background:var(--carta);border:2px solid var(--oro-scuro);border-radius:12px;padding:8px 12px 8px 6px;font-size:1.15rem;display:flex;align-items:center;gap:7px;box-shadow:var(--ombra);font-family:var(--font-ui);font-weight:700}
+  .carb svg{width:28px;height:28px}
+  .carb .barra{width:110px;height:11px;border-radius:99px;background:#e8e1cc;overflow:hidden;border:1px solid #cdbf93}
+  .carb .barra span{display:block;height:100%;background:linear-gradient(90deg,var(--oro-scuro),#f0c84a);transition:width .2s}
+  .carb small{font-size:.66rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.05em;display:block;line-height:1}
   .spazio{flex:1 1 auto}
-  .btn-tondo{width:44px;height:44px;border-radius:50%;border:2px solid var(--blu);background:var(--carta);color:var(--blu);display:flex;align-items:center;justify-content:center;box-shadow:var(--ombra)}
-  .btn-tondo svg{width:21px;height:21px}
+  .btn-tondo{width:42px;height:42px;border-radius:50%;border:2px solid var(--blu);background:var(--carta);color:var(--blu);display:flex;align-items:center;justify-content:center;box-shadow:var(--ombra)}
+  .btn-tondo svg{width:20px;height:20px}
   .btn-tondo.spento{color:var(--grigio);border-color:var(--grigio)}
   a.btn-tondo{text-decoration:none}
-  .btn-tondo:focus-visible,.btn:focus-visible,.tess:focus-visible,.cest:focus-visible{outline:3px solid var(--oro);outline-offset:3px}
+  .btn-tondo:focus-visible,.btn:focus-visible,.tess:focus-visible,.cest:focus-visible,.mezzo:focus-visible{outline:3px solid var(--oro);outline-offset:3px}
 
-  .hud-basso{position:absolute;left:12px;right:12px;bottom:12px;z-index:10;display:flex;gap:12px;align-items:flex-end;pointer-events:none}
+  .hud-basso{position:absolute;left:12px;right:12px;bottom:8px;z-index:10;display:flex;gap:10px;align-items:center;pointer-events:none}
   .hud-basso > *{pointer-events:auto}
-  .zaino{background:var(--carta);border:2px solid var(--blu);border-radius:14px;padding:6px 10px;box-shadow:var(--ombra);display:flex;align-items:center;gap:8px}
-  .zaino .tit{font-family:var(--font-ui);font-weight:600;font-size:.72rem;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em}
-  .zaino .posti{display:flex;gap:5px}
-  .zaino .posto{width:40px;height:40px;border-radius:10px;border:2px dashed #b9c3d6;background:#fff;display:flex;align-items:center;justify-content:center}
-  .zaino .posto .ico{width:32px;height:32px}
-  .suggerimento{flex:1 1 auto;text-align:center;font-size:.98rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.7);font-weight:700;padding:0 8px;min-height:1.4em}
+  .flotta{display:flex;gap:6px;background:rgba(251,248,240,.94);border:2px solid var(--blu);border-radius:16px;padding:6px;box-shadow:var(--ombra)}
+  .mezzo{width:92px;border:3px solid transparent;background:#fff;border-radius:12px;padding:4px 4px 3px;display:flex;flex-direction:column;align-items:center;gap:0;transition:.12s}
+  .mezzo svg{width:62px;height:auto;display:block}
+  .mezzo b{font-family:var(--font-ui);font-size:.64rem;font-weight:700;line-height:1.1;color:var(--inchiostro);text-align:center}
+  .mezzo small{font-family:var(--font-ui);font-size:.66rem;font-weight:600;color:var(--grigio)}
+  .mezzo.attivo{border-color:var(--k);background:#fffbe9;transform:translateY(-6px);box-shadow:0 6px 0 var(--k)}
+  .mezzo[disabled]{opacity:.5;cursor:default}
+  .suggerimento{flex:1 1 auto;text-align:center;font-size:.9rem;line-height:1.3;font-weight:700;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6);padding:0 4px}
   .btn{border:0;border-radius:99px;font-weight:700;font-size:1rem;padding:12px 22px;transition:.15s}
   .btn-oro{background:linear-gradient(180deg,#f0c84a,var(--oro));color:#1F2430;box-shadow:0 6px 0 var(--oro-scuro),0 12px 20px rgba(0,0,0,.3)}
   .btn-oro:hover{filter:brightness(1.06)} .btn-oro:active{transform:translateY(4px);box-shadow:0 2px 0 var(--oro-scuro)}
@@ -101,41 +128,41 @@
   .btn-blu:active{transform:translateY(3px);box-shadow:0 2px 0 var(--blu-scuro)}
   .btn-chiaro{background:#fff;color:var(--blu);border:2px solid var(--blu)}
   .btn[disabled]{opacity:.45;cursor:default;filter:grayscale(.4)}
-  .btn svg{width:20px;height:20px;vertical-align:-4px;margin-right:6px}
-  .btn-azione{font-size:1.15rem;padding:15px 28px;white-space:nowrap}
+  .btn-azione{font-size:1.1rem;padding:14px 24px;white-space:nowrap}
 
-  /* ====================== Pannello dell'isola ====================== */
-  .pannello{position:absolute;left:50%;bottom:86px;transform:translateX(-50%);z-index:12;width:min(820px,96vw);background:var(--carta);
+  /* ====================== Pannelli ====================== */
+  .pannello{position:absolute;left:50%;bottom:108px;transform:translateX(-50%);z-index:12;width:min(900px,96vw);background:var(--carta);
     border:3px solid var(--blu);border-radius:20px;box-shadow:0 18px 44px rgba(0,0,0,.45);padding:14px 16px;display:none}
   .pannello.aperto{display:block;animation:sale .25s ease}
   @keyframes sale{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
   .pannello header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-  .pannello header h2{font-size:1.2rem;color:var(--blu)}
-  .pannello header .fase{font-family:var(--font-ui);font-size:.75rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em}
+  .pannello header .bollo{flex:0 0 44px;width:44px;height:44px;border-radius:12px;border:3px solid var(--c);overflow:hidden}
+  .pannello header .bollo img{width:100%;height:100%;object-fit:cover;object-position:50% 32%}
+  .pannello header h2{font-size:1.15rem;color:var(--blu)}
+  .pannello header .fase{font-family:var(--font-ui);font-size:.74rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em}
   .pannello .chiudi{margin-left:auto;width:38px;height:38px;border-radius:50%;border:2px solid var(--blu);background:#fff;color:var(--blu);font-size:1.3rem;line-height:1}
   .riga{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
   .blocco{flex:1 1 240px}
-  .blocco h3{font-size:.78rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-  .tessere{display:flex;gap:8px;flex-wrap:wrap;min-height:74px}
-  .tess{width:84px;border:2px solid #cfd6e4;background:#fff;border-radius:14px;padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.12s}
+  .blocco h3{font-size:.76rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .tessere{display:flex;gap:12px 10px;flex-wrap:wrap;min-height:74px;padding-top:8px}
+  .tess{width:88px;border:2px solid #cfd6e4;background:#fff;border-radius:14px;padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.12s;position:relative}
   .tess .ico{width:46px;height:46px}
-  .tess span{font-family:var(--font-ui);font-size:.68rem;font-weight:600;line-height:1.15;text-align:center;color:var(--inchiostro)}
-  .tess.scelta{border-color:var(--oro);background:#fff8de;transform:translateY(-4px);box-shadow:0 6px 0 var(--oro-scuro)}
-  .tess.respinta{animation:scuoti .4s}
-  @keyframes scuoti{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .tess span{font-family:var(--font-ui);font-size:.66rem;font-weight:600;line-height:1.15;text-align:center;color:var(--inchiostro)}
+  .tess.tolto{border-color:var(--oro);background:#fff3cf;transform:translateY(-6px) rotate(-3deg);box-shadow:0 6px 0 var(--oro-scuro)}
+  .tess.tolto::after{content:"fuori";position:absolute;right:-6px;top:-9px;background:var(--oro);color:#1F2430;font-family:var(--font-ui);font-weight:700;font-size:.62rem;padding:1px 7px;border-radius:99px;border:2px solid #fff}
+  .aiuto{position:absolute;left:-7px;top:-9px;width:24px;height:24px;border-radius:50%;border:2px solid var(--blu);background:#fff;color:var(--blu);font-family:var(--font-ui);font-weight:800;font-size:.8rem;
+    display:flex;align-items:center;justify-content:center;padding:0;z-index:1}
   .cestini{display:flex;gap:8px;flex-wrap:wrap}
-  .cest{width:84px;border:3px solid var(--c);background:#fff;border-radius:14px;padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
-  .cest img{width:58px;height:70px;object-fit:cover;object-position:50% 32%;border-radius:8px;display:block}
+  .cest{width:74px;border:3px solid var(--c);background:#fff;border-radius:14px;padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+  .cest img{width:52px;height:62px;object-fit:cover;object-position:50% 32%;border-radius:8px;display:block}
   .cest span{font-family:var(--font-ui);font-size:.6rem;font-weight:700;line-height:1.1;text-align:center;color:var(--inchiostro);letter-spacing:-.01em}
   .cest .dentro{position:absolute;right:-7px;top:-7px;min-width:22px;height:22px;border-radius:99px;background:var(--blu);color:#fff;font-family:var(--font-ui);font-weight:700;font-size:.78rem;
-    display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 5px}
-  .cest.vuoto{border-style:dashed;border-color:#b9c3d6;color:var(--grigio);justify-content:center;min-height:104px;font-family:var(--font-ui);font-size:.72rem;font-weight:600}
-  .cest.pronto{box-shadow:0 0 0 4px rgba(212,160,23,.45)}
-  .cest.ok{animation:su .4s}
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 5px;font-style:normal}
+  .cest.vuoto{border-style:dashed;border-color:#b9c3d6;color:var(--grigio);justify-content:center;min-height:96px;font-family:var(--font-ui);font-size:.66rem;font-weight:600;text-align:center}
   .nota{font-size:.9rem;color:var(--grigio);margin:8px 0 0}
   .nota.ambra{color:#8a5a00;background:#fff3cf;border-left:4px solid var(--oro);padding:6px 10px;border-radius:0 8px 8px 0}
-  .azioni-pann{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  .azioni-pann .btn{padding:8px 16px;font-size:.9rem}
+  .azioni-pann{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  .azioni-pann .btn{padding:10px 20px;font-size:.95rem}
   .aiuole{display:flex;gap:10px;flex-wrap:wrap}
   .aiuola{width:120px;border:2px solid var(--verde);background:#fff;border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
   .aiuola svg{width:76px;height:76px}
@@ -149,15 +176,13 @@
     padding:22px 24px;-webkit-user-select:text;user-select:text}
   .carta-ov h1{color:var(--blu);font-size:1.7rem}
   .carta-ov h2{color:var(--blu);font-size:1.15rem;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
-  .carta-ov h2 svg{width:24px;height:24px}
   .sotto{color:var(--grigio);margin:4px 0 0}
-  /* titolo */
   #titolo{background:linear-gradient(180deg,rgba(12,44,104,.55),rgba(20,60,34,.9)),url('Campus.png') center/cover}
   .titolo-box{text-align:center;max-width:860px;color:#fff}
-  .titolo-box .logo-eco{width:92px;height:92px;margin:0 auto}
+  .titolo-box .logo-eco{width:150px;margin:0 auto}
   .titolo-box h1{font-family:var(--font-ui);font-weight:800;font-size:clamp(2.4rem,6vw,4.2rem);line-height:1;text-shadow:0 4px 0 rgba(12,44,104,.6),0 10px 24px rgba(0,0,0,.5)}
   .titolo-box .sottotitolo{font-family:var(--font-ui);font-weight:600;font-size:1.15rem;letter-spacing:.14em;text-transform:uppercase;color:#f0c84a;margin-top:6px}
-  .titolo-box p{max-width:52ch;margin:14px auto 16px;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .titolo-box p{max-width:54ch;margin:14px auto 16px;text-shadow:0 2px 6px rgba(0,0,0,.6)}
   .casate{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:0 0 20px}
   .casata{width:138px;background:rgba(255,255,255,.94);border:4px solid transparent;border-radius:18px;padding:8px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.15s}
   .casata img{width:104px;height:104px;object-fit:contain}
@@ -165,17 +190,15 @@
   .casata.scelta{border-color:var(--oro);transform:translateY(-6px);box-shadow:0 8px 0 var(--oro-scuro)}
   .casata:focus-visible{outline:3px solid #fff;outline-offset:3px}
   .titolo-box .crediti{margin-top:22px;font-size:.78rem;opacity:.85}
-  /* tutorial */
-  .tutor{width:min(620px,94vw);text-align:center}
-  .tutor .icona-grande{width:84px;height:84px;margin:0 auto 6px;border-radius:50%;background:var(--blu-chiaro);border:3px solid var(--blu);display:flex;align-items:center;justify-content:center}
-  .tutor .icona-grande .ico{width:54px;height:54px}
+  .tutor{width:min(640px,94vw);text-align:center}
+  .tutor .icona-grande{width:110px;height:84px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
+  .tutor .icona-grande svg{width:100%;height:100%}
   .tutor .passo-lbl{font-family:var(--font-ui);font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--oro-scuro)}
-  .tutor p{margin:8px auto 0;max-width:48ch}
+  .tutor p{margin:8px auto 0;max-width:50ch}
   .tutor .passi{display:flex;justify-content:center;gap:8px;margin:18px 0 14px}
   .tutor .passi i{width:10px;height:10px;border-radius:50%;background:#cfd6e4}
   .tutor .passi i.on{background:var(--blu)}
   .tutor .nav{display:flex;justify-content:space-between;gap:12px}
-  /* sera */
   .rapporto{display:flex;flex-direction:column;gap:6px}
   .rap{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #dbe2ee;border-radius:12px;padding:8px 12px}
   .rap .tacca{flex:0 0 12px;width:12px;align-self:stretch;border-radius:6px;background:var(--c)}
@@ -200,19 +223,19 @@
   .merce.fatto{opacity:.7;border-color:var(--verde);background:var(--verde-chiaro)}
   .piede{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;align-items:center}
   .piede .risorse{margin-right:auto;flex-wrap:wrap}
-  /* finale */
   .livello{font-family:var(--font-ui);font-weight:800;font-size:1.5rem;color:#14532d;background:var(--verde-chiaro);border:3px solid var(--verde);border-radius:16px;padding:10px 18px;display:inline-block;margin:10px 0}
-  .statistiche{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+  .statistiche{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
   .stat{background:#fff;border:2px solid #dbe2ee;border-radius:12px;padding:8px 10px;text-align:center}
   .stat b{font-family:var(--font-ui);font-size:1.5rem;color:var(--blu);display:block;line-height:1.1}
   .stat span{font-size:.8rem;color:var(--grigio)}
   .debrief label{display:block;font-family:var(--font-ui);font-weight:600;font-size:.9rem;color:var(--blu);margin:10px 0 4px}
   .debrief textarea{width:100%;min-height:68px;border:2px solid #cfd6e4;border-radius:10px;padding:8px 10px;font-family:var(--font-corpo);font-size:.95rem;resize:vertical}
   .debrief textarea:focus{outline:3px solid var(--oro)}
-  .toast{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:14;background:var(--blu);color:#fff;border:2px solid #fff;border-radius:14px;padding:9px 18px;
+  .toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:14;background:var(--blu);color:#fff;border:2px solid #fff;border-radius:14px;padding:9px 18px;
     font-family:var(--font-ui);font-weight:600;box-shadow:var(--ombra);opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:90vw}
   .toast.on{opacity:1}
-  @media (max-width:820px){ .ris{min-width:52px;font-size:.95rem} .chip.giorno small{display:none} .pannello{bottom:78px} .btn-azione{font-size:1rem;padding:12px 18px} .suggerimento{display:none} }
+  @media (max-width:1100px){ .chip.autista span{display:none} .mezzo{width:80px} .mezzo svg{width:52px} .carb .barra{width:70px} .btn-azione{font-size:1rem;padding:13px 18px} }
+  @media (max-width:820px){ .ris{min-width:48px;font-size:.92rem} .chip.giorno small{display:none} .mezzo{width:62px} .mezzo svg{width:42px} .mezzo small{display:none} .carb .barra{display:none} }
   @media (prefers-reduced-motion:reduce){ *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.05s !important} }
 </style>
 </head>
@@ -221,11 +244,12 @@
 <div id="gioco">
   <div id="scena">
     <img class="sfondo" src="Campus.png" alt="" draggable="false" />
-    <div class="eroe" id="eroe" aria-hidden="true"><img id="eroeImg" src="eco/tasso_full.webp" alt="" /></div>
+    <svg id="strade" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
   </div>
 
   <div class="hud-top">
     <div class="chip giorno"><div><span id="giornoNome">Lunedì</span><small id="giornoFase">mattino · giorno 1 di 5</small></div></div>
+    <div class="chip autista"><img id="autistaImg" src="eco/tasso_head.webp" alt="" /><span id="autistaNome">Tassorosso</span></div>
     <div class="risorse" id="risorse"></div>
     <span class="spazio"></span>
     <button class="btn-tondo" id="btnGuida" type="button" aria-label="Come si gioca" title="Come si gioca">
@@ -239,24 +263,24 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
   <section class="pannello" id="pannello" aria-live="polite"></section>
 
   <div class="hud-basso">
-    <div class="zaino" id="zaino"></div>
+    <div class="flotta" id="flotta" role="radiogroup" aria-label="Scegli il camioncino"></div>
+    <div class="carb" id="carb" title="Carburante dei camioncini per oggi"></div>
     <div class="suggerimento" id="suggerimento" role="status" aria-live="polite"></div>
     <button class="btn btn-oro btn-azione" id="btnAzione" type="button">Suona la campanella</button>
   </div>
 </div>
 
-<!-- Sera: camion + bottega -->
+<!-- Sera: resoconto degli impianti + bottega -->
 <div class="overlay" id="sera" role="dialog" aria-modal="true" aria-labelledby="seraTitolo">
   <div class="carta-ov">
     <h1 id="seraTitolo">Sera</h1>
     <p class="sotto" id="seraSotto"></p>
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h13v10H1zM14 9h4l4 4v3h-8z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>È passato il camion della raccolta</span></h2>
+    <h2><span>Che cosa è successo oggi</span></h2>
     <div class="rapporto" id="rapporto"></div>
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.500-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6"/></svg><span>La bottega del campus</span></h2>
+    <h2><span>La bottega del campus</span></h2>
     <p class="sotto" style="margin-bottom:10px">Usa i materiali riciclati per far crescere il campus. Non bastano per tutto: scegli che cosa viene prima.</p>
     <div class="bottega" id="bottega"></div>
     <div class="piede">
@@ -276,9 +300,9 @@
     <div id="finaleErrori" style="text-align:left"></div>
     <div class="debrief" style="text-align:left">
       <h2>Ripensa alla tua settimana</h2>
-      <label for="dbr1">Dove hai messo i cestini il primo giorno? Con quello che sai adesso, li metteresti negli stessi posti?</label>
+      <label for="dbr1">Come hai deciso quale camioncino far uscire per primo e che giro fargli fare? Che cosa cambieresti?</label>
       <textarea id="dbr1"></textarea>
-      <label for="dbr2">Quale rifiuto ti ha ingannato di più? Come lo riconoscerai la prossima volta, a scuola o a casa?</label>
+      <label for="dbr2">Quale rifiuto nel cestino sbagliato è stato più difficile da scovare? Come lo riconoscerai la prossima volta, a scuola o a casa?</label>
       <textarea id="dbr2"></textarea>
     </div>
     <div class="piede" style="justify-content:center">
@@ -308,8 +332,8 @@
   <div class="titolo-box">
     <div class="logo-eco" id="logoEco" aria-hidden="true"></div>
     <h1 id="titoloH">Eco-Campus</h1>
-    <div class="sottotitolo">La fattoria del riciclo</div>
-    <p>Una settimana per trasformare i rifiuti della scuola in un campus più verde. Scegli la tua casata e comincia.</p>
+    <div class="sottotitolo">Il giro dei camioncini</div>
+    <p>Cinque camioncini, cinque frazioni, una settimana per trasformare i rifiuti della scuola in un campus più verde. Scegli la casata che guiderà e comincia.</p>
     <div class="casate" id="casate" role="radiogroup" aria-label="Scegli la tua casata"></div>
     <div><button class="btn btn-oro btn-azione" id="btnGioca" type="button">Inizia la settimana</button></div>
     <div class="crediti">Scuola Sacra Famiglia · Animatore Digitale Andrea Cerioli · &copy; 2026</div>
@@ -331,8 +355,9 @@ function sid(){ let v=localStorage.getItem('eco_sid'); if(!v){ v=(crypto.randomU
 function run(){ const n=(+localStorage.getItem('eco_run')||0)+1; localStorage.setItem('eco_run',n); return n; }
 const $ = id => document.getElementById(id);
 const PARAMS = new URLSearchParams(location.search);
-// Leva del docente: ?aiuto=subito fa tornare indietro subito il rifiuto sbagliato, con un indizio (default: lo dice il camion la sera)
+// Leva del docente: ?aiuto=subito avvisa prima di partire se nel carico c'e ancora un intruso (default: lo scopre l'impianto)
 const AIUTO_SUBITO = PARAMS.get('aiuto')==='subito';
+let veloce = PARAMS.get('veloce')==='1';      // spostamenti istantanei (prove e chi non vuole animazioni)
 
 /* ====================== Icone (set coerente, vedi svg-craft) ====================== */
 const INK = '#22304a';
@@ -394,14 +419,17 @@ const DECO = {
 const gruppo = inner => '<g stroke="'+INK+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none">'+inner+'</g>';
 const ico  = n => '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true">'+gruppo(OGG[n])+'</svg>';
 const deco = n => '<svg viewBox="0 0 64 64" aria-hidden="true">'+gruppo(DECO[n])+'</svg>';
+const svgCamion = col => '<svg viewBox="0 0 62 42" aria-hidden="true">'+gruppo('<path d="M3 10h36a2 2 0 0 1 2 2v20H3a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2z" fill="'+col+'"/><path d="M8 16v10M15 16v10M22 16v10M29 16v10" stroke="#fff" stroke-opacity=".55"/><path d="M41 16h10l8 8v8H41z" fill="#fff"/><path d="M45 19h5l4.500 4.500H45z" fill="#bfe3f5"/><path d="M1 32h58"/><circle cx="14" cy="34" r="6" fill="#3a4257"/><circle cx="14" cy="34" r="2" fill="#cfd4dc" stroke="none"/><circle cx="48" cy="34" r="6" fill="#3a4257"/><circle cx="48" cy="34" r="2" fill="#cfd4dc" stroke="none"/>')+'</svg>';
+const SVG_FABBRICA = '<svg viewBox="0 0 50 42" aria-hidden="true">'+gruppo('<path d="M4 38V20l10-6v8l10-8v8l10-8v24z" fill="#e8edf5"/><rect x="36" y="6" width="8" height="32" fill="#cfd6e4"/><path d="M2 38h46"/><rect x="10" y="27" width="6" height="6" fill="#5aa9e6"/><rect x="21" y="27" width="6" height="6" fill="#5aa9e6"/><path d="M40 4c2-3 6-2 6 1"/>')+'</svg>';
+const SVG_TANICA = '<svg viewBox="0 0 34 42" aria-hidden="true">'+gruppo('<path d="M6 12h16l2 4v20a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V16z" fill="#f4c63f"/><path d="M9 12V7h8v5"/><path d="M22 14h5l3 5-3 3"/><path d="M14 22c-3 4-4 6-4 8a4 4 0 0 0 8 0c0-2-1-4-4-8z" fill="#fff"/>')+'</svg>';
 
 /* ====================== Contenuti: le 5 frazioni di Orzinuovi e i rifiuti della scuola ====================== */
 const CAT={
-  carta:   {nome:'Carta',            col:'var(--c-carta)',   img:'eco/cestino_carta.webp',           ris:'carta'},
-  plastica:{nome:'Plastica',         col:'var(--c-plastica)',img:'eco/cestino_plastica.webp',        ris:'plastica'},
-  vetro:   {nome:'Vetro e lattine',  col:'var(--c-vetro)',   img:'eco/cestino_vetro.webp',           ris:'vetro'},
-  organico:{nome:'Organico',         col:'var(--c-organico)',img:'eco/cestino_organico.webp',        ris:'compost'},
-  indiff:  {nome:'Indifferenziato',  col:'var(--c-indiff)',  img:'eco/cestino_indifferenziato.webp', ris:null}
+  carta:   {nome:'Carta',           col:'#2f6fc4',img:'eco/cestino_carta.webp',           ris:'carta',   imp:'Cartiera'},
+  plastica:{nome:'Plastica',        col:'#e0a91a',img:'eco/cestino_plastica.webp',        ris:'plastica',imp:'Impianto della plastica'},
+  vetro:   {nome:'Vetro e lattine', col:'#2e8b57',img:'eco/cestino_vetro.webp',           ris:'vetro',   imp:'Vetreria e fonderia'},
+  organico:{nome:'Organico',        col:'#8a5a2b',img:'eco/cestino_organico.webp',        ris:'compost', imp:'Compostaggio'},
+  indiff:  {nome:'Indifferenziato', col:'#6b7280',img:'eco/cestino_indifferenziato.webp', ris:null,      imp:'Discarica'}
 };
 const ORDINE=['carta','plastica','vetro','organico','indiff'];
 const RIS={carta:{nome:'Carta',ico:'foglio',col:'var(--c-carta)'},plastica:{nome:'Plastica',ico:'bottiglia',col:'var(--c-plastica)'},
@@ -434,51 +462,83 @@ const RIFIUTI={
 };
 const PER_CAT={}; for(const k in RIFIUTI){ (PER_CAT[RIFIUTI[k].cat]=PER_CAT[RIFIUTI[k].cat]||[]).push(k); }
 
-/* ====================== Il campus: isole, orto, casate, progetti ====================== */
+/* ====================== Il campus: isole, strade, impianti ====================== */
 const MAR=2482/1728;
 const ISOLE=[
   {id:'mensa',     nome:'La mensa',             x:77.4, y:37.5, prof:{organico:6,plastica:3,vetro:2,carta:1,indiff:1}},
-  {id:'primaria',  nome:'La scuola primaria',   x:92.3, y:44.0, prof:{carta:5,indiff:4,plastica:2,organico:2}},
-  {id:'secondaria',nome:'La scuola secondaria', x:47.2, y:49.6, prof:{carta:5,indiff:3,plastica:3,vetro:1}},
-  {id:'arena',     nome:'La QDV Arena',         x:73.8, y:17.2, prof:{plastica:4,vetro:4,carta:2,organico:1}},
-  {id:'campi',     nome:'I campi sportivi',     x:58.5, y:29.0, prof:{plastica:5,organico:3,vetro:2,indiff:1}},
+  {id:'primaria',  nome:'La scuola primaria',   x:90.5, y:44.0, prof:{carta:5,indiff:4,plastica:2,organico:2}},
+  {id:'secondaria',nome:'La scuola secondaria', x:47.2, y:51.0, prof:{carta:5,indiff:3,plastica:3,vetro:1}},
+  {id:'arena',     nome:'La QDV Arena',         x:75.5, y:19.0, prof:{plastica:4,vetro:4,carta:2,organico:1}},
+  {id:'campi',     nome:'I campi sportivi',     x:58.5, y:32.0, prof:{plastica:5,organico:3,vetro:2,indiff:1}},
   {id:'piscine',   nome:'Le piscine',           x:31.3, y:42.8, prof:{plastica:4,indiff:4,vetro:1,organico:1}},
-  {id:'ingresso',  nome:'L’ingresso',      x:73.4, y:62.7, prof:{carta:4,vetro:2,plastica:2,indiff:2}}
+  {id:'ingresso',  nome:'L’ingresso',           x:73.4, y:60.5, prof:{carta:4,vetro:2,plastica:2,indiff:2}}
 ];
-const ORTO={id:'orto',nome:'L’orto del campus',x:33.3,y:13.5};
-const POSTI=3, N_AIUOLE=4, SEMINA=2, RACCOLTO=4, COSTO_CESTINO=3, GIORNI=['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
-const PER_ISOLA=[2,2,2,3,3];          // rifiuti prodotti da ogni isola, giorno per giorno
-const KIT=['carta','carta','plastica','vetro','organico','indiff','indiff'];
-const CASATE={aquila:{nome:'Aquilablu',x:37,y:58},cero:{nome:'Cerogiallo',x:62.5,y:72.5},tasso:{nome:'Tassorosso',x:48.5,y:31},quercia:{nome:'Querciaverde',x:40.5,y:19.5}};
+const ORTO={id:'orto',nome:'L’orto del campus',x:34,y:13.5};
+// Strade rilevate sulla foto aerea (coordinate in % di larghezza e altezza). I camioncini seguono questo grafo.
+const NODI={
+  D:[40,74], P1:[25,74], P2:[12,72], P3:[52,74], Q1:[20,65], F1:[40,63.5], F2:[55,63.5], F3:[68,64],
+  R1:[60.5,79], R2:[66,73], R3:[71.5,79], R4:[66,85], E1:[80,80.5], E2:[91,81.5], E3:[95.5,70], E4:[95.5,50], E5:[95.5,28],
+  N1:[89,10], N2:[78,8], N3:[67,4.5], N4:[55,4.5], T1:[50,10], T2:[50,28], O1:[30,20], W1:[19,10], W2:[10,50], W3:[5,76],
+  s_mensa:[77.4,43.5], s_primaria:[92.5,50], s_secondaria:[46,58.5], s_arena:[73,11], s_campi:[53.5,33], s_piscine:[27,48], s_ingresso:[72,65.5],
+  x_carta:[8,89], x_plastica:[70,92], x_vetro:[90.5,87], x_organico:[21.5,5.5], x_indiff:[90.5,6]
+};
+const ARCHI=[['D','P1'],['P1','P2'],['P2','W3'],['D','P3'],['P3','R1'],['D','F1'],['F1','F2'],['F2','F3'],['P3','F2'],['F3','R2'],['R1','R2'],['R2','R3'],['R3','R4'],['R4','R1'],
+  ['R3','E1'],['E1','E2'],['E2','E3'],['E3','E4'],['E4','E5'],['E5','N1'],['N1','N2'],['N2','N3'],['N3','N4'],['N4','T1'],['T1','T2'],['T1','O1'],['O1','W1'],['W1','W2'],['W2','P2'],['W2','W3'],['Q1','P1'],
+  ['s_piscine','Q1'],['s_piscine','W2'],['s_secondaria','F1'],['s_secondaria','F2'],['s_ingresso','F3'],['s_ingresso','E1'],['s_primaria','E4'],['s_arena','N2'],['s_arena','N3'],['s_mensa','s_arena'],['s_mensa','s_primaria'],['s_mensa','s_ingresso'],['s_campi','T2'],['s_campi','s_secondaria'],
+  ['x_carta','W3'],['x_plastica','R4'],['x_vetro','E2'],['x_organico','W1'],['x_indiff','N1']];
+const dNodi=(a,b)=>Math.hypot(NODI[a][0]-NODI[b][0],(NODI[a][1]-NODI[b][1])/MAR);
+const ID_NODI=Object.keys(NODI), DIST={}, PROSS={};
+(function floyd(){
+  ID_NODI.forEach(a=>{ DIST[a]={}; PROSS[a]={}; ID_NODI.forEach(b=>{ DIST[a][b]=a===b?0:Infinity; PROSS[a][b]=null; }); });
+  ARCHI.forEach(([a,b])=>{ const d=dNodi(a,b); DIST[a][b]=DIST[b][a]=d; PROSS[a][b]=b; PROSS[b][a]=a; });
+  ID_NODI.forEach(k=>ID_NODI.forEach(i=>ID_NODI.forEach(j=>{ if(DIST[i][k]+DIST[k][j]<DIST[i][j]){ DIST[i][j]=DIST[i][k]+DIST[k][j]; PROSS[i][j]=PROSS[i][k]; } })));
+})();
+function percorso(a,b){ const p=[a]; let u=a, g=0; while(u!==b && g++<60){ u=PROSS[u][b]; p.push(u); } return p; }
+
+const POSTI=5, BONUS_COMPLETA=2, N_AIUOLE=4, SEMINA=2, RACCOLTO=4, COSTO_CESTINO=2, GIORNI=['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+const PER_ISOLA=[3,3,4,4,4];          // rifiuti prodotti da ogni isola, giorno per giorno
+// All'inizio ogni isola ha solo l'indifferenziato; i cestini del riciclo sono 10 e vanno piazzati dal giocatore.
+const KIT=['carta','carta','carta','plastica','plastica','plastica','vetro','vetro','organico','organico'];
+const CAP_CESTINO=8, CASSONE=8, CASSONE_GRANDE=12, CARBURANTE=800, CARBURANTE_GRANDE=1100;
+const ERRORE=.16, ERRORE_CARTELLI=.05;   // quanto spesso uno studente distratto sbaglia cestino, anche se quello giusto c'e
+const SOGLIE=[25,48];                    // foglie per "Campus in fiore" e "Campus rigoglioso"
+const CASATE={aquila:{nome:'Aquilablu',x:36,y:58},cero:{nome:'Cerogiallo',x:62.5,y:71},tasso:{nome:'Tassorosso',x:47.5,y:36},quercia:{nome:'Querciaverde',x:41,y:19.5}};
 const ATTREZZI=[
-  {id:'compostiera',nome:'Compostiera',costo:{compost:4},desc:'Da domani ogni rifiuto organico vale il doppio di compost.',fig:'compost'},
-  {id:'carretto',nome:'Carretto',costo:{plastica:3,vetro:2},desc:'Lo zaino passa da 3 a 6 posti: meno viaggi a vuoto.',fig:'scatola'},
-  {id:'cartelli',nome:'Cartelli illustrati',costo:{carta:4},desc:'Gli indizi sui rifiuti non costano più nulla.',fig:'cartoncino'}
+  {id:'cassone',nome:'Cassone grande',costo:{plastica:3,vetro:2},desc:'Ogni camioncino porta '+CASSONE_GRANDE+' rifiuti invece di '+CASSONE+': meno viaggi all’impianto.',fig:'scatola'},
+  {id:'serbatoio',nome:'Serbatoio grande',costo:{vetro:3,carta:2},desc:'Più carburante ogni giorno: i camioncini arrivano più lontano.',fig:'lattina'},
+  {id:'cartelli',nome:'Cartelli illustrati',costo:{carta:4},desc:'Con i cartelli sui cestini gli studenti sbagliano molto meno.',fig:'cartoncino'},
+  {id:'compostiera',nome:'Compostiera',costo:{compost:4},desc:'Da domani ogni rifiuto organico vale il doppio di compost.',fig:'compost'}
 ];
 const PROGETTI=[
-  {id:'aiuola',  nome:'Aiuola fiorita',                 chi:'quercia',costo:{compost:3},          foglie:4,x:88.5,y:50.5,deco:'aiuola'},
-  {id:'lampione',nome:'Lampione di vetro riciclato',    chi:'cero',   costo:{vetro:4},            foglie:5,x:69.5,y:66,  deco:'lampione'},
-  {id:'panchina',nome:'Panchina di plastica riciclata', chi:'tasso',  costo:{plastica:5},         foglie:6,x:56,  y:38.5,deco:'panchina'},
-  {id:'quaderni',nome:'Quaderni di carta riciclata',    chi:'aquila', costo:{carta:5},            foglie:6,x:42,  y:55,  deco:'quaderni'},
-  {id:'albero',  nome:'Albero da frutto',               chi:'quercia',costo:{compost:4,carta:2},  foglie:7,x:27,  y:18,  deco:'albero'},
-  {id:'murales', nome:'Murales di tappi',               chi:'tasso',  costo:{plastica:3,vetro:3}, foglie:7,x:67.5,y:21.5,deco:'murales'},
-  {id:'casetta', nome:'Casetta dei libri',              chi:'aquila', costo:{carta:6},            foglie:7,x:78.5,y:67,  deco:'casetta'}
+  {id:'aiuola',  nome:'Aiuola fiorita',                 chi:'quercia',costo:{compost:3},          foglie:4,x:86,  y:53.5,deco:'aiuola'},
+  {id:'lampione',nome:'Lampione di vetro riciclato',    chi:'cero',   costo:{vetro:4},            foglie:5,x:78.5,y:70,  deco:'lampione'},
+  {id:'panchina',nome:'Panchina di plastica riciclata', chi:'tasso',  costo:{plastica:5},         foglie:6,x:60,  y:41.5,deco:'panchina'},
+  {id:'quaderni',nome:'Quaderni di carta riciclata',    chi:'aquila', costo:{carta:5},            foglie:6,x:41,  y:53,  deco:'quaderni'},
+  {id:'albero',  nome:'Albero da frutto',               chi:'quercia',costo:{compost:4,carta:2},  foglie:7,x:27,  y:14,  deco:'albero'},
+  {id:'murales', nome:'Murales di tappi',               chi:'tasso',  costo:{plastica:3,vetro:3}, foglie:7,x:83,  y:20,  deco:'murales'},
+  {id:'casetta', nome:'Casetta dei libri',              chi:'aquila', costo:{carta:6},            foglie:7,x:63,  y:57,  deco:'casetta'}
 ];
 
 /* ====================== Stato ====================== */
-let S=null; const CHIAVE='eco_stato';
+let S=null; const CHIAVE='eco2_stato';
 function nuovoStato(casata){
   const seed=PARAMS.get('seed')||(sid()+'-'+run());
-  S={seed, casata:casata||'tasso', giorno:0, fase:'mattino', cestini:{}, magazzino:[...KIT], aTerra:{}, zaino:[], conferiti:[],
+  S={seed, casata:casata||'tasso', giorno:0, fase:'mattino', cestini:{}, bidoni:{}, aTerra:{}, magazzino:[...KIT], camion:{}, carb:CARBURANTE, scarichi:[],
      ris:{carta:0,plastica:0,vetro:0,compost:0}, foglie:0, attrezzi:{}, progetti:[], orto:Array.from({length:N_AIUOLE},()=>({st:'vuoto',g:-1})),
-     stat:{giusti:0,sprechi:0,contam:0,errori:{}}, pos:{x:66,y:56}, uid:1, rapporto:null, visti:{}};
-  ISOLE.forEach(i=>{ S.cestini[i.id]=[]; S.aTerra[i.id]=[]; });
+     stat:{giusti:0,sprechi:0,contam:0,scovati:0,falsi:0,errori:{}}, uid:1, rapporto:null};
+  ISOLE.forEach(i=>{ S.cestini[i.id]=['indiff']; S.aTerra[i.id]=[]; S.bidoni[i.id]={}; ORDINE.forEach(c=>S.bidoni[i.id][c]=[]); });
+  ORDINE.forEach(c=>S.camion[c]={nodo:'D',carico:[]});
   salva();
 }
 function salva(){ try{ localStorage.setItem(CHIAVE,JSON.stringify(S)); }catch(e){} }
-function carica(){ try{ const o=JSON.parse(localStorage.getItem(CHIAVE)||'null'); if(!o||!o.cestini) return false; S=o; return true; }catch(e){ return false; } }
-const capZaino = () => S.attrezzi.carretto?6:3;
-const rifiutiInGiro = () => ISOLE.reduce((n,i)=>n+S.aTerra[i.id].length,0)+S.zaino.length;
+function carica(){ try{ const o=JSON.parse(localStorage.getItem(CHIAVE)||'null'); if(!o||!o.camion) return false; S=o; return true; }catch(e){ return false; } }
+const capCassone = () => S.attrezzi.cassone?CASSONE_GRANDE:CASSONE;
+const carbMax = () => S.attrezzi.serbatoio?CARBURANTE_GRANDE:CARBURANTE;
+const nelCassone = c => S.camion[c].carico.reduce((n,b)=>n+b.items.length,0);
+const completa = id => ORDINE.every(c=>S.cestini[id].includes(c));
+const nComplete = () => ISOLE.filter(i=>completa(i.id)).length;
+const neiCestini = () => ISOLE.reduce((n,i)=>n+ORDINE.reduce((m,c)=>m+S.bidoni[i.id][c].length,0),0);
+const aTerraTot = () => ISOLE.reduce((n,i)=>n+S.aTerra[i.id].length,0);
 
 /* ====================== Suoni (WebAudio) ====================== */
 let actx=null, sfxOn=localStorage.getItem('eco_sfx')!=='0';
@@ -496,54 +556,89 @@ const SFX={
   butta(){ tono(330,.1,'triangle',.07); tono(220,.16,'sine',.06,.06); },
   no(){ tono(196,.22,'triangle',.06); },
   compra(){ [523,659,784,1047].forEach((f,i)=>tono(f,.3,'triangle',.07,i*.07)); },
-  camion(){ tono(70,.9,'sawtooth',.04); tono(92,.9,'sawtooth',.03,.15); },
+  motore(){ tono(82,.5,'sawtooth',.035); tono(110,.4,'sawtooth',.025,.12); },
+  clacson(){ tono(440,.16,'square',.04); tono(440,.2,'square',.04,.2); },
+  scarica(){ tono(160,.25,'triangle',.07); [392,523,659].forEach((f,i)=>tono(f,.25,'sine',.06,.15+i*.08)); },
   semina(){ tono(392,.18,'sine',.06); tono(494,.22,'sine',.06,.1); },
   fine(){ [523,659,784,1047,1319].forEach((f,i)=>tono(f,.7,'sine',.07,i*.13)); }
 };
 
-/* ====================== Scena e movimento ====================== */
-const scena=$('scena'), eroe=$('eroe');
-function layout(){ const w=Math.min(innerWidth, innerHeight*MAR); scena.style.width=w+'px'; scena.style.height=(w/MAR)+'px'; }
-let meta=null, alArrivo=null, ultimo=0;
-function vaiA(x,y,poi){ meta={x,y}; alArrivo=poi||null; }
+/* ====================== Scena, camioncini, movimento ====================== */
+const scena=$('scena');
+function layout(){ const w=Math.min(innerWidth-16, (innerHeight-62-104)*MAR); scena.style.width=w+'px'; scena.style.height=(w/MAR)+'px'; }   // 62 e 104 px: fasce dell'HUD sopra e sotto
+let attivo=null;          // camioncino scelto (frazione)
+let inMoto=null;          // {cat, via, i, x, y, poi}
+let ultimo=0;
+const POSTO_DEP={carta:-7,plastica:-3.5,vetro:0,organico:3.5,indiff:7};      // al deposito i camioncini stanno in fila
+function posCamion(c){ const n=S.camion[c].nodo, p=NODI[n]; return n==='D' ? [p[0]+POSTO_DEP[c],p[1]+1.5] : p; }
+function aggiornaCamion(){
+  ORDINE.forEach(c=>{
+    let el=scena.querySelector('.camion[data-cat="'+c+'"]');
+    if(!el){ el=document.createElement('div'); el.className='camion'; el.dataset.cat=c; el.style.setProperty('--k',CAT[c].col); el.innerHTML=svgCamion(CAT[c].col)+'<span class="carico"></span>'; scena.appendChild(el); }
+    if(!inMoto||inMoto.cat!==c){ const p=posCamion(c); el.style.left=p[0]+'%'; el.style.top=p[1]+'%'; el.classList.remove('moto'); }
+    const n=nelCassone(c); el.classList.toggle('carico-si',n>0); el.querySelector('.carico').textContent=n+'/'+capCassone();
+    el.classList.toggle('attivo',attivo===c);
+  });
+}
+function guida(cat,dest,poi){
+  if(inMoto) return;
+  const c=S.camion[cat]; if(c.nodo===dest){ if(poi) poi(); return; }
+  const costo=DIST[c.nodo][dest];
+  if(costo>S.carb+1e-6){ toast('Non basta il carburante per arrivare fin lì: servono '+Math.ceil(costo)+', ne restano '+Math.floor(S.carb)+'.',3800); SFX.no(); return; }
+  chiudiPannello(); SFX.motore();
+  if(veloce){ S.carb-=costo; c.nodo=dest; salva(); aggiornaCamion(); renderHUD(); if(poi) poi(); return; }
+  const p=posCamion(cat); inMoto={cat,via:percorso(c.nodo,dest),i:1,x:p[0],y:p[1],poi};
+}
 function ciclo(t){
-  const dt=Math.min(.25,(t-ultimo)/1000||0); ultimo=t;   // tetto largo: il passo non rallenta sui dispositivi lenti
-  if(S && meta){
-    const dx=meta.x-S.pos.x, dy=(meta.y-S.pos.y)/MAR, d=Math.hypot(dx,dy), passo=34*dt;
-    if(d<=passo){ S.pos.x=meta.x; S.pos.y=meta.y; meta=null; eroe.classList.remove('cammina'); const f=alArrivo; alArrivo=null; if(f) f(); }
-    else{ S.pos.x+=dx/d*passo; S.pos.y+=dy/d*passo*MAR; eroe.classList.add('cammina'); if(Math.abs(dx)>.05) eroe.classList.toggle('sx',dx<0); }
-    eroe.style.left=S.pos.x+'%'; eroe.style.top=S.pos.y+'%';
+  const dt=Math.min(.25,(t-ultimo)/1000||0); ultimo=t;      // tetto largo: il passo non rallenta sui dispositivi lenti
+  if(S && inMoto){
+    const m=inMoto, el=scena.querySelector('.camion[data-cat="'+m.cat+'"]'); let resto=44*dt;
+    while(resto>0 && m.i<m.via.length){
+      const q=NODI[m.via[m.i]], dx=q[0]-m.x, dy=(q[1]-m.y)/MAR, d=Math.hypot(dx,dy);
+      if(Math.abs(dx)>.05) el.classList.toggle('sx',dx<0);
+      if(d<=resto){ m.x=q[0]; m.y=q[1]; resto-=d; S.carb=Math.max(0,S.carb-d); m.i++; }
+      else{ m.x+=dx/d*resto; m.y+=dy/d*resto*MAR; S.carb=Math.max(0,S.carb-resto); resto=0; }
+    }
+    el.style.left=m.x+'%'; el.style.top=m.y+'%'; el.classList.add('moto'); renderCarb();
+    if(m.i>=m.via.length){ S.camion[m.cat].nodo=m.via[m.via.length-1]; inMoto=null; el.classList.remove('moto'); salva(); aggiornaCamion(); renderHUD(); if(m.poi) m.poi(); }
   }
   requestAnimationFrame(ciclo);
 }
 const inPausa = () => !!document.querySelector('.overlay.aperto');
 
 /* ====================== Disegno della mappa ====================== */
-let qui=null;       // isola (o 'orto') in cui si trova l'eroe con il pannello aperto
+function renderStrade(){
+  $('strade').innerHTML=ARCHI.map(([a,b])=>'<line x1="'+NODI[a][0]+'" y1="'+NODI[a][1]+'" x2="'+NODI[b][0]+'" y2="'+NODI[b][1]+'" stroke="#fff" stroke-opacity=".75" stroke-dasharray="7 7" stroke-linecap="round" vector-effect="non-scaling-stroke" stroke-width="3"/>').join('');
+}
 function renderMappa(){
-  scena.querySelectorAll('.isola,.png,.deco').forEach(n=>n.remove());
+  scena.querySelectorAll('.isola,.png,.deco,.impianto').forEach(n=>n.remove());
   ISOLE.forEach(i=>{
     const b=document.createElement('button'); b.type='button';
-    const n=S.aTerra[i.id].length;
-    b.className='isola'+(n&&S.fase==='giorno'?' ha-rifiuti':'')+(qui===i.id?' qui':'');
+    const terra=S.aTerra[i.id].length, meta=S.fase==='giro'&&attivo&&S.bidoni[i.id][attivo].length>0;
+    b.className='isola'+(completa(i.id)?' completa':'')+(terra?' sporca':'')+(meta?' meta':'');
     b.style.left=i.x+'%'; b.style.top=i.y+'%';
-    b.setAttribute('aria-label',i.nome+': '+S.cestini[i.id].length+' cestini'+(n?', '+n+' rifiuti da smistare':''));
-    b.innerHTML='<span class="puntini">'+S.cestini[i.id].map(c=>'<i style="background:'+CAT[c].col+'"></i>').join('')+'</span>'+
-      '<span class="disco"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#123E90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.200 12H6.200zM3 8h18M9 8V5h6v3M10 12v5M14 12v5"/></svg></span>'+
-      '<span class="conta">'+n+'</span><span class="nome">'+i.nome+'</span>';
-    b.addEventListener('click',()=>{ if(inPausa()) return; chiudiPannello(); vaiA(i.x,i.y+7,()=>apriIsola(i.id)); });
+    b.setAttribute('aria-label',i.nome+': '+S.cestini[i.id].map(c=>CAT[c].nome+' '+S.bidoni[i.id][c].length).join(', ')+(terra?'. A terra '+terra:''));
+    b.innerHTML='<span class="bidoni">'+ORDINE.filter(c=>S.cestini[i.id].includes(c)).map(c=>'<i class="'+(S.bidoni[i.id][c].length>=CAP_CESTINO?'pieno':'')+'" style="--c:'+CAT[c].col+'">'+(S.bidoni[i.id][c].length||'')+'</i>').join('')+'</span>'+
+      '<span class="disco"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#123E90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.200 12H6.200zM3 8h18M9 8V5h6v3M10 12v5M14 12v5"/></svg></span>'+
+      '<span class="spunta"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>'+
+      '<span class="terra" title="Rifiuti a terra">'+terra+'</span><span class="nome">'+i.nome+'</span>';
+    b.addEventListener('click',()=>toccaIsola(i.id));
     scena.appendChild(b);
   });
-  // l'orto: la figura mostra lo stato delle aiuole
-  const o=document.createElement('button'); o.type='button'; o.className='isola orto'+(qui==='orto'?' qui':'');
-  o.style.left=ORTO.x+'%'; o.style.top=ORTO.y+'%';
+  const o=document.createElement('button'); o.type='button'; o.className='isola orto'; o.style.left=ORTO.x+'%'; o.style.top=ORTO.y+'%';
   const pronte=S.orto.filter(a=>a.st==='pronto').length, germ=S.orto.filter(a=>a.st==='germoglio').length;
   o.setAttribute('aria-label',ORTO.nome+': '+pronte+' aiuole pronte, '+germ+' in crescita');
-  o.innerHTML='<span class="disco" style="padding:6px">'+deco(pronte?'ortoPronto':germ?'ortoGermoglio':'ortoVuoto')+'</span>'+
-    '<span class="conta" style="display:'+(pronte?'flex':'none')+'">'+pronte+'</span><span class="nome">'+ORTO.nome+'</span>';
-  o.addEventListener('click',()=>{ if(inPausa()) return; chiudiPannello(); vaiA(ORTO.x,ORTO.y+8,()=>apriOrto()); });
+  o.innerHTML='<span class="disco">'+deco(pronte?'ortoPronto':germ?'ortoGermoglio':'ortoVuoto')+'</span><span class="conta" style="display:'+(pronte?'flex':'none')+'">'+pronte+'</span><span class="nome">'+ORTO.nome+'</span>';
+  o.addEventListener('click',()=>{ if(inPausa()||inMoto) return; apriOrto(); });
   scena.appendChild(o);
-  // le altre casate, con le loro richieste
+  ORDINE.forEach(c=>{
+    const p=NODI['x_'+c], b=document.createElement('button'); b.type='button';
+    b.className='impianto'+(p[1]>80?' sopra':'')+(S.fase==='giro'&&attivo===c&&nelCassone(c)?' meta':''); b.style.left=p[0]+'%'; b.style.top=p[1]+'%'; b.style.setProperty('--c',CAT[c].col);
+    b.setAttribute('aria-label',CAT[c].imp+': ritira '+CAT[c].nome.toLowerCase());
+    b.innerHTML='<span class="disco">'+SVG_FABBRICA+'</span><span class="nome">'+CAT[c].imp+'</span>';
+    b.addEventListener('click',()=>toccaImpianto(c));
+    scena.appendChild(b);
+  });
   for(const k in CASATE){
     if(k===S.casata) continue;
     const c=CASATE[k], miei=PROGETTI.filter(p=>p.chi===k&&!S.progetti.includes(p.id));
@@ -555,112 +650,187 @@ function renderMappa(){
   }
   PROGETTI.forEach(p=>{ if(!S.progetti.includes(p.id)) return;
     const d=document.createElement('div'); d.className='deco'; d.style.left=p.x+'%'; d.style.top=p.y+'%'; d.innerHTML=deco(p.deco); scena.appendChild(d); });
-  renderHUD();
+  aggiornaCamion(); renderHUD();
 }
 function costoTxt(costo){ return Object.keys(costo).map(k=>costo[k]+' '+(k==='compost'?'di compost':'di '+RIS[k].nome.toLowerCase())).join(' e '); }
+const articolo = n => (/^Aiuola/.test(n)?'un’':/^(Panchina|Casetta)/.test(n)?'una ':/^Quaderni/.test(n)?'i ':'un ')+n.charAt(0).toLowerCase()+n.slice(1);
 function parla(k){
   const c=CASATE[k], miei=PROGETTI.filter(p=>p.chi===k&&!S.progetti.includes(p.id));
   toast(miei.length ? c.nome+': «Mi servono '+costoTxt(miei[0].costo)+' per '+articolo(miei[0].nome)+'. Passa in bottega questa sera!»'
                     : c.nome+': «Grazie! Guarda com’è diventato bello il campus.»', 5200);
 }
-const articolo = n => (/^Aiuola/.test(n)?'un’':/^(Panchina|Casetta)/.test(n)?'una ':/^Quaderni/.test(n)?'i ':'un ')+n.charAt(0).toLowerCase()+n.slice(1);
 function risHtml(){
   return Object.keys(RIS).map(k=>'<div class="ris" style="--c:'+RIS[k].col+'" title="'+RIS[k].nome+'" data-r="'+k+'">'+ico(RIS[k].ico)+'<span>'+S.ris[k]+'</span></div>').join('')+
     '<div class="ris foglie" title="Foglie: quanto è cresciuto il campus" data-r="foglie">'+ico('foglia')+'<span>'+S.foglie+'</span></div>';
 }
+function renderCarb(){
+  $('carb').innerHTML=SVG_TANICA+'<div><small>carburante</small><div class="barra"><span style="width:'+Math.max(0,Math.min(100,S.carb/carbMax()*100))+'%"></span></div></div><span>'+Math.floor(S.carb)+'</span>';
+}
 function renderHUD(){
-  $('risorse').innerHTML=risHtml();
+  $('risorse').innerHTML=risHtml(); renderCarb();
   $('giornoNome').textContent=GIORNI[S.giorno];
-  $('giornoFase').textContent=(S.fase==='mattino'?'mattino':S.fase==='giorno'?'a scuola':'sera')+' · giorno '+(S.giorno+1)+' di 5';
-  let z=''; for(let i=0;i<capZaino();i++){ const it=S.zaino[i]; z+='<span class="posto">'+(it?ico(it.r):'')+'</span>'; }
-  $('zaino').innerHTML='<span class="tit">Zaino</span><span class="posti">'+z+'</span>';
-  const b=$('btnAzione');
-  if(S.fase==='mattino'){ b.textContent='Suona la campanella'; b.disabled=false; }
-  else if(S.fase==='giorno'){ b.textContent='Fine giornata'; b.disabled=false; }
+  $('giornoFase').textContent=(S.fase==='mattino'?'mattino':S.fase==='giro'?'giro di raccolta':'sera')+' · giorno '+(S.giorno+1)+' di 5';
+  $('autistaImg').src='eco/'+S.casata+'_head.webp'; $('autistaNome').textContent=CASATE[S.casata].nome+' alla guida';
+  $('flotta').innerHTML=ORDINE.map(c=>{
+    const daPrendere=ISOLE.reduce((n,i)=>n+S.bidoni[i.id][c].length,0);
+    return '<button type="button" class="mezzo'+(attivo===c?' attivo':'')+'" role="radio" aria-checked="'+(attivo===c)+'" data-cat="'+c+'" style="--k:'+CAT[c].col+'"'+(S.fase==='giro'?'':' disabled')+
+      ' aria-label="Camioncino '+CAT[c].nome+': '+nelCassone(c)+' nel cassone, '+daPrendere+' nei cestini">'+svgCamion(CAT[c].col)+'<b>'+CAT[c].nome+'</b><small>'+nelCassone(c)+'/'+capCassone()+' · '+daPrendere+' fuori</small></button>';
+  }).join('');
+  $('flotta').querySelectorAll('.mezzo').forEach(b=>b.addEventListener('click',()=>scegliCamion(b.dataset.cat)));
+  const b=$('btnAzione'); b.textContent = S.fase==='mattino'?'Suona la campanella':S.fase==='giro'?'Fine giornata':'Rivedi il risultato';
   suggerimento();
 }
 function suggerimento(){
-  const el=$('suggerimento'); let t='';
+  let t='';
   if(S.fase==='mattino'){
     const piazzati=ISOLE.reduce((n,i)=>n+S.cestini[i.id].length,0);
-    t = !piazzati ? 'È mattina: tocca un’isola e sistema i cestini.' : S.magazzino.length ? 'Hai ancora '+S.magazzino.length+' cestini in magazzino. Quando sei pronto, suona la campanella.' : 'Cestini a posto: suona la campanella.';
-  }else if(S.fase==='giorno'){
-    t = rifiutiInGiro() ? 'Raggiungi le isole con il numero dorato e smista i rifiuti.' : 'Tutto smistato: puoi chiudere la giornata.';
+    t = (S.giorno===0 && S.magazzino.length===KIT.length) ? 'Tocca un’isola e sistema i cestini del riciclo.' : S.magazzino.length ? 'Ancora '+S.magazzino.length+' cestini in magazzino.' : 'Cestini a posto: suona la campanella.';
+  }else if(S.fase==='giro'){
+    if(!attivo) t='Scegli un camioncino qui sotto.';
+    else if(nelCassone(attivo)>=capCassone()) t='Cassone pieno: vai all’impianto.';
+    else t=nelCassone(attivo) ? 'Tocca un’isola che lampeggia, oppure l’impianto per scaricare.' : 'Tocca un’isola che lampeggia.';
   }
-  el.textContent=t;
+  $('suggerimento').textContent=t;
 }
 let tToast=0;
 function toast(txt,ms){ const t=$('toast'); t.textContent=txt; t.classList.add('on'); clearTimeout(tToast); tToast=setTimeout(()=>t.classList.remove('on'),ms||3200); }
-function pulsa(r){ const el=document.querySelector('#risorse [data-r="'+r+'"]'); if(el){ el.classList.remove('su'); void el.offsetWidth; el.classList.add('su'); } }
 
-/* ====================== Pannello dell'isola ====================== */
-const pannello=$('pannello'); let sel=null, notaPann='';
-function chiudiPannello(){ pannello.classList.remove('aperto'); qui=null; sel=null; notaPann=''; scena.querySelectorAll('.isola.qui').forEach(n=>n.classList.remove('qui')); }
-function apriIsola(id){ qui=id; sel=null; notaPann=''; renderMappa(); renderPannello(); pannello.classList.add('aperto'); const p=pannello.querySelector('.tess,.cest,.btn'); if(p) p.focus(); }
-function cestHtml(cat,extra,dentro){
-  return '<button type="button" class="cest '+(extra||'')+'" style="--c:'+CAT[cat].col+'" data-cat="'+cat+'"><img src="'+CAT[cat].img+'" alt="" /><span>'+CAT[cat].nome+'</span>'+
-    (dentro?'<i class="dentro">'+dentro+'</i>':'')+'</button>';
+/* ====================== Comandi sulla mappa ====================== */
+function scegliCamion(c){ if(S.fase!=='giro'||inMoto) return; attivo=(attivo===c?null:c); chiudiPannello(); SFX.prendi(); renderMappa(); }
+function toccaIsola(id){
+  if(inPausa()||inMoto) return;
+  if(S.fase==='mattino'){ apriCestini(id); return; }
+  if(S.fase!=='giro') return;
+  if(!attivo){ toast('Scegli prima un camioncino.',2600); SFX.no(); return; }
+  const isola=ISOLE.find(i=>i.id===id);
+  if(!S.cestini[id].includes(attivo)){ toast('Qui ('+isola.nome.toLowerCase()+') non c’è il cestino '+CAT[attivo].nome.toLowerCase()+'.',3200); SFX.no(); return; }
+  if(!S.bidoni[id][attivo].length){ toast('Qui il cestino '+CAT[attivo].nome.toLowerCase()+' è vuoto.',2800); SFX.no(); return; }
+  if(nelCassone(attivo)>=capCassone()){ toast('Il cassone è pieno: prima scarica a '+CAT[attivo].imp.toLowerCase()+'.',3400); SFX.no(); return; }
+  const cat=attivo; guida(cat,'s_'+id,()=>apriControllo(cat,id));
 }
-function renderPannello(){
-  if(!qui || qui==='orto') return;
+function toccaImpianto(c){
+  if(inPausa()||inMoto||S.fase!=='giro') return;
+  if(!attivo){ toast(CAT[c].imp+' ritira solo '+CAT[c].nome.toLowerCase()+'. Scegli un camioncino.',3200); return; }
+  if(attivo!==c){ toast(CAT[c].imp+' ritira solo '+CAT[c].nome.toLowerCase()+': il camioncino '+CAT[attivo].nome.toLowerCase()+' deve andare a '+CAT[attivo].imp.toLowerCase()+'.',4600); SFX.no(); return; }
+  if(!nelCassone(c)){ toast('Il cassone è vuoto: prima raccogli.',2600); SFX.no(); return; }
+  guida(c,'x_'+c,()=>scarica(c));
+}
+
+/* ====================== Mattino: sistemare i cestini ====================== */
+const pannello=$('pannello'); let qui=null, notaPann='', ctrl=null;
+function chiudiPannello(){ pannello.classList.remove('aperto'); qui=null; notaPann=''; ctrl=null; }
+function cestHtml(cat,extra,dentro){
+  return '<button type="button" class="cest '+(extra||'')+'" style="--c:'+CAT[cat].col+'" data-cat="'+cat+'"><img src="'+CAT[cat].img+'" alt="" /><span>'+CAT[cat].nome+'</span>'+(dentro?'<i class="dentro">'+dentro+'</i>':'')+'</button>';
+}
+function apriCestini(id){ qui=id; notaPann=''; renderCestini(); pannello.classList.add('aperto'); const p=pannello.querySelector('.cest,.btn'); if(p) p.focus(); }
+function renderCestini(){
   const isola=ISOLE.find(i=>i.id===qui), cest=S.cestini[qui];
-  let h='<header><div><h2>'+isola.nome+'</h2><div class="fase">'+(S.fase==='mattino'?'Sistema i cestini di questa isola':'Smista i rifiuti')+'</div></div><button class="chiudi" type="button" aria-label="Chiudi">&times;</button></header>';
-  if(S.fase==='mattino'){
-    let posti=''; for(let i=0;i<POSTI;i++) posti += cest[i] ? cestHtml(cest[i],'tolgo') : '<div class="cest vuoto">posto libero</div>';
-    const cont={}; S.magazzino.forEach(c=>cont[c]=(cont[c]||0)+1);
-    const mag=ORDINE.filter(c=>cont[c]).map(c=>cestHtml(c,'metto',cont[c])).join('') || '<p class="nota">Il magazzino è vuoto. Per spostare un cestino toccalo: torna in magazzino.</p>';
-    h+='<div class="riga"><div class="blocco" style="flex:0 0 auto"><h3>Cestini di questa isola ('+cest.length+' su '+POSTI+')</h3><div class="cestini">'+posti+'</div></div>'+
-       '<div class="blocco"><h3>In magazzino: tocca per metterlo qui</h3><div class="cestini">'+mag+'</div></div></div>'+
-       '<p class="nota">Ogni isola ha solo '+POSTI+' posti: quali rifiuti si producono di più qui?</p>';
-  }else{
-    const terra=S.aTerra[qui];
-    const tess=(it,da)=>'<button type="button" class="tess'+(sel&&sel.u===it.u?' scelta':'')+'" data-u="'+it.u+'" data-da="'+da+'" aria-pressed="'+(sel&&sel.u===it.u)+'">'+ico(it.r)+'<span>'+RIFIUTI[it.r].nome+'</span></button>';
-    const cont={}; S.conferiti.filter(c=>c.isola===qui).forEach(c=>cont[c.cat]=(cont[c.cat]||0)+1);
-    h+='<div class="riga"><div class="blocco"><h3>A terra ('+terra.length+')</h3><div class="tessere">'+(terra.map(it=>tess(it,'terra')).join('')||'<p class="nota">Qui è tutto pulito.</p>')+'</div>'+
-       (S.zaino.length?'<h3 style="margin-top:8px">Nel tuo zaino</h3><div class="tessere">'+S.zaino.map(it=>tess(it,'zaino')).join('')+'</div>':'')+'</div>'+
-       '<div class="blocco"><h3>Cestini di questa isola</h3><div class="cestini">'+(cest.map(c=>cestHtml(c,sel?'pronto':'',cont[c])).join('')||'<p class="nota">Qui non ci sono cestini: porta i rifiuti in un’altra isola con lo zaino.</p>')+'</div></div></div>';
-    h+='<div class="azioni-pann">'+
-       '<button type="button" class="btn btn-blu" id="pZaino"'+(sel&&sel.da==='terra'&&S.zaino.length<capZaino()?'':' disabled')+'>Metti nello zaino</button>'+
-       '<button type="button" class="btn btn-chiaro" id="pPosa"'+(sel&&sel.da==='zaino'?'':' disabled')+'>Posa a terra</button>'+
-       '<button type="button" class="btn btn-chiaro" id="pIndizio"'+(sel?'':' disabled')+'>Chiedi un indizio'+(S.attrezzi.cartelli?'':' (il rifiuto non darà materiale)')+'</button></div>';
-  }
+  let posti=''; for(let i=0;i<POSTI;i++) posti += cest[i] ? cestHtml(cest[i],'tolgo',S.bidoni[qui][cest[i]].length) : '<div class="cest vuoto">posto libero</div>';
+  const cont={}; S.magazzino.forEach(c=>cont[c]=(cont[c]||0)+1);
+  const mag=ORDINE.filter(c=>cont[c]).map(c=>cestHtml(c,'metto',cont[c])).join('') || '<p class="nota">Il magazzino è vuoto. Per spostare un cestino vuoto toccalo: torna in magazzino.</p>';
+  let h='<header><div><h2>'+isola.nome+'</h2><div class="fase">Sistema i cestini di questa isola</div></div><button class="chiudi" type="button" aria-label="Chiudi">&times;</button></header>'+
+    '<div class="riga"><div class="blocco" style="flex:0 0 auto"><h3>Cestini di questa isola ('+cest.length+' su '+POSTI+')</h3><div class="cestini">'+posti+'</div></div>'+
+    '<div class="blocco"><h3>In magazzino: tocca per metterlo qui</h3><div class="cestini">'+mag+'</div></div></div>'+
+    '<p class="nota">'+(completa(qui)?'Isola completa: qui ogni rifiuto trova il suo cestino. Vale +'+BONUS_COMPLETA+' foglie ogni sera.':'Dove manca un cestino, gli studenti buttano il rifiuto in quello sbagliato. Un’isola è completa quando ha tutte e cinque le frazioni.')+'</p>';
   if(notaPann) h+='<p class="nota ambra">'+notaPann+'</p>';
   pannello.innerHTML=h;
   pannello.querySelector('.chiudi').addEventListener('click',()=>{ chiudiPannello(); renderMappa(); });
-  pannello.querySelectorAll('.cest.tolgo').forEach((b,i)=>b.addEventListener('click',()=>{ S.magazzino.push(S.cestini[qui].splice(i,1)[0]); SFX.prendi(); dopo(); }));
+  pannello.querySelectorAll('.cest.tolgo').forEach(b=>b.addEventListener('click',()=>{
+    const c=b.dataset.cat;
+    if(S.bidoni[qui][c].length){ notaPann='Questo cestino non è vuoto: prima deve passare il suo camioncino.'; SFX.no(); renderCestini(); return; }
+    S.cestini[qui].splice(S.cestini[qui].indexOf(c),1); S.magazzino.push(c); SFX.prendi(); salva(); renderMappa(); renderCestini();
+  }));
   pannello.querySelectorAll('.cest.metto').forEach(b=>b.addEventListener('click',()=>{
-    if(S.cestini[qui].length>=POSTI){ notaPann='Questa isola è piena: togli prima un cestino.'; SFX.no(); renderPannello(); return; }
-    const c=b.dataset.cat; S.magazzino.splice(S.magazzino.indexOf(c),1); S.cestini[qui].push(c); SFX.butta(); dopo();
+    const c=b.dataset.cat;
+    if(S.cestini[qui].includes(c)){ notaPann='In questa isola c’è già il cestino '+CAT[c].nome.toLowerCase()+': mettilo dove manca.'; SFX.no(); renderCestini(); return; }
+    S.magazzino.splice(S.magazzino.indexOf(c),1); S.cestini[qui].push(c); SFX.butta(); salva(); renderMappa(); renderCestini();
   }));
-  pannello.querySelectorAll('.tess').forEach(b=>b.addEventListener('click',()=>{
-    const u=+b.dataset.u; sel=(sel&&sel.u===u)?null:{u,da:b.dataset.da}; notaPann=''; SFX.prendi(); renderPannello();
-    const p=pannello.querySelector('.tess.scelta')||pannello.querySelector('.tess'); if(p) p.focus();
-  }));
-  if(S.fase==='giorno'){
-    pannello.querySelectorAll('.cestini .cest').forEach(b=>b.addEventListener('click',()=>conferisci(b.dataset.cat,b)));
-    const z=$('pZaino'), p=$('pPosa'), i=$('pIndizio');
-    if(z) z.addEventListener('click',()=>{ const it=togli(sel); S.zaino.push(it); sel=null; SFX.prendi(); dopo(); });
-    if(p) p.addEventListener('click',()=>{ const it=togli(sel); S.aTerra[qui].push(it); sel=null; SFX.butta(); dopo(); });
-    if(i) i.addEventListener('click',()=>{ const it=trova(sel); if(!S.attrezzi.cartelli) it.ind=true; notaPann='Indizio: '+RIFIUTI[it.r].indizio; salva(); renderPannello(); });
-  }
-}
-const trova = s => (s.da==='zaino'?S.zaino:S.aTerra[qui]).find(x=>x.u===s.u);
-function togli(s){ const l=(s.da==='zaino'?S.zaino:S.aTerra[qui]); return l.splice(l.findIndex(x=>x.u===s.u),1)[0]; }
-function dopo(){ salva(); renderMappa(); renderPannello(); }
-function conferisci(cat,btn){
-  if(!sel){ notaPann='Scegli prima un rifiuto, poi il cestino.'; SFX.no(); renderPannello(); return; }
-  const it=trova(sel);
-  if(AIUTO_SUBITO && RIFIUTI[it.r].cat!==cat){
-    notaPann='Non è il suo cestino. '+RIFIUTI[it.r].indizio; S.stat.errori[it.r]=(S.stat.errori[it.r]||0)+1; SFX.no(); salva(); renderPannello();
-    const t=pannello.querySelector('.tess.scelta'); if(t) t.classList.add('respinta'); return;
-  }
-  togli(sel); S.conferiti.push({u:it.u,r:it.r,ind:!!it.ind,isola:qui,cat}); sel=null; notaPann=''; SFX.butta(); dopo();
-  const nb=pannello.querySelector('.cest[data-cat="'+cat+'"]'); if(nb) nb.classList.add('ok');
-  if(!rifiutiInGiro()) toast('Tutto smistato! Puoi chiudere la giornata.',3500);
 }
 
-/* ====================== L'orto: semina e raccolto ====================== */
-function apriOrto(){ qui='orto'; renderMappa(); renderOrto(); pannello.classList.add('aperto'); }
+/* ====================== La campanella: gli studenti buttano i rifiuti (e qualcuno sbaglia) ====================== */
+function suonaCampanella(){
+  const r=mulberry32(cyrb53(S.seed+'-g'+S.giorno)), err=S.attrezzi.cartelli?ERRORE_CARTELLI:ERRORE;
+  ISOLE.forEach(i=>{
+    const daButtare=S.aTerra[i.id]; S.aTerra[i.id]=[];
+    const tot=Object.values(i.prof).reduce((a,b)=>a+b,0);
+    for(let k=0;k<PER_ISOLA[S.giorno];k++){
+      let x=r()*tot, cat='carta'; for(const c in i.prof){ x-=i.prof[c]; if(x<0){ cat=c; break; } }
+      const lista=PER_CAT[cat]; daButtare.push({u:S.uid++, r:lista[Math.floor(r()*lista.length)]});
+    }
+    const pres=S.cestini[i.id];
+    daButtare.forEach(it=>{
+      if(!pres.length){ S.aTerra[i.id].push(it); return; }
+      const cat=RIFIUTI[it.r].cat, altri=pres.filter(c=>c!==cat); let dove;
+      if(pres.includes(cat)) dove = (altri.length && r()<err) ? altri[Math.floor(r()*altri.length)] : cat;       // lo studente distratto
+      else if(pres.includes('indiff') && r()<.6) dove='indiff';                                                 // manca il cestino: finisce nell'indifferenziato...
+      else dove=pres[Math.floor(r()*pres.length)];                                                              // ...o in un cestino a caso
+      const b=S.bidoni[i.id][dove]; if(b.length>=CAP_CESTINO) S.aTerra[i.id].push(it); else b.push(it);
+    });
+  });
+  S.fase='giro'; S.scarichi=[]; S.carb=carbMax(); attivo=null; SFX.campanella(); chiudiPannello(); salva(); renderMappa();
+  toast('Gli studenti hanno buttato i rifiuti nei cestini. Ora tocca ai camioncini.',4000);
+}
+
+/* ====================== Il controllo del cestino: scova gli intrusi prima di caricare ====================== */
+function apriControllo(cat,isola){ ctrl={cat,isola,tolti:new Set(),nota:''}; qui=isola; renderControllo(); pannello.classList.add('aperto'); const p=pannello.querySelector('.tess'); if(p) p.focus(); }
+function renderControllo(){
+  const {cat,isola,tolti}=ctrl, nomeIsola=ISOLE.find(i=>i.id===isola).nome, bin=S.bidoni[isola][cat], liberi=capCassone()-nelCassone(cat);
+  const restano=bin.filter(it=>!tolti.has(it.u)).length;
+  let h='<header><span class="bollo" style="--c:'+CAT[cat].col+'"><img src="'+CAT[cat].img+'" alt="" /></span><div><h2>Cestino '+CAT[cat].nome.toLowerCase()+' · '+nomeIsola+'</h2>'+
+    '<div class="fase">Controlla prima di caricare: tocca quello che non ci dovrebbe stare</div></div><button class="chiudi" type="button" aria-label="Chiudi">&times;</button></header>'+
+    '<div class="tessere">'+bin.map(it=>'<div style="position:relative"><button type="button" class="tess'+(tolti.has(it.u)?' tolto':'')+'" data-u="'+it.u+'" aria-pressed="'+tolti.has(it.u)+'">'+ico(it.r)+'<span>'+RIFIUTI[it.r].nome+'</span></button>'+
+      '<button type="button" class="aiuto" data-aiuto="'+it.u+'" aria-label="Indizio su '+RIFIUTI[it.r].nome+'">?</button></div>').join('')+'</div>';
+  // la nota ha uno spazio riservato sopra il pulsante: cosi il pulsante non si sposta mentre si toccano i rifiuti
+  h+='<p class="nota'+(ctrl.nota?' ambra':'')+'" style="min-height:3.1em">'+(ctrl.nota || ('Nel cassone c’è posto per '+liberi+'.'+(tolti.size?' Quello che togli va nel suo cestino, se in questa isola c’è; altrimenti resta a terra.':'')))+'</p>'+
+     '<div class="azioni-pann"><button type="button" class="btn btn-oro" id="pCarica">'+(restano?'Carica sul camioncino ('+Math.min(restano,liberi)+')':'Togli tutto e non caricare')+'</button></div>';
+  pannello.innerHTML=h;
+  pannello.querySelector('.chiudi').addEventListener('click',()=>{ chiudiPannello(); renderMappa(); });
+  pannello.querySelectorAll('.tess').forEach(b=>b.addEventListener('click',()=>{ const u=+b.dataset.u; tolti.has(u)?tolti.delete(u):tolti.add(u); ctrl.nota=''; SFX.prendi(); renderControllo(); const n=pannello.querySelector('.tess[data-u="'+u+'"]'); if(n) n.focus(); }));
+  pannello.querySelectorAll('[data-aiuto]').forEach(b=>b.addEventListener('click',()=>{ const it=bin.find(x=>x.u===+b.dataset.aiuto); it.ind=true; ctrl.nota='Indizio su «'+RIFIUTI[it.r].nome.toLowerCase()+'»: '+RIFIUTI[it.r].indizio+' (con l’indizio questo rifiuto non darà materiale).'; salva(); renderControllo(); }));
+  $('pCarica').addEventListener('click',caricaCestino);
+}
+function caricaCestino(){
+  const {cat,isola,tolti}=ctrl, bin=S.bidoni[isola][cat], liberi=capCassone()-nelCassone(cat);
+  const tenuti=bin.filter(it=>!tolti.has(it.u)), fuori=bin.filter(it=>tolti.has(it.u));
+  if(AIUTO_SUBITO && tenuti.some(it=>RIFIUTI[it.r].cat!==cat)){ ctrl.nota='Guarda meglio: nel cestino c’è ancora qualcosa che non ci dovrebbe stare.'; SFX.no(); renderControllo(); return; }
+  fuori.forEach(it=>{
+    const giusto=RIFIUTI[it.r].cat;
+    if(giusto===cat){ S.stat.falsi++; S.stat.errori[it.r]=(S.stat.errori[it.r]||0)+1; S.aTerra[isola].push(it); return; }      // tolto per sbaglio: resta a terra
+    S.stat.scovati++;
+    if(S.cestini[isola].includes(giusto) && S.bidoni[isola][giusto].length<CAP_CESTINO) S.bidoni[isola][giusto].push(it);   // rimesso nel suo cestino
+    else S.aTerra[isola].push(it);                                                                                      // qui il suo cestino non c'e
+  });
+  const presi=tenuti.slice(0,liberi);
+  S.bidoni[isola][cat]=tenuti.slice(liberi);
+  if(presi.length) S.camion[cat].carico.push({isola,items:presi,falsi:fuori.filter(it=>RIFIUTI[it.r].cat===cat).map(it=>it.r)});
+  SFX.butta(); chiudiPannello(); salva(); renderMappa();
+  if(nelCassone(cat)>=capCassone()) toast('Cassone pieno: porta il carico a '+CAT[cat].imp.toLowerCase()+'.',3600);
+}
+/* ====================== All'impianto: il carico viene accettato o respinto a metà ====================== */
+function scarica(cat){
+  const c=S.camion[cat]; let presi=0, respinti=0;
+  c.carico.forEach(b=>{
+    const nomeIsola=ISOLE.find(i=>i.id===b.isola).nome;
+    const giusti=b.items.filter(it=>RIFIUTI[it.r].cat===cat), intrusi=b.items.filter(it=>RIFIUTI[it.r].cat!==cat);
+    intrusi.forEach(it=>{ S.stat.errori[it.r]=(S.stat.errori[it.r]||0)+1; });
+    S.stat.giusti+=giusti.length;
+    const riga={cat,isola:nomeIsola,giusti:giusti.length,intrusi:intrusi.map(it=>it.r),falsi:b.falsi||[],n:0};
+    if(cat==='indiff'){ S.stat.sprechi+=intrusi.length; }
+    else{
+      const utili=giusti.filter(it=>!it.ind).length; let n = intrusi.length ? 0 : utili;      // un intruso basta: l'impianto respinge il carico di quel cestino
+      if(intrusi.length){ S.stat.contam++; respinti++; }
+      if(cat==='organico' && S.attrezzi.compostiera) n*=2;
+      S.ris[CAT[cat].ris]+=n; riga.n=n; presi+=n;
+    }
+    S.scarichi.push(riga);
+  });
+  c.carico=[]; SFX.scarica(); salva(); renderMappa();
+  toast(cat==='indiff' ? 'Indifferenziato portato in discarica: da qui non si recupera nulla.'
+        : CAT[cat].imp+': +'+presi+' '+RIS[CAT[cat].ris].nome.toLowerCase()+'.'+(respinti?' '+(respinti===1?'Un carico è stato respinto':respinti+' carichi sono stati respinti')+': questa sera saprai perché.':''),4200);
+}
+
+/* ====================== L'orto ====================== */
+function apriOrto(){ chiudiPannello(); qui='orto'; renderOrto(); pannello.classList.add('aperto'); }
 function renderOrto(){
   let h='<header><div><h2>'+ORTO.nome+'</h2><div class="fase">Il compost fa crescere gli ortaggi</div></div><button class="chiudi" type="button" aria-label="Chiudi">&times;</button></header><div class="aiuole">';
   S.orto.forEach((a,i)=>{
@@ -670,66 +840,48 @@ function renderOrto(){
     else h+='<button type="button" class="btn btn-oro" data-rac="'+i+'">Raccogli</button><small>+'+RACCOLTO+' foglie</small>';
     h+='</div>';
   });
-  h+='</div><p class="nota">Compost disponibile: '+S.ris.compost+'. Il compost nasce dai rifiuti organici smistati bene.</p>';
+  h+='</div><p class="nota">Compost disponibile: '+S.ris.compost+'. Il compost arriva dall’organico portato al compostaggio.</p>';
   pannello.innerHTML=h;
   pannello.querySelector('.chiudi').addEventListener('click',()=>{ chiudiPannello(); renderMappa(); });
-  pannello.querySelectorAll('[data-sem]').forEach(b=>b.addEventListener('click',()=>{ const a=S.orto[+b.dataset.sem]; S.ris.compost-=SEMINA; a.st='germoglio'; a.g=S.giorno; SFX.semina(); salva(); renderMappa(); renderOrto(); pulsa('compost'); }));
-  pannello.querySelectorAll('[data-rac]').forEach(b=>b.addEventListener('click',()=>{ const a=S.orto[+b.dataset.rac]; a.st='vuoto'; S.foglie+=RACCOLTO; SFX.compra(); salva(); renderMappa(); renderOrto(); pulsa('foglie'); }));
+  pannello.querySelectorAll('[data-sem]').forEach(b=>b.addEventListener('click',()=>{ const a=S.orto[+b.dataset.sem]; S.ris.compost-=SEMINA; a.st='germoglio'; a.g=S.giorno; SFX.semina(); salva(); renderMappa(); renderOrto(); }));
+  pannello.querySelectorAll('[data-rac]').forEach(b=>b.addEventListener('click',()=>{ const a=S.orto[+b.dataset.rac]; a.st='vuoto'; S.foglie+=RACCOLTO; SFX.compra(); salva(); renderMappa(); renderOrto(); }));
 }
 
-/* ====================== Le fasi della giornata ====================== */
-function suonaCampanella(){
-  const r=mulberry32(cyrb53(S.seed+'-g'+S.giorno));
-  ISOLE.forEach(i=>{
-    const tot=Object.values(i.prof).reduce((a,b)=>a+b,0);
-    for(let k=0;k<PER_ISOLA[S.giorno];k++){
-      let x=r()*tot, cat='carta'; for(const c in i.prof){ x-=i.prof[c]; if(x<0){ cat=c; break; } }
-      const lista=PER_CAT[cat]; S.aTerra[i.id].push({u:S.uid++, r:lista[Math.floor(r()*lista.length)]});
-    }
-  });
-  S.fase='giorno'; S.conferiti=[]; SFX.campanella(); chiudiPannello(); salva(); renderMappa();
-  toast('La scuola si anima: in ogni isola sono comparsi dei rifiuti.',3600);
-}
+/* ====================== Sera: resoconto e bottega ====================== */
+const elenco = l => l.map(r=>'<em>'+RIFIUTI[r].nome.toLowerCase()+'</em>').join(', ');
 function chiudiGiornata(){
-  // il camion controlla ogni cestino: la conseguenza delle scelte arriva adesso, non durante lo smistamento
-  const righe=[], guad={carta:0,plastica:0,vetro:0,compost:0};
-  ISOLE.forEach(i=>{ S.cestini[i.id].forEach(cat=>{
-    const dentro=S.conferiti.filter(c=>c.isola===i.id&&c.cat===cat); if(!dentro.length) return;
-    const giusti=dentro.filter(c=>RIFIUTI[c.r].cat===cat), sbagliati=dentro.filter(c=>RIFIUTI[c.r].cat!==cat);
-    sbagliati.forEach(c=>{ S.stat.errori[c.r]=(S.stat.errori[c.r]||0)+1; });
-    if(cat==='indiff'){
-      S.stat.giusti+=giusti.length; S.stat.sprechi+=sbagliati.length;
-      if(sbagliati.length) righe.push({cat,avviso:true,txt:'<strong>'+i.nome+' · Indifferenziato.</strong> Qui '+(sbagliati.length>1?'sono finiti':'è finito')+' '+elenco(sbagliati)+': '+sbagliati.map(c=>RIFIUTI[c.r].perche).join(' '),guad:'materiale perso'});
-      else righe.push({cat,txt:'<strong>'+i.nome+' · Indifferenziato.</strong> Solo rifiuti che non si possono riciclare: giusto così.',guad:'campus pulito'});
-      return;
-    }
-    const utili=giusti.filter(c=>!c.ind).length;
-    let n = sbagliati.length ? Math.floor(utili/2) : utili;
-    const rk=CAT[cat].ris; if(rk==='compost' && S.attrezzi.compostiera) n*=2;
-    guad[rk]+=n; S.stat.giusti+=giusti.length;
-    if(sbagliati.length){ S.stat.contam++;
-      righe.push({cat,avviso:true,txt:'<strong>'+i.nome+' · '+CAT[cat].nome+'.</strong> Dentro c’era anche '+elenco(sbagliati)+'. '+sbagliati.map(c=>RIFIUTI[c.r].perche).join(' ')+' Il camion ha potuto ritirare solo metà del cestino.',guad:'+'+n+' '+RIS[rk].nome.toLowerCase()});
-    }else righe.push({cat,txt:'<strong>'+i.nome+' · '+CAT[cat].nome+'.</strong> '+giusti.length+(giusti.length>1?' rifiuti giusti':' rifiuto giusto')+': cestino perfetto.',guad:'+'+n+' '+RIS[rk].nome.toLowerCase()});
-  }); });
-  for(const k in guad) S.ris[k]+=guad[k];
-  const rimasti=rifiutiInGiro(); let bonus=0;
-  if(!rimasti){ bonus=2; S.foglie+=2; }
-  S.rapporto={righe,guad,rimasti,bonus}; S.fase='sera'; S.conferiti=[]; chiudiPannello(); salva(); SFX.camion(); apriSera();
+  const righe=[];
+  S.scarichi.forEach(r=>{
+    const testa='<strong>'+CAT[r.cat].nome+' · '+r.isola+'.</strong> ';
+    if(r.cat==='indiff'){
+      if(r.intrusi.length) righe.push({cat:r.cat,avviso:true,txt:testa+'In discarica '+(r.intrusi.length>1?'sono finiti':'è finito')+' anche '+elenco(r.intrusi)+'. '+r.intrusi.map(x=>RIFIUTI[x].perche).join(' ')+' Si poteva togliere dal cestino prima di caricare.',guad:'materiale perso'});
+      else righe.push({cat:r.cat,txt:testa+'Solo rifiuti che non si possono riciclare: giusto così.',guad:''});
+    }else if(r.intrusi.length) righe.push({cat:r.cat,avviso:true,txt:testa+'Nel carico c’era anche '+elenco(r.intrusi)+'. '+r.intrusi.map(x=>RIFIUTI[x].perche).join(' ')+' Per questo l’impianto ha respinto il carico di questo cestino.',guad:'respinto'});
+    else righe.push({cat:r.cat,txt:testa+r.giusti+(r.giusti>1?' rifiuti giusti':' rifiuto giusto')+': carico perfetto.',guad:'+'+r.n+' '+RIS[CAT[r.cat].ris].nome.toLowerCase()});
+    if(r.falsi.length) righe.push({cat:r.cat,avviso:true,txt:'<strong>Tolto per sbaglio.</strong> Dal cestino '+CAT[r.cat].nome.toLowerCase()+' hai tolto '+elenco(r.falsi)+', che invece era al posto giusto. '+r.falsi.map(x=>RIFIUTI[x].perche).join(' '),guad:''});
+  });
+  const sulCamion=ORDINE.reduce((n,c)=>n+nelCassone(c),0), rimasti=neiCestini(), terra=aTerraTot(), complete=nComplete();
+  let bonus=0; if(!terra){ bonus=2; S.foglie+=2; }
+  S.foglie+=complete*BONUS_COMPLETA;
+  S.rapporto={righe,sulCamion,rimasti,terra,complete,bonus}; S.fase='sera'; attivo=null;
+  ORDINE.forEach(c=>S.camion[c].nodo='D');
+  chiudiPannello(); salva(); SFX.clacson(); apriSera();
 }
-const elenco = l => l.map(c=>'<em>'+RIFIUTI[c.r].nome.toLowerCase()+'</em>').join(', ');
-function costoHtml(costo){
-  return '<span class="costo">'+Object.keys(costo).map(k=>'<span class="c'+(S.ris[k]<costo[k]?' manca':'')+'" title="'+RIS[k].nome+'">'+ico(RIS[k].ico)+costo[k]+'</span>').join('')+'</span>';
-}
+function costoHtml(costo){ return '<span class="costo">'+Object.keys(costo).map(k=>'<span class="c'+(S.ris[k]<costo[k]?' manca':'')+'" title="'+RIS[k].nome+'">'+ico(RIS[k].ico)+costo[k]+'</span>').join('')+'</span>'; }
 const posso = costo => Object.keys(costo).every(k=>S.ris[k]>=costo[k]);
 const paga  = costo => { for(const k in costo) S.ris[k]-=costo[k]; };
 const totMateriali = () => Object.values(S.ris).reduce((a,b)=>a+b,0);
 function pagaQualsiasi(n){ for(let i=0;i<n;i++){ const k=Object.keys(S.ris).sort((a,b)=>S.ris[b]-S.ris[a])[0]; S.ris[k]--; } }
 function apriSera(){
-  const R=S.rapporto;
+  const R=S.rapporto, extra=[];
   $('seraTitolo').textContent='Sera di '+GIORNI[S.giorno].toLowerCase();
-  $('seraSotto').textContent = R.rimasti ? (R.rimasti===1?'È rimasto un rifiuto in giro: lo ritroverai domani.':'Sono rimasti '+R.rimasti+' rifiuti in giro: li ritroverai domani.') : 'Nessun rifiuto in giro: campus pulito, +'+R.bonus+' foglie.';
-  $('rapporto').innerHTML = R.righe.map(r=>'<div class="rap'+(r.avviso?' avviso':'')+'" style="--c:'+CAT[r.cat].col+'"><span class="tacca"></span><span class="txt">'+r.txt+'</span><span class="guad">'+r.guad+'</span></div>').join('')
-    || '<p class="sotto">Oggi i cestini sono rimasti vuoti.</p>';
+  $('seraSotto').textContent = R.bonus ? 'Nessun rifiuto a terra: campus pulito, +'+R.bonus+' foglie.' : 'I camioncini sono rientrati al deposito.';
+  extra.push(R.complete ? {col:'var(--verde)',txt:'<strong>Isole complete: '+R.complete+' su '+ISOLE.length+'.</strong> Dove ci sono tutte e cinque le frazioni gli studenti sbagliano molto meno.',guad:'+'+(R.complete*BONUS_COMPLETA)+' foglie'}
+                        : {col:'var(--grigio)',txt:'<strong>Nessuna isola completa.</strong> Un’isola con tutte e cinque le frazioni vale +'+BONUS_COMPLETA+' foglie ogni sera.',guad:''});
+  if(R.rimasti) extra.push({col:'var(--oro)',avviso:true,txt:'<strong>Nei cestini '+(R.rimasti===1?'è rimasto un rifiuto':'sono rimasti '+R.rimasti+' rifiuti')+'.</strong> I camioncini non sono passati ovunque: domani i cestini saranno più pieni.',guad:''});
+  if(R.sulCamion) extra.push({col:'var(--oro)',avviso:true,txt:'<strong>'+(R.sulCamion===1?'Un rifiuto è ancora su un camioncino':R.sulCamion+' rifiuti sono ancora sui camioncini')+'.</strong> Non sono arrivati all’impianto: li porterai domani.',guad:''});
+  if(R.terra) extra.push({col:'var(--oro)',avviso:true,txt:'<strong>'+(R.terra===1?'Un rifiuto è rimasto':R.terra+' rifiuti sono rimasti')+' a terra.</strong> Domani qualcuno li butterà di nuovo in un cestino.',guad:''});
+  $('rapporto').innerHTML = extra.concat(R.righe).map(r=>'<div class="rap'+(r.avviso?' avviso':'')+'" style="--c:'+(r.col||CAT[r.cat].col)+'"><span class="tacca"></span><span class="txt">'+r.txt+'</span><span class="guad">'+r.guad+'</span></div>').join('');
   $('btnNotte').textContent = S.giorno===GIORNI.length-1 ? 'Concludi la settimana' : 'Buonanotte: a domani';
   renderBottega(); $('sera').classList.add('aperto'); $('sera').querySelector('.carta-ov').scrollTop=0;
 }
@@ -743,7 +895,7 @@ function renderBottega(){
     h+='<div class="merce'+(fatto?' fatto':'')+'"><div class="fig">'+ico(a.fig)+'</div><div class="info"><strong>'+a.nome+'</strong><small>'+a.desc+'</small>'+(fatto?'<small>Acquistato</small>':costoHtml(a.costo))+'</div>'+
        (fatto?'':'<button type="button" class="btn btn-blu" data-att="'+a.id+'"'+(posso(a.costo)?'':' disabled')+'>Prendi</button>')+'</div>'; });
   ORDINE.forEach(c=>{
-    h+='<div class="merce"><div class="fig"><img src="'+CAT[c].img+'" alt="" style="object-position:50% 32%" /></div><div class="info"><strong>Cestino: '+CAT[c].nome+'</strong><small>Un cestino in più da sistemare domattina.</small>'+
+    h+='<div class="merce"><div class="fig"><img src="'+CAT[c].img+'" alt="" style="object-position:50% 32%" /></div><div class="info"><strong>Cestino: '+CAT[c].nome+'</strong><small>Per completare un’isola. Lo sistemi domattina.</small>'+
        '<span class="costo"><span class="c'+(totMateriali()<COSTO_CESTINO?' manca':'')+'">'+COSTO_CESTINO+' materiali a piacere</span></span></div>'+
        '<button type="button" class="btn btn-blu" data-cest="'+c+'"'+(totMateriali()>=COSTO_CESTINO?'':' disabled')+'>Prendi</button></div>'; });
   $('bottega').innerHTML=h; $('risorseSera').innerHTML=risHtml();
@@ -754,7 +906,7 @@ function renderBottega(){
 function notte(){
   $('sera').classList.remove('aperto');
   if(S.giorno>=GIORNI.length-1){ fineSettimana(); return; }
-  S.giorno++; S.fase='mattino'; S.rapporto=null;
+  S.giorno++; S.fase='mattino'; S.rapporto=null; S.carb=carbMax();
   S.orto.forEach(a=>{ if(a.st==='germoglio'&&a.g<S.giorno) a.st='pronto'; });
   salva(); renderMappa();
   const pronte=S.orto.filter(a=>a.st==='pronto').length;
@@ -766,51 +918,50 @@ function fineSettimana(){
   const germ=S.orto.filter(a=>a.st==='germoglio').length;
   if(germ && !S.contatoGerm){ S.foglie+=germ*2; S.contatoGerm=true; }
   S.fase='fine'; salva(); SFX.fine(); renderMappa();
-  const liv = S.foglie>=40?'Campus rigoglioso':S.foglie>=22?'Campus in fiore':'Campus in germoglio';
+  const liv = S.foglie>=SOGLIE[1]?'Campus rigoglioso':S.foglie>=SOGLIE[0]?'Campus in fiore':'Campus in germoglio';
   $('finaleLivello').textContent=liv+' · '+S.foglie+' foglie';
-  $('finaleTesto').textContent='In una settimana hai trasformato i rifiuti della scuola in '+(S.progetti.length===1?'una miglioria':S.progetti.length+' migliorie')+' per il campus'+(germ===1?', e nell’orto c’è un’aiuola che crescerà ancora.':germ?', e nell’orto ci sono '+germ+' aiuole che cresceranno ancora.':'.');
-  $('finaleStat').innerHTML=[[S.stat.giusti,'rifiuti nel cestino giusto'],[S.stat.contam,'cestini ritirati a metà'],[S.stat.sprechi,'riciclabili finiti nell’indifferenziato'],[S.progetti.length+' su '+PROGETTI.length,'progetti realizzati']]
+  $('finaleTesto').textContent='In una settimana i tuoi camioncini hanno trasformato i rifiuti della scuola in '+(S.progetti.length===1?'una miglioria':S.progetti.length+' migliorie')+' per il campus'+(germ===1?', e nell’orto c’è un’aiuola che crescerà ancora.':germ?', e nell’orto ci sono '+germ+' aiuole che cresceranno ancora.':'.');
+  $('finaleStat').innerHTML=[[S.stat.giusti,'rifiuti arrivati all’impianto giusto'],[S.stat.scovati,'intrusi scovati nei cestini'],[S.stat.contam,'carichi respinti dall’impianto'],[S.stat.sprechi,'riciclabili finiti in discarica'],[nComplete()+' su '+ISOLE.length,'isole complete'],[S.progetti.length+' su '+PROGETTI.length,'progetti realizzati']]
     .map(s=>'<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>').join('');
   const err=Object.keys(S.stat.errori).sort((a,b)=>S.stat.errori[b]-S.stat.errori[a]).slice(0,5);
   $('finaleErrori').innerHTML = err.length ? '<h2>I rifiuti che ti hanno ingannato</h2><div class="rapporto">'+err.map(r=>'<div class="rap avviso" style="--c:'+CAT[RIFIUTI[r].cat].col+'"><span class="tacca"></span><span class="txt"><strong>'+RIFIUTI[r].nome+'</strong> va in <strong>'+CAT[RIFIUTI[r].cat].nome+'</strong>. '+RIFIUTI[r].perche+'</span></div>').join('')+'</div>'
-    : '<h2>Nessun rifiuto ti ha ingannato</h2><p class="sotto">Ogni rifiuto è finito nel suo cestino.</p>';
+    : '<h2>Nessun rifiuto ti ha ingannato</h2><p class="sotto">Hai scovato tutti gli intrusi prima di caricare.</p>';
   $('finale').classList.add('aperto'); $('finale').querySelector('.carta-ov').scrollTop=0;
 }
 
 /* ====================== Tutorial 4 momenti ====================== */
 const TUTOR=[
-  {lbl:'Passo 1 di 4 · Il contesto',tit:'Una settimana a scuola',fig:'foglia',txt:'Ogni giorno la scuola produce rifiuti: in mensa, nelle aule, ai campi. Tu e la tua casata avete una settimana per trasformarli in qualcosa di bello per il campus.'},
-  {lbl:'Passo 2 di 4 · L’obiettivo',tit:'Fai crescere il campus',fig:'compost',txt:'I rifiuti smistati bene diventano materiali: carta, plastica, vetro, compost. Con i materiali realizzi i progetti chiesti dalle casate e coltivi l’orto. Ogni miglioria vale foglie.'},
-  {lbl:'Passo 3 di 4 · Come si gioca',tit:'Mattino, scuola, sera',fig:'bottiglia',txt:'Al mattino sistemi i cestini nelle isole (solo tre posti ciascuna). Suonata la campanella compaiono i rifiuti: tocca un’isola, scegli un rifiuto e poi il cestino. Se manca il cestino giusto, portalo altrove con lo zaino. La sera passa il camion.'},
-  {lbl:'Passo 4 di 4 · In breve',tit:'Attento al camion',fig:'fazzoletto',txt:'Il camion controlla i cestini: se trova un rifiuto sbagliato ritira solo metà del contenuto e ti spiega perché. I materiali non bastano per tutto: decidi tu che cosa viene prima.'}
+  {lbl:'Passo 1 di 4 · Il contesto',tit:'Dove vanno i rifiuti della scuola?',fig:()=>svgCamion(CAT.carta.col),txt:'Ogni giorno gli studenti buttano i rifiuti nei cestini delle isole. Poi passano i camioncini: uno diverso per ogni frazione, perché ogni materiale va in un impianto diverso.'},
+  {lbl:'Passo 2 di 4 · L’obiettivo',tit:'Fai crescere il campus',fig:()=>ico('foglia'),txt:'I rifiuti portati all’impianto giusto diventano materiali: carta, plastica, vetro, compost. Con i materiali realizzi i progetti chiesti dalle casate, coltivi l’orto e completi le isole. Ogni miglioria vale foglie.'},
+  {lbl:'Passo 3 di 4 · Come si gioca',tit:'Scegli, raccogli, scarica',fig:()=>svgCamion(CAT.plastica.col),txt:'Ogni isola ha già l’indifferenziato: al mattino aggiungi i cestini del riciclo e suoni la campanella. Poi scegli un camioncino e tocca un’isola che lampeggia: prima di caricare controlla il cestino e tocca quello che non ci dovrebbe stare. Quando il cassone è pieno, porta il carico al suo impianto.'},
+  {lbl:'Passo 4 di 4 · In breve',tit:'Carburante e intrusi',fig:()=>SVG_TANICA,txt:'Il carburante della giornata non basta per passare ovunque: decidi quali camioncini escono e che giro fanno. Se all’impianto arriva un intruso, il carico di quel cestino viene respinto, e la sera scopri il perché.'}
 ];
 let tPasso=0;
 function renderTutor(){
-  const t=TUTOR[tPasso]; $('tutorIcona').innerHTML=ico(t.fig); $('tutorLbl').textContent=t.lbl; $('tutorTitolo').textContent=t.tit; $('tutorTesto').textContent=t.txt;
+  const t=TUTOR[tPasso]; $('tutorIcona').innerHTML=t.fig(); $('tutorLbl').textContent=t.lbl; $('tutorTitolo').textContent=t.tit; $('tutorTesto').textContent=t.txt;
   $('tutor').querySelectorAll('.passi i').forEach((n,i)=>n.classList.toggle('on',i===tPasso));
   $('tutorIndietro').style.visibility=tPasso?'visible':'hidden'; $('tutorAvanti').textContent=tPasso===TUTOR.length-1?'Si comincia':'Avanti';
 }
 function apriTutor(){ tPasso=0; renderTutor(); $('tutor').classList.add('aperto'); $('tutorAvanti').focus(); }
-$('tutorAvanti').addEventListener('click',()=>{ if(tPasso<TUTOR.length-1){ tPasso++; renderTutor(); } else { $('tutor').classList.remove('aperto'); localStorage.setItem('eco_tutorVisto','1'); } });
+$('tutorAvanti').addEventListener('click',()=>{ if(tPasso<TUTOR.length-1){ tPasso++; renderTutor(); } else { $('tutor').classList.remove('aperto'); localStorage.setItem('eco_tutorVisto','2'); } });
 $('tutorIndietro').addEventListener('click',()=>{ if(tPasso){ tPasso--; renderTutor(); } });
 $('btnGuida').addEventListener('click',apriTutor);
 
 /* ====================== Comandi generali e avvio ====================== */
 $('btnAzione').addEventListener('click',()=>{
-  if(inPausa()) return;
+  if(inPausa()||inMoto) return;
   if(S.fase==='mattino'){
-    if(!ISOLE.some(i=>S.cestini[i.id].length)){ toast('Prima sistema almeno un cestino in un’isola.',3200); SFX.no(); return; }
     suonaCampanella();
-  }else if(S.fase==='giorno'){
-    const n=rifiutiInGiro();
-    if(n && !confirm('Restano '+n+' rifiuti in giro: li ritroverai domani. Chiudere la giornata?')) return;
+  }else if(S.fase==='giro'){
+    const n=neiCestini()+ORDINE.reduce((m,c)=>m+nelCassone(c),0);
+    if(n && !confirm('Ci sono ancora '+n+' rifiuti nei cestini o sui camioncini: li ritroverai domani. Chiudere la giornata?')) return;
     chiudiGiornata();
   }else if(S.fase==='fine'){ $('finale').classList.add('aperto'); }
 });
 $('btnNotte').addEventListener('click',notte);
 $('btnSuoni').addEventListener('click',function(){ sfxOn=!sfxOn; localStorage.setItem('eco_sfx',sfxOn?'1':'0'); this.classList.toggle('spento',!sfxOn); this.setAttribute('aria-pressed',sfxOn?'true':'false'); if(sfxOn) SFX.prendi(); });
 $('btnNuova').addEventListener('click',()=>{ if(confirm('Vuoi ricominciare la settimana da capo?')) mostraTitolo(); });
-$('finaleGuarda').addEventListener('click',()=>{ $('finale').classList.remove('aperto'); $('btnAzione').textContent='Rivedi il risultato'; $('suggerimento').textContent='Ecco il tuo campus dopo una settimana.'; });
+$('finaleGuarda').addEventListener('click',()=>{ $('finale').classList.remove('aperto'); $('suggerimento').textContent='Ecco il tuo campus dopo una settimana.'; });
 $('finaleRigioca').addEventListener('click',()=>{ $('finale').classList.remove('aperto'); mostraTitolo(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape' && pannello.classList.contains('aperto')){ chiudiPannello(); renderMappa(); } });
 window.addEventListener('resize',layout);
@@ -820,28 +971,27 @@ function mostraTitolo(){
   $('casate').innerHTML=Object.keys(CASATE).map(k=>'<button type="button" class="casata'+(k===casataScelta?' scelta':'')+'" role="radio" aria-checked="'+(k===casataScelta)+'" data-k="'+k+'"><img src="eco/'+k+'_full.webp" alt="" /><span>'+CASATE[k].nome+'</span></button>').join('');
   $('casate').querySelectorAll('.casata').forEach(b=>b.addEventListener('click',()=>{ casataScelta=b.dataset.k; SFX.prendi(); mostraTitolo(); }));
   $('btnGioca').textContent='Inizia la settimana'; $('btnGioca').dataset.modo='nuova';
+  const nota=$('notaRipresa'); if(nota) nota.remove();
   $('titolo').classList.add('aperto');
 }
 function entra(){
-  $('eroeImg').src='eco/'+S.casata+'_full.webp'; eroe.style.left=S.pos.x+'%'; eroe.style.top=S.pos.y+'%';
-  chiudiPannello(); renderMappa();
+  attivo=null; inMoto=null; chiudiPannello(); renderMappa();
   if(S.fase==='sera' && S.rapporto) apriSera();
   if(S.fase==='fine') fineSettimana();
 }
 $('btnGioca').addEventListener('click',function(){
   if(this.dataset.modo==='continua'){ $('titolo').classList.remove('aperto'); entra(); return; }
   nuovoStato(casataScelta); $('titolo').classList.remove('aperto'); entra();
-  if(!localStorage.getItem('eco_tutorVisto')) apriTutor();
+  if(localStorage.getItem('eco_tutorVisto')!=='2') apriTutor();
 });
 (function avvia(){
-  layout(); $('logoEco').innerHTML=ico('foglia');
+  layout(); renderStrade(); $('logoEco').innerHTML=svgCamion(CAT.vetro.col);
   $('btnSuoni').classList.toggle('spento',!sfxOn);
   mostraTitolo();
   if(carica() && S.fase!=='fine'){
     casataScelta=S.casata; mostraTitolo();
     const b=$('btnGioca'); b.textContent='Continua da '+GIORNI[S.giorno].toLowerCase(); b.dataset.modo='continua';
-    $('casate').insertAdjacentHTML('afterend','<p style="margin:-8px 0 14px;font-size:.9rem">Hai una settimana in corso. Per ricominciare scegli una casata.</p>');
-    $('casate').querySelectorAll('.casata').forEach(c=>c.addEventListener('click',()=>{ $('btnGioca').textContent='Inizia una settimana nuova'; $('btnGioca').dataset.modo='nuova'; }));
+    $('casate').insertAdjacentHTML('afterend','<p id="notaRipresa" style="margin:-8px 0 14px;font-size:.9rem">Hai una settimana in corso. Per ricominciare scegli una casata.</p>');
   }else{ nuovoStato('tasso'); }
   entra();
   requestAnimationFrame(ciclo);
