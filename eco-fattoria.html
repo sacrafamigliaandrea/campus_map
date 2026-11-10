@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Eco-Campus — La fattoria del riciclo</title>
+<link rel="icon" href="logo.svg" />
+<link rel="apple-touch-icon" href="logo.jpg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --blu:#123E90;            /* blu istituzionale Scuola Sacra Famiglia */
+    --blu-scuro:#0C2C68; --blu-chiaro:#E8EEFA;
+    --oro:#D4A017; --oro-scuro:#B8860B;      /* avanzamento e merito; ambra per gli avvisi (mai rosso) */
+    --verde:#2E8B57; --verde-chiaro:#DFF3E4;
+    --carta:#FBF8F0; --inchiostro:#1F2430; --grigio:#5B6472;
+    --c-carta:#2f6fc4; --c-plastica:#e0a91a; --c-vetro:#2e8b57; --c-organico:#8a5a2b; --c-indiff:#6b7280;
+    --ombra:0 10px 28px rgba(12,44,104,.28);
+    --font-corpo:"Atkinson Hyperlegible",system-ui,sans-serif; --font-ui:"Lexend",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{font-family:var(--font-corpo);font-size:18px;line-height:1.45;color:var(--inchiostro);
+    background:radial-gradient(120% 120% at 50% 40%,#3c7a4b,#1f4a2c);-webkit-font-smoothing:antialiased;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  h1,h2,h3{font-family:var(--font-ui);font-weight:700;margin:0}
+  button{font-family:var(--font-ui);cursor:pointer}
+  .ico{display:block}
+
+  /* ====================== Il campus ====================== */
+  #gioco{position:fixed;inset:0;overflow:hidden}
+  #scena{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:18px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  #scena .sfondo{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none;filter:saturate(1.08)}
+  .isola{position:absolute;transform:translate(-50%,-50%);border:0;background:transparent;padding:0;z-index:3}
+  .isola .disco{width:54px;height:54px;border-radius:50%;background:#fff;border:3px solid var(--blu);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 14px rgba(12,44,104,.4);transition:transform .15s}
+  .isola:hover .disco,.isola:focus-visible .disco{transform:scale(1.1)}
+  .isola:focus-visible{outline:none}
+  .isola:focus-visible .disco{box-shadow:0 0 0 4px var(--oro)}
+  .isola.qui .disco{border-color:var(--oro);box-shadow:0 0 0 4px rgba(212,160,23,.5)}
+  .isola .nome{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:3px;white-space:nowrap;
+    font-family:var(--font-ui);font-size:.74rem;font-weight:600;color:#fff;background:rgba(12,44,104,.9);padding:2px 9px;border-radius:99px}
+  .isola .puntini{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;display:flex;gap:3px}
+  .isola .puntini i{width:11px;height:11px;border-radius:3px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .isola .conta{position:absolute;right:-8px;top:-8px;min-width:24px;height:24px;border-radius:99px;background:var(--oro);color:#1F2430;
+    font-family:var(--font-ui);font-weight:700;font-size:.85rem;display:none;align-items:center;justify-content:center;padding:0 6px;border:2px solid #fff;
+    animation:salta 1.1s ease-in-out infinite}
+  .isola.ha-rifiuti .conta{display:flex}
+  @keyframes salta{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .isola.orto .disco{width:66px;height:66px;border-color:var(--verde);background:var(--verde-chiaro)}
+  .eroe{position:absolute;width:7.2%;transform:translate(-50%,-88%);z-index:5;pointer-events:none;filter:drop-shadow(0 6px 5px rgba(0,0,0,.4))}
+  .eroe img{display:block;width:100%;height:auto}
+  .eroe.sx img{transform:scaleX(-1)}
+  .eroe.cammina img{animation:passo .3s ease-in-out infinite alternate}
+  @keyframes passo{from{translate:0 0;rotate:-3deg}to{translate:0 -6%;rotate:3deg}}
+  .png{position:absolute;width:5.4%;transform:translate(-50%,-88%);z-index:4;border:0;background:transparent;padding:0;filter:drop-shadow(0 5px 4px rgba(0,0,0,.4))}
+  .png img{display:block;width:100%;height:auto}
+  .png:focus-visible{outline:3px solid var(--oro);outline-offset:3px;border-radius:12px}
+  .png .fumetto{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:var(--oro);
+    border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);font-weight:800;color:#1F2430;animation:salta 1.3s ease-in-out infinite}
+  .deco{position:absolute;width:5.6%;transform:translate(-50%,-80%);z-index:2;pointer-events:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35));animation:spunta .5s cubic-bezier(.2,1.6,.4,1)}
+  .deco svg{width:100%;height:auto;display:block}
+  @keyframes spunta{from{transform:translate(-50%,-80%) scale(.2)}to{transform:translate(-50%,-80%) scale(1)}}
+
+  /* ====================== HUD ====================== */
+  .hud-top{position:absolute;left:12px;right:12px;top:10px;z-index:10;display:flex;gap:10px;align-items:center;pointer-events:none;flex-wrap:wrap}
+  .hud-top > *{pointer-events:auto}
+  .chip{background:var(--carta);border:2px solid var(--blu);border-radius:14px;padding:6px 12px;display:flex;align-items:center;gap:8px;box-shadow:var(--ombra);
+    font-family:var(--font-ui);font-weight:700}
+  .chip.giorno{background:var(--blu);color:#fff;border-color:#fff}
+  .chip.giorno small{display:block;font-weight:500;font-size:.68rem;opacity:.85;letter-spacing:.06em;text-transform:uppercase}
+  .risorse{display:flex;gap:6px}
+  .ris{background:var(--carta);border:2px solid var(--c);border-radius:12px;padding:3px 9px 3px 5px;display:flex;align-items:center;gap:5px;box-shadow:var(--ombra);
+    font-family:var(--font-ui);font-weight:700;font-size:1.05rem;min-width:64px}
+  .ris .ico{width:30px;height:30px}
+  .ris.foglie{border-color:var(--verde);background:var(--verde-chiaro);color:#14532d}
+  .ris.su{animation:su .5s ease}
+  @keyframes su{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .spazio{flex:1 1 auto}
+  .btn-tondo{width:44px;height:44px;border-radius:50%;border:2px solid var(--blu);background:var(--carta);color:var(--blu);display:flex;align-items:center;justify-content:center;box-shadow:var(--ombra)}
+  .btn-tondo svg{width:21px;height:21px}
+  .btn-tondo.spento{color:var(--grigio);border-color:var(--grigio)}
+  a.btn-tondo{text-decoration:none}
+  .btn-tondo:focus-visible,.btn:focus-visible,.tess:focus-visible,.cest:focus-visible{outline:3px solid var(--oro);outline-offset:3px}
+
+  .hud-basso{position:absolute;left:12px;right:12px;bottom:12px;z-index:10;display:flex;gap:12px;align-items:flex-end;pointer-events:none}
+  .hud-basso > *{pointer-events:auto}
+  .zaino{background:var(--carta);border:2px solid var(--blu);border-radius:14px;padding:6px 10px;box-shadow:var(--ombra);display:flex;align-items:center;gap:8px}
+  .zaino .tit{font-family:var(--font-ui);font-weight:600;font-size:.72rem;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em}
+  .zaino .posti{display:flex;gap:5px}
+  .zaino .posto{width:40px;height:40px;border-radius:10px;border:2px dashed #b9c3d6;background:#fff;display:flex;align-items:center;justify-content:center}
+  .zaino .posto .ico{width:32px;height:32px}
+  .suggerimento{flex:1 1 auto;text-align:center;font-size:.98rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.7);font-weight:700;padding:0 8px;min-height:1.4em}
+  .btn{border:0;border-radius:99px;font-weight:700;font-size:1rem;padding:12px 22px;transition:.15s}
+  .btn-oro{background:linear-gradient(180deg,#f0c84a,var(--oro));color:#1F2430;box-shadow:0 6px 0 var(--oro-scuro),0 12px 20px rgba(0,0,0,.3)}
+  .btn-oro:hover{filter:brightness(1.06)} .btn-oro:active{transform:translateY(4px);box-shadow:0 2px 0 var(--oro-scuro)}
+  .btn-blu{background:var(--blu);color:#fff;box-shadow:0 5px 0 var(--blu-scuro)}
+  .btn-blu:active{transform:translateY(3px);box-shadow:0 2px 0 var(--blu-scuro)}
+  .btn-chiaro{background:#fff;color:var(--blu);border:2px solid var(--blu)}
+  .btn[disabled]{opacity:.45;cursor:default;filter:grayscale(.4)}
+  .btn svg{width:20px;height:20px;vertical-align:-4px;margin-right:6px}
+  .btn-azione{font-size:1.15rem;padding:15px 28px;white-space:nowrap}
+
+  /* ====================== Pannello dell'isola ====================== */
+  .pannello{position:absolute;left:50%;bottom:86px;transform:translateX(-50%);z-index:12;width:min(820px,96vw);background:var(--carta);
+    border:3px solid var(--blu);border-radius:20px;box-shadow:0 18px 44px rgba(0,0,0,.45);padding:14px 16px;display:none}
+  .pannello.aperto{display:block;animation:sale .25s ease}
+  @keyframes sale{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+  .pannello header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .pannello header h2{font-size:1.2rem;color:var(--blu)}
+  .pannello header .fase{font-family:var(--font-ui);font-size:.75rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em}
+  .pannello .chiudi{margin-left:auto;width:38px;height:38px;border-radius:50%;border:2px solid var(--blu);background:#fff;color:var(--blu);font-size:1.3rem;line-height:1}
+  .riga{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+  .blocco{flex:1 1 240px}
+  .blocco h3{font-size:.78rem;font-weight:600;color:var(--grigio);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .tessere{display:flex;gap:8px;flex-wrap:wrap;min-height:74px}
+  .tess{width:84px;border:2px solid #cfd6e4;background:#fff;border-radius:14px;padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.12s}
+  .tess .ico{width:46px;height:46px}
+  .tess span{font-family:var(--font-ui);font-size:.68rem;font-weight:600;line-height:1.15;text-align:center;color:var(--inchiostro)}
+  .tess.scelta{border-color:var(--oro);background:#fff8de;transform:translateY(-4px);box-shadow:0 6px 0 var(--oro-scuro)}
+  .tess.respinta{animation:scuoti .4s}
+  @keyframes scuoti{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .cestini{display:flex;gap:8px;flex-wrap:wrap}
+  .cest{width:84px;border:3px solid var(--c);background:#fff;border-radius:14px;padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+  .cest img{width:58px;height:70px;object-fit:cover;object-position:50% 32%;border-radius:8px;display:block}
+  .cest span{font-family:var(--font-ui);font-size:.6rem;font-weight:700;line-height:1.1;text-align:center;color:var(--inchiostro);letter-spacing:-.01em}
+  .cest .dentro{position:absolute;right:-7px;top:-7px;min-width:22px;height:22px;border-radius:99px;background:var(--blu);color:#fff;font-family:var(--font-ui);font-weight:700;font-size:.78rem;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 5px}
+  .cest.vuoto{border-style:dashed;border-color:#b9c3d6;color:var(--grigio);justify-content:center;min-height:104px;font-family:var(--font-ui);font-size:.72rem;font-weight:600}
+  .cest.pronto{box-shadow:0 0 0 4px rgba(212,160,23,.45)}
+  .cest.ok{animation:su .4s}
+  .nota{font-size:.9rem;color:var(--grigio);margin:8px 0 0}
+  .nota.ambra{color:#8a5a00;background:#fff3cf;border-left:4px solid var(--oro);padding:6px 10px;border-radius:0 8px 8px 0}
+  .azioni-pann{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .azioni-pann .btn{padding:8px 16px;font-size:.9rem}
+  .aiuole{display:flex;gap:10px;flex-wrap:wrap}
+  .aiuola{width:120px;border:2px solid var(--verde);background:#fff;border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .aiuola svg{width:76px;height:76px}
+  .aiuola .btn{padding:6px 12px;font-size:.8rem;width:100%}
+  .aiuola small{font-family:var(--font-ui);font-size:.7rem;color:var(--grigio);text-align:center}
+
+  /* ====================== Overlay ====================== */
+  .overlay{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(10,30,20,.78)}
+  .overlay.aperto{display:flex}
+  .carta-ov{width:min(920px,96vw);max-height:94vh;overflow:auto;background:var(--carta);border:3px solid var(--blu);border-radius:22px;box-shadow:0 22px 60px rgba(0,0,0,.5);
+    padding:22px 24px;-webkit-user-select:text;user-select:text}
+  .carta-ov h1{color:var(--blu);font-size:1.7rem}
+  .carta-ov h2{color:var(--blu);font-size:1.15rem;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+  .carta-ov h2 svg{width:24px;height:24px}
+  .sotto{color:var(--grigio);margin:4px 0 0}
+  /* titolo */
+  #titolo{background:linear-gradient(180deg,rgba(12,44,104,.55),rgba(20,60,34,.9)),url('Campus.png') center/cover}
+  .titolo-box{text-align:center;max-width:860px;color:#fff}
+  .titolo-box .logo-eco{width:92px;height:92px;margin:0 auto}
+  .titolo-box h1{font-family:var(--font-ui);font-weight:800;font-size:clamp(2.4rem,6vw,4.2rem);line-height:1;text-shadow:0 4px 0 rgba(12,44,104,.6),0 10px 24px rgba(0,0,0,.5)}
+  .titolo-box .sottotitolo{font-family:var(--font-ui);font-weight:600;font-size:1.15rem;letter-spacing:.14em;text-transform:uppercase;color:#f0c84a;margin-top:6px}
+  .titolo-box p{max-width:52ch;margin:14px auto 16px;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .casate{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:0 0 20px}
+  .casata{width:138px;background:rgba(255,255,255,.94);border:4px solid transparent;border-radius:18px;padding:8px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.15s}
+  .casata img{width:104px;height:104px;object-fit:contain}
+  .casata span{font-family:var(--font-ui);font-weight:700;font-size:.92rem;color:var(--blu)}
+  .casata.scelta{border-color:var(--oro);transform:translateY(-6px);box-shadow:0 8px 0 var(--oro-scuro)}
+  .casata:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  .titolo-box .crediti{margin-top:22px;font-size:.78rem;opacity:.85}
+  /* tutorial */
+  .tutor{width:min(620px,94vw);text-align:center}
+  .tutor .icona-grande{width:84px;height:84px;margin:0 auto 6px;border-radius:50%;background:var(--blu-chiaro);border:3px solid var(--blu);display:flex;align-items:center;justify-content:center}
+  .tutor .icona-grande .ico{width:54px;height:54px}
+  .tutor .passo-lbl{font-family:var(--font-ui);font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--oro-scuro)}
+  .tutor p{margin:8px auto 0;max-width:48ch}
+  .tutor .passi{display:flex;justify-content:center;gap:8px;margin:18px 0 14px}
+  .tutor .passi i{width:10px;height:10px;border-radius:50%;background:#cfd6e4}
+  .tutor .passi i.on{background:var(--blu)}
+  .tutor .nav{display:flex;justify-content:space-between;gap:12px}
+  /* sera */
+  .rapporto{display:flex;flex-direction:column;gap:6px}
+  .rap{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #dbe2ee;border-radius:12px;padding:8px 12px}
+  .rap .tacca{flex:0 0 12px;width:12px;align-self:stretch;border-radius:6px;background:var(--c)}
+  .rap .txt{flex:1 1 auto;font-size:.95rem}
+  .rap .txt strong{font-family:var(--font-ui)}
+  .rap .guad{font-family:var(--font-ui);font-weight:700;white-space:nowrap;color:#14532d}
+  .rap.avviso{border-color:var(--oro);background:#fff8de}
+  .rap.avviso .guad{color:#8a5a00}
+  .bottega{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+  .merce{background:#fff;border:2px solid #dbe2ee;border-radius:14px;padding:10px;display:flex;gap:10px;align-items:center}
+  .merce .fig{flex:0 0 58px;width:58px;height:58px;display:flex;align-items:center;justify-content:center;position:relative}
+  .merce .fig svg,.merce .fig img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+  .merce .fig .chi{position:absolute;right:-8px;bottom:-8px;width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:#fff;object-fit:cover}
+  .merce .info{flex:1 1 auto;min-width:0}
+  .merce .info strong{font-family:var(--font-ui);font-size:.92rem;display:block;line-height:1.15}
+  .merce .info small{display:block;font-size:.8rem;color:var(--grigio);line-height:1.25;margin:2px 0 5px}
+  .costo{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .costo .c{display:inline-flex;align-items:center;gap:2px;font-family:var(--font-ui);font-weight:700;font-size:.85rem;background:#f1f4fa;border-radius:8px;padding:1px 6px 1px 2px}
+  .costo .c .ico{width:20px;height:20px}
+  .costo .c.manca{background:#fff3cf;color:#8a5a00}
+  .merce .btn{padding:7px 13px;font-size:.82rem;flex:0 0 auto}
+  .merce.fatto{opacity:.7;border-color:var(--verde);background:var(--verde-chiaro)}
+  .piede{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;align-items:center}
+  .piede .risorse{margin-right:auto;flex-wrap:wrap}
+  /* finale */
+  .livello{font-family:var(--font-ui);font-weight:800;font-size:1.5rem;color:#14532d;background:var(--verde-chiaro);border:3px solid var(--verde);border-radius:16px;padding:10px 18px;display:inline-block;margin:10px 0}
+  .statistiche{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+  .stat{background:#fff;border:2px solid #dbe2ee;border-radius:12px;padding:8px 10px;text-align:center}
+  .stat b{font-family:var(--font-ui);font-size:1.5rem;color:var(--blu);display:block;line-height:1.1}
+  .stat span{font-size:.8rem;color:var(--grigio)}
+  .debrief label{display:block;font-family:var(--font-ui);font-weight:600;font-size:.9rem;color:var(--blu);margin:10px 0 4px}
+  .debrief textarea{width:100%;min-height:68px;border:2px solid #cfd6e4;border-radius:10px;padding:8px 10px;font-family:var(--font-corpo);font-size:.95rem;resize:vertical}
+  .debrief textarea:focus{outline:3px solid var(--oro)}
+  .toast{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:14;background:var(--blu);color:#fff;border:2px solid #fff;border-radius:14px;padding:9px 18px;
+    font-family:var(--font-ui);font-weight:600;box-shadow:var(--ombra);opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:90vw}
+  .toast.on{opacity:1}
+  @media (max-width:820px){ .ris{min-width:52px;font-size:.95rem} .chip.giorno small{display:none} .pannello{bottom:78px} .btn-azione{font-size:1rem;padding:12px 18px} .suggerimento{display:none} }
+  @media (prefers-reduced-motion:reduce){ *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.05s !important} }
+</style>
+</head>
+<body>
+
+<div id="gioco">
+  <div id="scena">
+    <img class="sfondo" src="Campus.png" alt="" draggable="false" />
+    <div class="eroe" id="eroe" aria-hidden="true"><img id="eroeImg" src="eco/tasso_full.webp" alt="" /></div>
+  </div>
+
+  <div class="hud-top">
+    <div class="chip giorno"><div><span id="giornoNome">Lunedì</span><small id="giornoFase">mattino · giorno 1 di 5</small></div></div>
+    <div class="risorse" id="risorse"></div>
+    <span class="spazio"></span>
+    <button class="btn-tondo" id="btnGuida" type="button" aria-label="Come si gioca" title="Come si gioca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.300a2.600 2.600 0 1 1 3.600 2.400c-.700.400-1.100 1-1.100 1.800M12 17h.01"/></svg></button>
+    <button class="btn-tondo" id="btnSuoni" type="button" aria-pressed="true" aria-label="Effetti sonori" title="Effetti sonori">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.500 8.500a5 5 0 0 1 0 7"/></svg></button>
+    <button class="btn-tondo" id="btnNuova" type="button" aria-label="Ricomincia la settimana" title="Ricomincia la settimana">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.700M3 4v4h4"/></svg></button>
+    <a class="btn-tondo" href="index.html" aria-label="Torna a Lume di Lanterna" title="Torna a Lume di Lanterna">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6"/></svg></a>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <section class="pannello" id="pannello" aria-live="polite"></section>
+
+  <div class="hud-basso">
+    <div class="zaino" id="zaino"></div>
+    <div class="suggerimento" id="suggerimento" role="status" aria-live="polite"></div>
+    <button class="btn btn-oro btn-azione" id="btnAzione" type="button">Suona la campanella</button>
+  </div>
+</div>
+
+<!-- Sera: camion + bottega -->
+<div class="overlay" id="sera" role="dialog" aria-modal="true" aria-labelledby="seraTitolo">
+  <div class="carta-ov">
+    <h1 id="seraTitolo">Sera</h1>
+    <p class="sotto" id="seraSotto"></p>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h13v10H1zM14 9h4l4 4v3h-8z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>È passato il camion della raccolta</span></h2>
+    <div class="rapporto" id="rapporto"></div>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.500-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6"/></svg><span>La bottega del campus</span></h2>
+    <p class="sotto" style="margin-bottom:10px">Usa i materiali riciclati per far crescere il campus. Non bastano per tutto: scegli che cosa viene prima.</p>
+    <div class="bottega" id="bottega"></div>
+    <div class="piede">
+      <div class="risorse" id="risorseSera"></div>
+      <button class="btn btn-oro btn-azione" id="btnNotte" type="button">Buonanotte: a domani</button>
+    </div>
+  </div>
+</div>
+
+<!-- Finale + debrief -->
+<div class="overlay" id="finale" role="dialog" aria-modal="true" aria-labelledby="finaleTitolo">
+  <div class="carta-ov" style="text-align:center">
+    <h1 id="finaleTitolo">La settimana ecologica è finita</h1>
+    <div class="livello" id="finaleLivello"></div>
+    <p id="finaleTesto" style="max-width:56ch;margin:0 auto"></p>
+    <div class="statistiche" id="finaleStat"></div>
+    <div id="finaleErrori" style="text-align:left"></div>
+    <div class="debrief" style="text-align:left">
+      <h2>Ripensa alla tua settimana</h2>
+      <label for="dbr1">Dove hai messo i cestini il primo giorno? Con quello che sai adesso, li metteresti negli stessi posti?</label>
+      <textarea id="dbr1"></textarea>
+      <label for="dbr2">Quale rifiuto ti ha ingannato di più? Come lo riconoscerai la prossima volta, a scuola o a casa?</label>
+      <textarea id="dbr2"></textarea>
+    </div>
+    <div class="piede" style="justify-content:center">
+      <button class="btn btn-chiaro" id="finaleGuarda" type="button">Guarda il tuo campus</button>
+      <button class="btn btn-oro" id="finaleRigioca" type="button">Gioca un'altra settimana</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial 4 momenti -->
+<div class="overlay" id="tutor" role="dialog" aria-modal="true" aria-labelledby="tutorTitolo">
+  <div class="carta-ov tutor">
+    <div class="icona-grande" id="tutorIcona" aria-hidden="true"></div>
+    <div class="passo-lbl" id="tutorLbl"></div>
+    <h1 id="tutorTitolo" style="font-size:1.45rem"></h1>
+    <p id="tutorTesto"></p>
+    <div class="passi" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="nav">
+      <button class="btn btn-chiaro" id="tutorIndietro" type="button">Indietro</button>
+      <button class="btn btn-oro" id="tutorAvanti" type="button">Avanti</button>
+    </div>
+  </div>
+</div>
+
+<!-- Titolo -->
+<div class="overlay aperto" id="titolo" role="dialog" aria-modal="true" aria-labelledby="titoloH">
+  <div class="titolo-box">
+    <div class="logo-eco" id="logoEco" aria-hidden="true"></div>
+    <h1 id="titoloH">Eco-Campus</h1>
+    <div class="sottotitolo">La fattoria del riciclo</div>
+    <p>Una settimana per trasformare i rifiuti della scuola in un campus più verde. Scegli la tua casata e comincia.</p>
+    <div class="casate" id="casate" role="radiogroup" aria-label="Scegli la tua casata"></div>
+    <div><button class="btn btn-oro btn-azione" id="btnGioca" type="button">Inizia la settimana</button></div>
+    <div class="crediti">Scuola Sacra Famiglia · Animatore Digitale Andrea Cerioli · &copy; 2026</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ====================== PRNG deterministico (RIGIOCABILITA §5): ?seed=2B-eco-01 per la lezione ====================== */
+function cyrb53(s, seed = 0){
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for(let i=0,c;i<s.length;i++){ c=s.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
+  h1=Math.imul(h1^h1>>>16,2246822507)^Math.imul(h2^h2>>>13,3266489909);
+  h2=Math.imul(h2^h2>>>16,2246822507)^Math.imul(h1^h1>>>13,3266489909);
+  return 4294967296*(2097151&h2)+(h1>>>0);
+}
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function sid(){ let v=localStorage.getItem('eco_sid'); if(!v){ v=(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())); localStorage.setItem('eco_sid',v);} return v; }
+function run(){ const n=(+localStorage.getItem('eco_run')||0)+1; localStorage.setItem('eco_run',n); return n; }
+const $ = id => document.getElementById(id);
+const PARAMS = new URLSearchParams(location.search);
+// Leva del docente: ?aiuto=subito fa tornare indietro subito il rifiuto sbagliato, con un indizio (default: lo dice il camion la sera)
+const AIUTO_SUBITO = PARAMS.get('aiuto')==='subito';
+
+/* ====================== Icone (set coerente, vedi svg-craft) ====================== */
+const INK = '#22304a';
+function corona(cx, cy, R, r, n) {            // tappo a corona visto dall'alto
+  const p = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = Math.PI * i / n, q = i % 2 ? r : R;
+    p.push((cx + Math.cos(a) * q).toFixed(1) + ' ' + (cy + Math.sin(a) * q).toFixed(1));
+  }
+  return 'M' + p.join('L') + 'Z';
+}
+const OGG = {
+  // ---------- CARTA ----------
+  foglio: '<path d="M12 5h17l8 8v30H12z" fill="#fff"/><path d="M29 5v8h8" fill="#dfe8f6"/><path d="M17 21h14M17 27h14M17 33h9" stroke="#8fa6cc"/>',
+  quaderno: '<rect x="11" y="6" width="27" height="36" rx="3" fill="#4caf6a"/><rect x="18" y="13" width="14" height="8" rx="1.5" fill="#fff"/><path d="M8 12h6M8 19h6M8 26h6M8 33h6"/>',
+  cartoncino: '<rect x="8" y="14" width="24" height="28" rx="2" fill="#f6d186" transform="rotate(-10 20 28)"/><rect x="17" y="8" width="24" height="28" rx="2" fill="#f2a65a" transform="rotate(8 29 22)"/>',
+  scatola: '<path d="M6 18l18-7 18 7v18l-18 7-18-7z" fill="#d9a55f"/><path d="M6 18l18 7 18-7z" fill="#e8bf85"/><path d="M24 25v18"/><path d="M15 14.500l18 7" stroke="#f6e3c0" stroke-width="3"/>',
+  giornale: '<path d="M8 10h28v28a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z" fill="#f3f4f7"/><path d="M36 16h4v22a4 4 0 0 1-8 0" fill="#d9dde6"/><rect x="13" y="15" width="18" height="5" fill="#22304a" stroke="none"/><path d="M13 25h8M13 30h8M13 35h8" stroke="#7d8798"/><rect x="25" y="25" width="6" height="10" fill="#b9c3d6" stroke="#7d8798"/>',
+  // ---------- PLASTICA ----------
+  bottiglia: '<path d="M20 6h8v4l4 6v23a4 4 0 0 1-4 4h-8a4 4 0 0 1-4-4V16l4-6z" fill="#cfeaf8"/><rect x="19" y="3" width="10" height="4" rx="1" fill="#2f7fd1"/><rect x="16" y="23" width="16" height="9" fill="#5aa9e6"/><path d="M20 15v4" stroke="#fff"/>',
+  bicchiere: '<path d="M12 9h24l-4 33H16z" fill="#eaf6fc"/><path d="M13.500 21h21" stroke="#5aa9e6"/><ellipse cx="24" cy="9" rx="12" ry="3" fill="#fff"/>',
+  tappo: '<path d="M9 20v9c0 4 7 7 15 7s15-3 15-7v-9" fill="#3fa66b"/><ellipse cx="24" cy="20" rx="15" ry="7" fill="#7fd3a0"/><path d="M14 31v3M19 33v3M24 33.500v3M29 33v3M34 31v3" stroke="#1e6e44"/>',
+  yogurt: '<path d="M11 14h26l-4 26a3 3 0 0 1-3 2H18a3 3 0 0 1-3-2z" fill="#fff"/><path d="M13 24h22l-1.500 10h-19z" fill="#7fb6ea"/><path d="M9 10h23v4H9z" fill="#dfe8f6"/><path d="M32 12c1-5 5-7 9-5-1 3-4 5-9 5z" fill="#c9d3e3"/>',
+  merenda: '<path d="M12 13l-5 3 5 3-5 3 5 3-5 3 5 3-5 4h5z" fill="#f9d98a"/><path d="M36 13l5 3-5 3 5 3-5 3 5 3-5 3 5 4h-5z" fill="#f9d98a"/><rect x="12" y="13" width="24" height="22" rx="1" fill="#f4b63f"/><circle cx="24" cy="24" r="6" fill="#fff"/>',
+  // ---------- VETRO E LATTINE ----------
+  bottigliaVetro: '<path d="M21 4h6v10c0 3 5 5 5 10v16a3 3 0 0 1-3 3H19a3 3 0 0 1-3-3V24c0-5 5-7 5-10z" fill="#8cc79a"/><path d="M19.500 4h9"/><path d="M20 26v10" stroke="#e3f5e7"/>',
+  barattolo: '<rect x="12" y="14" width="24" height="29" rx="5" fill="#dff3ec"/><rect x="11" y="6" width="26" height="8" rx="2" fill="#9aa1ad"/><path d="M17 22v12" stroke="#fff"/>',
+  lattina: '<path d="M13 10v28c0 3 5 5 11 5s11-2 11-5V10" fill="#cfd4dc"/><path d="M13 19c0 3 5 5 11 5s11-2 11-5v10c0 3-5 5-11 5s-11-2-11-5z" fill="#5aa9e6"/><ellipse cx="24" cy="10" rx="11" ry="4.500" fill="#e6e9ee"/><ellipse cx="26" cy="10" rx="3.500" ry="1.500" fill="#9aa1ad"/>',
+  tappoMetallo: '<path d="' + corona(24, 24, 18, 15, 11) + '" fill="#b9bec7"/><circle cx="24" cy="24" r="10.500" fill="#dfe3e9"/><path d="M19 22c2-3 6-4 9-2" stroke="#fff"/>',
+  // ---------- ORGANICO ----------
+  banana: '<path d="M24 20c-3 6-8 12-17 14 2 4 8 5 12 3 5-3 7-10 7-15z" fill="#f2cf4a"/><path d="M24 20c3 6 8 12 17 14-2 4-8 5-12 3-5-3-7-10-7-15z" fill="#f7dd72"/><path d="M22 21c-1 7-1 14 2 22 3-8 3-15 2-22z" fill="#eec23a"/><path d="M21 12h6l1 9h-8z" fill="#c9a12f"/><rect x="22" y="7" width="4" height="5" fill="#7a5a1c"/>',
+  torsolo: '<path d="M14 12c3-4 17-4 20 0-1 4-5 6-6 12 1 6 5 8 6 12-3 4-17 4-20 0 1-4 5-6 6-12-1-6-5-8-6-12z" fill="#f3e6bd"/><path d="M14 12c3-4 17-4 20 0-2 3-18 3-20 0z" fill="#7fbf5a"/><path d="M14 36c3 4 17 4 20 0-2-3-18-3-20 0z" fill="#7fbf5a"/><path d="M24 9V4"/><circle cx="22" cy="23" r="1.300" fill="#5a3d1c" stroke="none"/><circle cx="26" cy="26" r="1.300" fill="#5a3d1c" stroke="none"/>',
+  pane: '<path d="M10 21c-4-6 2-13 8-11 3-4 9-4 12 0 6-2 12 5 8 11v19a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2z" fill="#c98d4f"/><path d="M14 23c-2-4 2-8 5-7 2-3 8-3 10 0 3-1 7 3 5 7v15H14z" fill="#f6e3c0" stroke="none"/>',
+  biscotto: '<path d="M24 6a18 18 0 1 0 18 18c-4 1-7-1-7-5-4 1-7-2-6-6-3 0-5-3-5-7z" fill="#d6a05c"/><circle cx="17" cy="19" r="2.200" fill="#5a3d1c" stroke="none"/><circle cx="25" cy="29" r="2.200" fill="#5a3d1c" stroke="none"/><circle cx="14" cy="30" r="2" fill="#5a3d1c" stroke="none"/><circle cx="31" cy="35" r="2" fill="#5a3d1c" stroke="none"/><circle cx="21" cy="37" r="1.800" fill="#5a3d1c" stroke="none"/>',
+  avanzi: '<ellipse cx="24" cy="29" rx="19" ry="10" fill="#fff"/><ellipse cx="24" cy="28" rx="12" ry="5.500" fill="#eef1f6" stroke="#b9c3d6"/><path d="M15 28c3-4 5 1 8-2s5 1 7-1" stroke="#e0a53a" stroke-width="3"/><path d="M27 31c2-3 6-3 7 0z" fill="#c98d4f" stroke="none"/><g stroke="none" fill="#58b368"><circle cx="17" cy="31" r="1.700"/><circle cx="20.500" cy="32.500" r="1.700"/><circle cx="23" cy="30.500" r="1.700"/></g>',
+  // ---------- INDIFFERENZIATO ----------
+  penna: '<g transform="rotate(40 24 24)"><rect x="20" y="5" width="8" height="29" rx="2" fill="#2f7fd1"/><rect x="20" y="5" width="8" height="7" rx="2" fill="#1d5aa0"/><path d="M20 34h8l-4 9z" fill="#f1d7a3"/><path d="M28 9h3v12"/></g>',
+  pennarello: '<g transform="rotate(-40 24 24)"><rect x="19" y="15" width="10" height="27" rx="2" fill="#4caf6a"/><rect x="18" y="4" width="12" height="13" rx="2" fill="#2e7d4f"/><path d="M19 34h10" stroke="#fff"/></g>',
+  fazzoletto: '<path d="M10 22l6-9 8 3 7-6 8 9-3 8 4 8-9 6-8-3-8 4-6-8 3-6z" fill="#fff"/><path d="M16 13l4 10-7 4M24 16l1 9 9-1M20 23l6 9-3 9M31 24l5 3" stroke="#aeb7c6"/>',
+  trucioli: '<path d="M8 39c0-17 12-29 29-29l5 6c-3 1-4 3-4 5-4 0-6 2-6 5-4 0-6 3-6 6-3 0-5 3-5 7z" fill="#f6e3c0"/><path d="M37 10l5 6" stroke="#e0803a" stroke-width="4"/><path d="M13 29l7 3M19 20l6 6M28 14l3 7" stroke="#c98d4f"/><circle cx="35" cy="36" r="2.200" fill="#5a5f6b" stroke="none"/><circle cx="29" cy="41" r="1.600" fill="#5a5f6b" stroke="none"/><circle cx="40" cy="42" r="1.400" fill="#5a5f6b" stroke="none"/>',
+  colla: '<rect x="15" y="16" width="18" height="27" rx="2" fill="#f4c63f"/><rect x="14" y="5" width="20" height="12" rx="2" fill="#fff"/><rect x="15" y="24" width="18" height="10" fill="#fff"/><path d="M19 29h10" stroke="#2f7fd1"/>',
+  // ---------- RISORSE ----------
+  compost: '<path d="M5 41c2-11 10-17 19-17s17 6 19 17z" fill="#7a5632"/><path d="M24 24v-8"/><path d="M24 15c0-5 4-8 9-8 0 5-4 8-9 8z" fill="#6fca93"/><path d="M24 18c0-4-3-6-7-6 0 4 3 6 7 6z" fill="#6fca93"/>',
+  foglia: '<path d="M8 40C8 20 20 8 40 8c0 20-12 32-32 32z" fill="#58b368"/><path d="M8 40L30 18M18 30v-9M18 30h9" stroke="#e3f5e7"/>'
+};
+// Decorazioni e orto: stesso stile, viewBox 64
+const DECO = {
+  panchina: '<rect x="8" y="14" width="48" height="7" rx="2" fill="#5aa9e6"/><rect x="8" y="27" width="48" height="7" rx="2" fill="#7fc0f0"/><path d="M14 21v6M50 21v6M14 34v14M50 34v14M9 48h10M45 48h10"/>',
+  lampione: '<path d="M32 58V24" stroke-width="4"/><path d="M24 58h16"/><path d="M23 24h18l-3-16H26z" fill="#fff3c4"/><path d="M22 8h20"/><circle cx="32" cy="17" r="3" fill="#f4c63f" stroke="none"/>',
+  quaderni: '<rect x="10" y="40" width="44" height="10" rx="2" fill="#4caf6a"/><rect x="14" y="30" width="40" height="10" rx="2" fill="#f4c63f"/><rect x="10" y="20" width="42" height="10" rx="2" fill="#5aa9e6"/><path d="M16 25h10M20 35h10M16 45h10" stroke="#fff"/>',
+  aiuola: '<ellipse cx="32" cy="50" rx="26" ry="8" fill="#7a5632"/><path d="M18 48V34M32 48V28M46 48V34" stroke="#2e7d4f" stroke-width="3"/><circle cx="18" cy="30" r="6" fill="#f4c63f"/><circle cx="32" cy="23" r="7" fill="#c9a0f0"/><circle cx="46" cy="30" r="6" fill="#f2a65a"/><circle cx="18" cy="30" r="2" fill="#fff" stroke="none"/><circle cx="32" cy="23" r="2.400" fill="#fff" stroke="none"/><circle cx="46" cy="30" r="2" fill="#fff" stroke="none"/>',
+  albero: '<rect x="28" y="36" width="8" height="22" rx="2" fill="#8a5a2b"/><circle cx="32" cy="24" r="19" fill="#58b368"/><circle cx="24" cy="20" r="3" fill="#f4c63f"/><circle cx="38" cy="16" r="3" fill="#f4c63f"/><circle cx="36" cy="30" r="3" fill="#f4c63f"/><circle cx="22" cy="31" r="2.600" fill="#f4c63f"/>',
+  murales: '<rect x="6" y="12" width="52" height="38" rx="3" fill="#fff"/><g stroke="none"><circle cx="16" cy="22" r="4" fill="#5aa9e6"/><circle cx="26" cy="22" r="4" fill="#f4c63f"/><circle cx="38" cy="22" r="4" fill="#3fa66b"/><circle cx="48" cy="22" r="4" fill="#f2a65a"/><circle cx="16" cy="32" r="4" fill="#f4c63f"/><circle cx="48" cy="32" r="4" fill="#5aa9e6"/><circle cx="20" cy="41" r="4" fill="#3fa66b"/><circle cx="32" cy="43" r="4" fill="#c9a0f0"/><circle cx="44" cy="41" r="4" fill="#f4c63f"/></g><path d="M12 50v8M52 50v8"/>',
+  casetta: '<path d="M32 60V44" stroke-width="4"/><path d="M12 22L32 8l20 14z" fill="#f2a65a"/><rect x="16" y="22" width="32" height="22" fill="#fff"/><rect x="20" y="27" width="5" height="13" fill="#5aa9e6"/><rect x="25" y="27" width="5" height="13" fill="#f4c63f"/><rect x="30" y="27" width="5" height="13" fill="#4caf6a"/><rect x="36" y="29" width="7" height="11" fill="#c9a0f0" transform="rotate(12 39 34)"/>',
+  ortoVuoto: '<rect x="6" y="20" width="52" height="32" rx="6" fill="#8a6239"/><path d="M14 30h36M14 38h36M14 46h36" stroke="#6b4a28"/>',
+  ortoGermoglio: '<rect x="6" y="20" width="52" height="32" rx="6" fill="#8a6239"/><path d="M20 44v-8M32 44v-8M44 44v-8" stroke="#2e7d4f" stroke-width="3"/><path d="M20 37c0-5 4-7 7-7 0 5-3 7-7 7zM32 37c0-5 4-7 7-7 0 5-3 7-7 7zM44 37c0-5 4-7 7-7 0 5-3 7-7 7z" fill="#6fca93"/><path d="M20 39c0-4-3-6-6-6 0 4 2 6 6 6zM32 39c0-4-3-6-6-6 0 4 2 6 6 6zM44 39c0-4-3-6-6-6 0 4 2 6 6 6z" fill="#6fca93"/>',
+  ortoPronto: '<rect x="6" y="24" width="52" height="30" rx="6" fill="#8a6239"/><circle cx="18" cy="30" r="10" fill="#58b368"/><circle cx="18" cy="30" r="5" fill="#9bdc9f"/><path d="M34 26l6 22 6-22z" fill="#f2a65a"/><path d="M40 26V14M40 20l-6-6M40 20l6-6" stroke="#2e7d4f" stroke-width="3"/><circle cx="54" cy="34" r="6" fill="#f4c63f"/>'
+};
+const gruppo = inner => '<g stroke="'+INK+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none">'+inner+'</g>';
+const ico  = n => '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true">'+gruppo(OGG[n])+'</svg>';
+const deco = n => '<svg viewBox="0 0 64 64" aria-hidden="true">'+gruppo(DECO[n])+'</svg>';
+
+/* ====================== Contenuti: le 5 frazioni di Orzinuovi e i rifiuti della scuola ====================== */
+const CAT={
+  carta:   {nome:'Carta',            col:'var(--c-carta)',   img:'eco/cestino_carta.webp',           ris:'carta'},
+  plastica:{nome:'Plastica',         col:'var(--c-plastica)',img:'eco/cestino_plastica.webp',        ris:'plastica'},
+  vetro:   {nome:'Vetro e lattine',  col:'var(--c-vetro)',   img:'eco/cestino_vetro.webp',           ris:'vetro'},
+  organico:{nome:'Organico',         col:'var(--c-organico)',img:'eco/cestino_organico.webp',        ris:'compost'},
+  indiff:  {nome:'Indifferenziato',  col:'var(--c-indiff)',  img:'eco/cestino_indifferenziato.webp', ris:null}
+};
+const ORDINE=['carta','plastica','vetro','organico','indiff'];
+const RIS={carta:{nome:'Carta',ico:'foglio',col:'var(--c-carta)'},plastica:{nome:'Plastica',ico:'bottiglia',col:'var(--c-plastica)'},
+           vetro:{nome:'Vetro e metallo',ico:'barattolo',col:'var(--c-vetro)'},compost:{nome:'Compost',ico:'compost',col:'var(--c-organico)'}};
+const RIFIUTI={
+  foglio:{nome:'Foglio di carta',cat:'carta',perche:'È carta pulita: riciclata diventa carta nuova.',indizio:'È fatto di carta ed è pulito.'},
+  quaderno:{nome:'Quaderno finito',cat:'carta',perche:'Le pagine sono carta: si riciclano con la carta.',indizio:'Sfoglialo: di che cosa sono fatte le pagine?'},
+  cartoncino:{nome:'Cartoncino',cat:'carta',perche:'Il cartoncino è carta più spessa: va con la carta.',indizio:'È come un foglio, solo più spesso.'},
+  scatola:{nome:'Scatola di cartone',cat:'carta',perche:'Il cartone si ricicla con la carta: meglio schiacciarlo.',indizio:'Il cartone è un parente stretto della carta.'},
+  giornale:{nome:'Giornale',cat:'carta',perche:'I giornali sono carta: tornano a essere carta.',indizio:'È stampato su fogli sottili.'},
+  bottiglia:{nome:'Bottiglia d’acqua',cat:'plastica',perche:'È un imballaggio di plastica: si schiaccia e si ricicla.',indizio:'È leggera, trasparente e si schiaccia con le mani.'},
+  bicchiere:{nome:'Bicchiere di plastica',cat:'plastica',perche:'I bicchieri di plastica vanno con gli imballaggi di plastica.',indizio:'Si deforma con le dita e non si rompe.'},
+  tappo:{nome:'Tappo di plastica',cat:'plastica',perche:'Il tappo è di plastica come la bottiglia.',indizio:'È leggero e colorato: non è metallo.'},
+  yogurt:{nome:'Vasetto dello yogurt',cat:'plastica',perche:'Il vasetto vuoto è un imballaggio di plastica.',indizio:'Era un contenitore leggero per un alimento.'},
+  merenda:{nome:'Incarto della merenda',cat:'plastica',perche:'L’incarto delle merendine è un imballaggio di plastica.',indizio:'È una pellicola che avvolgeva un alimento.'},
+  bottigliaVetro:{nome:'Bottiglia di vetro',cat:'vetro',perche:'Il vetro si ricicla all’infinito: va nel vetro.',indizio:'È pesante, trasparente e si può rompere.'},
+  barattolo:{nome:'Barattolo',cat:'vetro',perche:'Il barattolo è di vetro: va con vetro e lattine.',indizio:'È pesante, trasparente e si può rompere.'},
+  lattina:{nome:'Lattina',cat:'vetro',perche:'A Orzinuovi le lattine si raccolgono insieme al vetro.',indizio:'È di metallo: qui il metallo ha un compagno di cestino.'},
+  tappoMetallo:{nome:'Tappo di metallo',cat:'vetro',perche:'I tappi di metallo vanno con vetro e lattine.',indizio:'È rigido e freddo: è metallo.'},
+  banana:{nome:'Buccia di banana',cat:'organico',perche:'Le bucce di frutta diventano compost.',indizio:'Faceva parte di un frutto.'},
+  torsolo:{nome:'Torsolo di mela',cat:'organico',perche:'I torsoli sono scarti di cibo: diventano compost.',indizio:'È quello che resta di un frutto.'},
+  pane:{nome:'Pane avanzato',cat:'organico',perche:'Il pane avanzato è un residuo di cibo: va nell’organico.',indizio:'Si poteva mangiare.'},
+  biscotto:{nome:'Biscotto sbriciolato',cat:'organico',perche:'I resti di biscotti sono cibo: vanno nell’organico.',indizio:'Si poteva mangiare.'},
+  avanzi:{nome:'Avanzi del pranzo',cat:'organico',perche:'Gli avanzi di cibo tornano terra: vanno nell’organico.',indizio:'È cibo rimasto nel piatto.'},
+  penna:{nome:'Penna scarica',cat:'indiff',perche:'È fatta di più materiali uniti insieme: non si può riciclare.',indizio:'Plastica, metallo e inchiostro insieme: riesci a separarli?'},
+  pennarello:{nome:'Pennarello scarico',cat:'indiff',perche:'Plastica, feltro e inchiostro non si separano: va nell’indifferenziato.',indizio:'È fatto di più materiali che non si separano.'},
+  fazzoletto:{nome:'Fazzoletto usato',cat:'indiff',perche:'È carta, ma sporca: non si ricicla con la carta.',indizio:'È carta. Ma è pulita?'},
+  trucioli:{nome:'Trucioli di matita',cat:'indiff',perche:'Legno e mina mescolati in pezzetti: vanno nell’indifferenziato.',indizio:'Sono pezzetti minuscoli di materiali mescolati.'},
+  colla:{nome:'Colla stick finita',cat:'indiff',perche:'Il tubetto sporco di colla non si ricicla.',indizio:'Dentro è rimasta colla che non si toglie.'}
+};
+const PER_CAT={}; for(const k in RIFIUTI){ (PER_CAT[RIFIUTI[k].cat]=PER_CAT[RIFIUTI[k].cat]||[]).push(k); }
+
+/* ====================== Il campus: isole, orto, casate, progetti ====================== */
+const MAR=2482/1728;
+const ISOLE=[
+  {id:'mensa',     nome:'La mensa',             x:77.4, y:37.5, prof:{organico:6,plastica:3,vetro:2,carta:1,indiff:1}},
+  {id:'primaria',  nome:'La scuola primaria',   x:92.3, y:44.0, prof:{carta:5,indiff:4,plastica:2,organico:2}},
+  {id:'secondaria',nome:'La scuola secondaria', x:47.2, y:49.6, prof:{carta:5,indiff:3,plastica:3,vetro:1}},
+  {id:'arena',     nome:'La QDV Arena',         x:73.8, y:17.2, prof:{plastica:4,vetro:4,carta:2,organico:1}},
+  {id:'campi',     nome:'I campi sportivi',     x:58.5, y:29.0, prof:{plastica:5,organico:3,vetro:2,indiff:1}},
+  {id:'piscine',   nome:'Le piscine',           x:31.3, y:42.8, prof:{plastica:4,indiff:4,vetro:1,organico:1}},
+  {id:'ingresso',  nome:'L’ingresso',      x:73.4, y:62.7, prof:{carta:4,vetro:2,plastica:2,indiff:2}}
+];
+const ORTO={id:'orto',nome:'L’orto del campus',x:33.3,y:13.5};
+const POSTI=3, N_AIUOLE=4, SEMINA=2, RACCOLTO=4, COSTO_CESTINO=3, GIORNI=['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+const PER_ISOLA=[2,2,2,3,3];          // rifiuti prodotti da ogni isola, giorno per giorno
+const KIT=['carta','carta','plastica','vetro','organico','indiff','indiff'];
+const CASATE={aquila:{nome:'Aquilablu',x:37,y:58},cero:{nome:'Cerogiallo',x:62.5,y:72.5},tasso:{nome:'Tassorosso',x:48.5,y:31},quercia:{nome:'Querciaverde',x:40.5,y:19.5}};
+const ATTREZZI=[
+  {id:'compostiera',nome:'Compostiera',costo:{compost:4},desc:'Da domani ogni rifiuto organico vale il doppio di compost.',fig:'compost'},
+  {id:'carretto',nome:'Carretto',costo:{plastica:3,vetro:2},desc:'Lo zaino passa da 3 a 6 posti: meno viaggi a vuoto.',fig:'scatola'},
+  {id:'cartelli',nome:'Cartelli illustrati',costo:{carta:4},desc:'Gli indizi sui rifiuti non costano più nulla.',fig:'cartoncino'}
+];
+const PROGETTI=[
+  {id:'aiuola',  nome:'Aiuola fiorita',                 chi:'quercia',costo:{compost:3},          foglie:4,x:88.5,y:50.5,deco:'aiuola'},
+  {id:'lampione',nome:'Lampione di vetro riciclato',    chi:'cero',   costo:{vetro:4},            foglie:5,x:69.5,y:66,  deco:'lampione'},
+  {id:'panchina',nome:'Panchina di plastica riciclata', chi:'tasso',  costo:{plastica:5},         foglie:6,x:56,  y:38.5,deco:'panchina'},
+  {id:'quaderni',nome:'Quaderni di carta riciclata',    chi:'aquila', costo:{carta:5},            foglie:6,x:42,  y:55,  deco:'quaderni'},
+  {id:'albero',  nome:'Albero da frutto',               chi:'quercia',costo:{compost:4,carta:2},  foglie:7,x:27,  y:18,  deco:'albero'},
+  {id:'murales', nome:'Murales di tappi',               chi:'tasso',  costo:{plastica:3,vetro:3}, foglie:7,x:67.5,y:21.5,deco:'murales'},
+  {id:'casetta', nome:'Casetta dei libri',              chi:'aquila', costo:{carta:6},            foglie:7,x:78.5,y:67,  deco:'casetta'}
+];
+
+/* ====================== Stato ====================== */
+let S=null; const CHIAVE='eco_stato';
+function nuovoStato(casata){
+  const seed=PARAMS.get('seed')||(sid()+'-'+run());
+  S={seed, casata:casata||'tasso', giorno:0, fase:'mattino', cestini:{}, magazzino:[...KIT], aTerra:{}, zaino:[], conferiti:[],
+     ris:{carta:0,plastica:0,vetro:0,compost:0}, foglie:0, attrezzi:{}, progetti:[], orto:Array.from({length:N_AIUOLE},()=>({st:'vuoto',g:-1})),
+     stat:{giusti:0,sprechi:0,contam:0,errori:{}}, pos:{x:66,y:56}, uid:1, rapporto:null, visti:{}};
+  ISOLE.forEach(i=>{ S.cestini[i.id]=[]; S.aTerra[i.id]=[]; });
+  salva();
+}
+function salva(){ try{ localStorage.setItem(CHIAVE,JSON.stringify(S)); }catch(e){} }
+function carica(){ try{ const o=JSON.parse(localStorage.getItem(CHIAVE)||'null'); if(!o||!o.cestini) return false; S=o; return true; }catch(e){ return false; } }
+const capZaino = () => S.attrezzi.carretto?6:3;
+const rifiutiInGiro = () => ISOLE.reduce((n,i)=>n+S.aTerra[i.id].length,0)+S.zaino.length;
+
+/* ====================== Suoni (WebAudio) ====================== */
+let actx=null, sfxOn=localStorage.getItem('eco_sfx')!=='0';
+function tono(f,dur,tipo,vol,quando){
+  if(!sfxOn) return;
+  try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume();
+    const t=actx.currentTime+(quando||0), o=actx.createOscillator(), g=actx.createGain();
+    o.type=tipo||'sine'; o.frequency.setValueAtTime(f,t); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol||.07,t+.015); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.05);
+  }catch(e){}
+}
+const SFX={
+  campanella(){ [0,.22,.44].forEach(q=>{ tono(1318,.5,'triangle',.07,q); tono(1760,.4,'sine',.04,q); }); },
+  prendi(){ tono(520,.12,'triangle',.06); },
+  butta(){ tono(330,.1,'triangle',.07); tono(220,.16,'sine',.06,.06); },
+  no(){ tono(196,.22,'triangle',.06); },
+  compra(){ [523,659,784,1047].forEach((f,i)=>tono(f,.3,'triangle',.07,i*.07)); },
+  camion(){ tono(70,.9,'sawtooth',.04); tono(92,.9,'sawtooth',.03,.15); },
+  semina(){ tono(392,.18,'sine',.06); tono(494,.22,'sine',.06,.1); },
+  fine(){ [523,659,784,1047,1319].forEach((f,i)=>tono(f,.7,'sine',.07,i*.13)); }
+};
+
+/* ====================== Scena e movimento ====================== */
+const scena=$('scena'), eroe=$('eroe');
+function layout(){ const w=Math.min(innerWidth, innerHeight*MAR); scena.style.width=w+'px'; scena.style.height=(w/MAR)+'px'; }
+let meta=null, alArrivo=null, ultimo=0;
+function vaiA(x,y,poi){ meta={x,y}; alArrivo=poi||null; }
+function ciclo(t){
+  const dt=Math.min(.25,(t-ultimo)/1000||0); ultimo=t;   // tetto largo: il passo non rallenta sui dispositivi lenti
+  if(S && meta){
+    const dx=meta.x-S.pos.x, dy=(meta.y-S.pos.y)/MAR, d=Math.hypot(dx,dy), passo=34*dt;
+    if(d<=passo){ S.pos.x=meta.x; S.pos.y=meta.y; meta=null; eroe.classList.remove('cammina'); const f=alArrivo; alArrivo=null; if(f) f(); }
+    else{ S.pos.x+=dx/d*passo; S.pos.y+=dy/d*passo*MAR; eroe.classList.add('cammina'); if(Math.abs(dx)>.05) eroe.classList.toggle('sx',dx<0); }
+    eroe.style.left=S.pos.x+'%'; eroe.style.top=S.pos.y+'%';
+  }
+  requestAnimationFrame(ciclo);
+}
+const inPausa = () => !!document.querySelector('.overlay.aperto');
+
+/* ====================== Disegno della mappa ====================== */
+let qui=null;       // isola (o 'orto') in cui si trova l'eroe con il pannello aperto
+function renderMappa(){
+  scena.querySelectorAll('.isola,.png,.deco').forEach(n=>n.remove());
+  ISOLE.forEach(i=>{
+    const b=document.createElement('button'); b.type='button';
+    const n=S.aTerra[i.id].length;
+    b.className='isola'+(n&&S.fase==='giorno'?' ha-rifiuti':'')+(qui===i.id?' qui':'');
+    b.style.left=i.x+'%'; b.style.top=i.y+'%';
+    b.setAttribute('aria-label',i.nome+': '+S.cestini[i.id].length+' cestini'+(n?', '+n+' rifiuti da smistare':''));
+    b.innerHTML='<span class="puntini">'+S.cestini[i.id].map(c=>'<i style="background:'+CAT[c].col+'"></i>').join('')+'</span>'+
+      '<span class="disco"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#123E90" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.200 12H6.200zM3 8h18M9 8V5h6v3M10 12v5M14 12v5"/></svg></span>'+
+      '<span class="conta">'+n+'</span><span class="nome">'+i.nome+'</span>';
+    b.addEventListener('click',()=>{ if(inPausa()) return; chiudiPannello(); vaiA(i.x,i.y+7,()=>apriIsola(i.id)); });
+    scena.appendChild(b);
+  });
+  // l'orto: la figura mostra lo stato delle aiuole
+  const o=document.createElement('button'); o.type='button'; o.className='isola orto'+(qui==='orto'?' qui':'');
+  o.style.left=ORTO.x+'%'; o.style.top=ORTO.y+'%';
+  const pronte=S.orto.filter(a=>a.st==='pronto').length, germ=S.orto.filter(a=>a.st==='germoglio').length;
+  o.setAttribute('aria-label',ORTO.nome+': '+pronte+' aiuole pronte, '+germ+' in crescita');
+  o.innerHTML='<span class="disco" style="padding:6px">'+deco(pronte?'ortoPronto':germ?'ortoGermoglio':'ortoVuoto')+'</span>'+
+    '<span class="conta" style="display:'+(pronte?'flex':'none')+'">'+pronte+'</span><span class="nome">'+ORTO.nome+'</span>';
+  o.addEventListener('click',()=>{ if(inPausa()) return; chiudiPannello(); vaiA(ORTO.x,ORTO.y+8,()=>apriOrto()); });
+  scena.appendChild(o);
+  // le altre casate, con le loro richieste
+  for(const k in CASATE){
+    if(k===S.casata) continue;
+    const c=CASATE[k], miei=PROGETTI.filter(p=>p.chi===k&&!S.progetti.includes(p.id));
+    const b=document.createElement('button'); b.type='button'; b.className='png'; b.style.left=c.x+'%'; b.style.top=c.y+'%';
+    b.setAttribute('aria-label',c.nome+(miei.length?': ha una richiesta':''));
+    b.innerHTML=(miei.length?'<span class="fumetto">!</span>':'')+'<img src="eco/'+k+'_full.webp" alt="" />';
+    b.addEventListener('click',()=>parla(k));
+    scena.appendChild(b);
+  }
+  PROGETTI.forEach(p=>{ if(!S.progetti.includes(p.id)) return;
+    const d=document.createElement('div'); d.className='deco'; d.style.left=p.x+'%'; d.style.top=p.y+'%'; d.innerHTML=deco(p.deco); scena.appendChild(d); });
+  renderHUD();
+}
+function costoTxt(costo){ return Object.keys(costo).map(k=>costo[k]+' '+(k==='compost'?'di compost':'di '+RIS[k].nome.toLowerCase())).join(' e '); }
+function parla(k){
+  const c=CASATE[k], miei=PROGETTI.filter(p=>p.chi===k&&!S.progetti.includes(p.id));
+  toast(miei.length ? c.nome+': «Mi servono '+costoTxt(miei[0].costo)+' per '+articolo(miei[0].nome)+'. Passa in bottega questa sera!»'
+                    : c.nome+': «Grazie! Guarda com’è diventato bello il campus.»', 5200);
+}
+const articolo = n => (/^Aiuola/.test(n)?'un’':/^(Panchina|Casetta)/.test(n)?'una ':/^Quaderni/.test(n)?'i ':'un ')+n.charAt(0).toLowerCase()+n.slice(1);
+function risHtml(){
+  return Object.keys(RIS).map(k=>'<div class="ris" style="--c:'+RIS[k].col+'" title="'+RIS[k].nome+'" data-r="'+k+'">'+ico(RIS[k].ico)+'<span>'+S.ris[k]+'</span></div>').join('')+
+    '<div class="ris foglie" title="Foglie: quanto è cresciuto il campus" data-r="foglie">'+ico('foglia')+'<span>'+S.foglie+'</span></div>';
+}
+function renderHUD(){
+  $('risorse').innerHTML=risHtml();
+  $('giornoNome').textContent=GIORNI[S.giorno];
+  $('giornoFase').textContent=(S.fase==='mattino'?'mattino':S.fase==='giorno'?'a scuola':'sera')+' · giorno '+(S.giorno+1)+' di 5';
+  let z=''; for(let i=0;i<capZaino();i++){ const it=S.zaino[i]; z+='<span class="posto">'+(it?ico(it.r):'')+'</span>'; }
+  $('zaino').innerHTML='<span class="tit">Zaino</span><span class="posti">'+z+'</span>';
+  const b=$('btnAzione');
+  if(S.fase==='mattino'){ b.textContent='Suona la campanella'; b.disabled=false; }
+  else if(S.fase==='giorno'){ b.textContent='Fine giornata'; b.disabled=false; }
+  suggerimento();
+}
+function suggerimento(){
+  const el=$('suggerimento'); let t='';
+  if(S.fase==='mattino'){
+    const piazzati=ISOLE.reduce((n,i)=>n+S.cestini[i.id].length,0);
+    t = !piazzati ? 'È mattina: tocca un’isola e sistema i cestini.' : S.magazzino.length ? 'Hai ancora '+S.magazzino.length+' cestini in magazzino. Quando sei pronto, suona la campanella.' : 'Cestini a posto: suona la campanella.';
+  }else if(S.fase==='giorno'){
+    t = rifiutiInGiro() ? 'Raggiungi le isole con il numero dorato e smista i rifiuti.' : 'Tutto smistato: puoi chiudere la giornata.';
+  }
+  el.textContent=t;
+}
+let tToast=0;
+function toast(txt,ms){ const t=$('toast'); t.textContent=txt; t.classList.add('on'); clearTimeout(tToast); tToast=setTimeout(()=>t.classList.remove('on'),ms||3200); }
+function pulsa(r){ const el=document.querySelector('#risorse [data-r="'+r+'"]'); if(el){ el.classList.remove('su'); void el.offsetWidth; el.classList.add('su'); } }
+
+/* ====================== Pannello dell'isola ====================== */
+const pannello=$('pannello'); let sel=null, notaPann='';
+function chiudiPannello(){ pannello.classList.remove('aperto'); qui=null; sel=null; notaPann=''; scena.querySelectorAll('.isola.qui').forEach(n=>n.classList.remove('qui')); }
+function apriIsola(id){ qui=id; sel=null; notaPann=''; renderMappa(); renderPannello(); pannello.classList.add('aperto'); const p=pannello.querySelector('.tess,.cest,.btn'); if(p) p.focus(); }
+function cestHtml(cat,extra,dentro){
+  return '<button type="button" class="cest '+(extra||'')+'" style="--c:'+CAT[cat].col+'" data-cat="'+cat+'"><img src="'+CAT[cat].img+'" alt="" /><span>'+CAT[cat].nome+'</span>'+
+    (dentro?'<i class="dentro">'+dentro+'</i>':'')+'</button>';
+}
+function renderPannello(){
+  if(!qui || qui==='orto') return;
+  const isola=ISOLE.find(i=>i.id===qui), cest=S.cestini[qui];
+  let h='<header><div><h2>'+isola.nome+'</h2><div class="fase">'+(S.fase==='mattino'?'Sistema i cestini di questa isola':'Smista i rifiuti')+'</div></div><button class="chiudi" type="button" aria-label="Chiudi">&times;</button></header>';
+  if(S.fase==='mattino'){
+    let posti=''; for(let i=0;i<POSTI;i++) posti += cest[i] ? cestHtml(cest[i],'tolgo') : '<div class="cest vuoto">posto libero</div>';
+    const cont={}; S.magazzino.forEach(c=>cont[c]=(cont[c]||0)+1);
+    const mag=ORDINE.filter(c=>cont[c]).map(c=>cestHtml(c,'metto',cont[c])).join('') || '<p class="nota">Il magazzino è vuoto. Per spostare un cestino toccalo: torna in magazzino.</p>';
+    h+='<div class="riga"><div class="blocco" style="flex:0 0 auto"><h3>Cestini di questa isola ('+cest.length+' su '+POSTI+')</h3><div class="cestini">'+posti+'</div></div>'+
+       '<div class="blocco"><h3>In magazzino: tocca per metterlo qui</h3><div class="cestini">'+mag+'</div></div></div>'+
+       '<p class="nota">Ogni isola ha solo '+POSTI+' posti: quali rifiuti si producono di più qui?</p>';
+  }else{
+    const terra=S.aTerra[qui];
+    const tess=(it,da)=>'<button type="button" class="tess'+(sel&&sel.u===it.u?' scelta':'')+'" data-u="'+it.u+'" data-da="'+da+'" aria-pressed="'+(sel&&sel.u===it.u)+'">'+ico(it.r)+'<span>'+RIFIUTI[it.r].nome+'</span></button>';
+    const cont={}; S.conferiti.filter(c=>c.isola===qui).forEach(c=>cont[c.cat]=(cont[c.cat]||0)+1);
+    h+='<div class="riga"><div class="blocco"><h3>A terra ('+terra.length+')</h3><div class="tessere">'+(terra.map(it=>tess(it,'terra')).join('')||'<p class="nota">Qui è tutto pulito.</p>')+'</div>'+
+       (S.zaino.length?'<h3 style="margin-top:8px">Nel tuo zaino</h3><div class="tessere">'+S.zaino.map(it=>tess(it,'zaino')).join('')+'</div>':'')+'</div>'+
+       '<div class="blocco"><h3>Cestini di questa isola</h3><div class="cestini">'+(cest.map(c=>cestHtml(c,sel?'pronto':'',cont[c])).join('')||'<p class="nota">Qui non ci sono cestini: porta i rifiuti in un’altra isola con lo zaino.</p>')+'</div></div></div>';
+    h+='<div class="azioni-pann">'+
+       '<button type="button" class="btn btn-blu" id="pZaino"'+(sel&&sel.da==='terra'&&S.zaino.length<capZaino()?'':' disabled')+'>Metti nello zaino</button>'+
+       '<button type="button" class="btn btn-chiaro" id="pPosa"'+(sel&&sel.da==='zaino'?'':' disabled')+'>Posa a terra</button>'+
+       '<button type="button" class="btn btn-chiaro" id="pIndizio"'+(sel?'':' disabled')+'>Chiedi un indizio'+(S.attrezzi.cartelli?'':' (il rifiuto non darà materiale)')+'</button></div>';
+  }
+  if(notaPann) h+='<p class="nota ambra">'+notaPann+'</p>';
+  pannello.innerHTML=h;
+  pannello.querySelector('.chiudi').addEventListener('click',()=>{ chiudiPannello(); renderMappa(); });
+  pannello.querySelectorAll('.cest.tolgo').forEach((b,i)=>b.addEventListener('click',()=>{ S.magazzino.push(S.cestini[qui].splice(i,1)[0]); SFX.prendi(); dopo(); }));
+  pannello.querySelectorAll('.cest.metto').forEach(b=>b.addEventListener('click',()=>{
+    if(S.cestini[qui].length>=POSTI){ notaPann='Questa isola è piena: togli prima un cestino.'; SFX.no(); renderPannello(); return; }
+    const c=b.dataset.cat; S.magazzino.splice(S.magazzino.indexOf(c),1); S.cestini[qui].push(c); SFX.butta(); dopo();
+  }));
+  pannello.querySelectorAll('.tess').forEach(b=>b.addEventListener('click',()=>{
+    const u=+b.dataset.u; sel=(sel&&sel.u===u)?null:{u,da:b.dataset.da}; notaPann=''; SFX.prendi(); renderPannello();
+    const p=pannello.querySelector('.tess.scelta')||pannello.querySelector('.tess'); if(p) p.focus();
+  }));
+  if(S.fase==='giorno'){
+    pannello.querySelectorAll('.cestini .cest').forEach(b=>b.addEventListener('click',()=>conferisci(b.dataset.cat,b)));
+    const z=$('pZaino'), p=$('pPosa'), i=$('pIndizio');
+    if(z) z.addEventListener('click',()=>{ const it=togli(sel); S.zaino.push(it); sel=null; SFX.prendi(); dopo(); });
+    if(p) p.addEventListener('click',()=>{ const it=togli(sel); S.aTerra[qui].push(it); sel=null; SFX.butta(); dopo(); });
+    if(i) i.addEventListener('click',()=>{ const it=trova(sel); if(!S.attrezzi.cartelli) it.ind=true; notaPann='Indizio: '+RIFIUTI[it.r].indizio; salva(); renderPannello(); });
+  }
+}
+const trova = s => (s.da==='zaino'?S.zaino:S.aTerra[qui]).find(x=>x.u===s.u);
+function togli(s){ const l=(s.da==='zaino'?S.zaino:S.aTerra[qui]); return l.splice(l.findIndex(x=>x.u===s.u),1)[0]; }
+function dopo(){ salva(); renderMappa(); renderPannello(); }
+function conferisci(cat,btn){
+  if(!sel){ notaPann='Scegli prima un rifiuto, poi il cestino.'; SFX.no(); renderPannello(); return; }
+  const it=trova(sel);
+  if(AIUTO_SUBITO && RIFIUTI[it.r].cat!==cat){
+    notaPann='Non è il suo cestino. '+RIFIUTI[it.r].indizio; S.stat.errori[it.r]=(S.stat.errori[it.r]||0)+1; SFX.no(); salva(); renderPannello();
+    const t=pannello.querySelector('.tess.scelta'); if(t) t.classList.add('respinta'); return;
+  }
+  togli(sel); S.conferiti.push({u:it.u,r:it.r,ind:!!it.ind,isola:qui,cat}); sel=null; notaPann=''; SFX.butta(); dopo();
+  const nb=pannello.querySelector('.cest[data-cat="'+cat+'"]'); if(nb) nb.classList.add('ok');
+  if(!rifiutiInGiro()) toast('Tutto smistato! Puoi chiudere la giornata.',3500);
+}
+
+/* ====================== L'orto: semina e raccolto ====================== */
+function apriOrto(){ qui='orto'; renderMappa(); renderOrto(); pannello.classList.add('aperto'); }
+function renderOrto(){
+  let h='<header><div><h2>'+ORTO.nome+'</h2><div class="fase">Il compost fa crescere gli ortaggi</div></div><button class="chiudi" type="button" aria-label="Chiudi">&times;</button></header><div class="aiuole">';
+  S.orto.forEach((a,i)=>{
+    h+='<div class="aiuola">'+deco(a.st==='pronto'?'ortoPronto':a.st==='germoglio'?'ortoGermoglio':'ortoVuoto');
+    if(a.st==='vuoto') h+='<button type="button" class="btn btn-blu" data-sem="'+i+'"'+(S.ris.compost>=SEMINA?'':' disabled')+'>Semina</button><small>costa '+SEMINA+' di compost</small>';
+    else if(a.st==='germoglio') h+='<small>Sta crescendo: sarà pronta domani.</small>';
+    else h+='<button type="button" class="btn btn-oro" data-rac="'+i+'">Raccogli</button><small>+'+RACCOLTO+' foglie</small>';
+    h+='</div>';
+  });
+  h+='</div><p class="nota">Compost disponibile: '+S.ris.compost+'. Il compost nasce dai rifiuti organici smistati bene.</p>';
+  pannello.innerHTML=h;
+  pannello.querySelector('.chiudi').addEventListener('click',()=>{ chiudiPannello(); renderMappa(); });
+  pannello.querySelectorAll('[data-sem]').forEach(b=>b.addEventListener('click',()=>{ const a=S.orto[+b.dataset.sem]; S.ris.compost-=SEMINA; a.st='germoglio'; a.g=S.giorno; SFX.semina(); salva(); renderMappa(); renderOrto(); pulsa('compost'); }));
+  pannello.querySelectorAll('[data-rac]').forEach(b=>b.addEventListener('click',()=>{ const a=S.orto[+b.dataset.rac]; a.st='vuoto'; S.foglie+=RACCOLTO; SFX.compra(); salva(); renderMappa(); renderOrto(); pulsa('foglie'); }));
+}
+
+/* ====================== Le fasi della giornata ====================== */
+function suonaCampanella(){
+  const r=mulberry32(cyrb53(S.seed+'-g'+S.giorno));
+  ISOLE.forEach(i=>{
+    const tot=Object.values(i.prof).reduce((a,b)=>a+b,0);
+    for(let k=0;k<PER_ISOLA[S.giorno];k++){
+      let x=r()*tot, cat='carta'; for(const c in i.prof){ x-=i.prof[c]; if(x<0){ cat=c; break; } }
+      const lista=PER_CAT[cat]; S.aTerra[i.id].push({u:S.uid++, r:lista[Math.floor(r()*lista.length)]});
+    }
+  });
+  S.fase='giorno'; S.conferiti=[]; SFX.campanella(); chiudiPannello(); salva(); renderMappa();
+  toast('La scuola si anima: in ogni isola sono comparsi dei rifiuti.',3600);
+}
+function chiudiGiornata(){
+  // il camion controlla ogni cestino: la conseguenza delle scelte arriva adesso, non durante lo smistamento
+  const righe=[], guad={carta:0,plastica:0,vetro:0,compost:0};
+  ISOLE.forEach(i=>{ S.cestini[i.id].forEach(cat=>{
+    const dentro=S.conferiti.filter(c=>c.isola===i.id&&c.cat===cat); if(!dentro.length) return;
+    const giusti=dentro.filter(c=>RIFIUTI[c.r].cat===cat), sbagliati=dentro.filter(c=>RIFIUTI[c.r].cat!==cat);
+    sbagliati.forEach(c=>{ S.stat.errori[c.r]=(S.stat.errori[c.r]||0)+1; });
+    if(cat==='indiff'){
+      S.stat.giusti+=giusti.length; S.stat.sprechi+=sbagliati.length;
+      if(sbagliati.length) righe.push({cat,avviso:true,txt:'<strong>'+i.nome+' · Indifferenziato.</strong> Qui '+(sbagliati.length>1?'sono finiti':'è finito')+' '+elenco(sbagliati)+': '+sbagliati.map(c=>RIFIUTI[c.r].perche).join(' '),guad:'materiale perso'});
+      else righe.push({cat,txt:'<strong>'+i.nome+' · Indifferenziato.</strong> Solo rifiuti che non si possono riciclare: giusto così.',guad:'campus pulito'});
+      return;
+    }
+    const utili=giusti.filter(c=>!c.ind).length;
+    let n = sbagliati.length ? Math.floor(utili/2) : utili;
+    const rk=CAT[cat].ris; if(rk==='compost' && S.attrezzi.compostiera) n*=2;
+    guad[rk]+=n; S.stat.giusti+=giusti.length;
+    if(sbagliati.length){ S.stat.contam++;
+      righe.push({cat,avviso:true,txt:'<strong>'+i.nome+' · '+CAT[cat].nome+'.</strong> Dentro c’era anche '+elenco(sbagliati)+'. '+sbagliati.map(c=>RIFIUTI[c.r].perche).join(' ')+' Il camion ha potuto ritirare solo metà del cestino.',guad:'+'+n+' '+RIS[rk].nome.toLowerCase()});
+    }else righe.push({cat,txt:'<strong>'+i.nome+' · '+CAT[cat].nome+'.</strong> '+giusti.length+(giusti.length>1?' rifiuti giusti':' rifiuto giusto')+': cestino perfetto.',guad:'+'+n+' '+RIS[rk].nome.toLowerCase()});
+  }); });
+  for(const k in guad) S.ris[k]+=guad[k];
+  const rimasti=rifiutiInGiro(); let bonus=0;
+  if(!rimasti){ bonus=2; S.foglie+=2; }
+  S.rapporto={righe,guad,rimasti,bonus}; S.fase='sera'; S.conferiti=[]; chiudiPannello(); salva(); SFX.camion(); apriSera();
+}
+const elenco = l => l.map(c=>'<em>'+RIFIUTI[c.r].nome.toLowerCase()+'</em>').join(', ');
+function costoHtml(costo){
+  return '<span class="costo">'+Object.keys(costo).map(k=>'<span class="c'+(S.ris[k]<costo[k]?' manca':'')+'" title="'+RIS[k].nome+'">'+ico(RIS[k].ico)+costo[k]+'</span>').join('')+'</span>';
+}
+const posso = costo => Object.keys(costo).every(k=>S.ris[k]>=costo[k]);
+const paga  = costo => { for(const k in costo) S.ris[k]-=costo[k]; };
+const totMateriali = () => Object.values(S.ris).reduce((a,b)=>a+b,0);
+function pagaQualsiasi(n){ for(let i=0;i<n;i++){ const k=Object.keys(S.ris).sort((a,b)=>S.ris[b]-S.ris[a])[0]; S.ris[k]--; } }
+function apriSera(){
+  const R=S.rapporto;
+  $('seraTitolo').textContent='Sera di '+GIORNI[S.giorno].toLowerCase();
+  $('seraSotto').textContent = R.rimasti ? (R.rimasti===1?'È rimasto un rifiuto in giro: lo ritroverai domani.':'Sono rimasti '+R.rimasti+' rifiuti in giro: li ritroverai domani.') : 'Nessun rifiuto in giro: campus pulito, +'+R.bonus+' foglie.';
+  $('rapporto').innerHTML = R.righe.map(r=>'<div class="rap'+(r.avviso?' avviso':'')+'" style="--c:'+CAT[r.cat].col+'"><span class="tacca"></span><span class="txt">'+r.txt+'</span><span class="guad">'+r.guad+'</span></div>').join('')
+    || '<p class="sotto">Oggi i cestini sono rimasti vuoti.</p>';
+  $('btnNotte').textContent = S.giorno===GIORNI.length-1 ? 'Concludi la settimana' : 'Buonanotte: a domani';
+  renderBottega(); $('sera').classList.add('aperto'); $('sera').querySelector('.carta-ov').scrollTop=0;
+}
+function renderBottega(){
+  let h='';
+  PROGETTI.forEach(p=>{ const fatto=S.progetti.includes(p.id);
+    h+='<div class="merce'+(fatto?' fatto':'')+'"><div class="fig">'+deco(p.deco)+'<img class="chi" src="eco/'+p.chi+'_head.webp" alt="" /></div><div class="info"><strong>'+p.nome+'</strong>'+
+       '<small>Lo chiede '+CASATE[p.chi].nome+' · +'+p.foglie+' foglie</small>'+(fatto?'<small>Realizzato</small>':costoHtml(p.costo))+'</div>'+
+       (fatto?'':'<button type="button" class="btn btn-oro" data-prog="'+p.id+'"'+(posso(p.costo)?'':' disabled')+'>Realizza</button>')+'</div>'; });
+  ATTREZZI.forEach(a=>{ const fatto=!!S.attrezzi[a.id];
+    h+='<div class="merce'+(fatto?' fatto':'')+'"><div class="fig">'+ico(a.fig)+'</div><div class="info"><strong>'+a.nome+'</strong><small>'+a.desc+'</small>'+(fatto?'<small>Acquistato</small>':costoHtml(a.costo))+'</div>'+
+       (fatto?'':'<button type="button" class="btn btn-blu" data-att="'+a.id+'"'+(posso(a.costo)?'':' disabled')+'>Prendi</button>')+'</div>'; });
+  ORDINE.forEach(c=>{
+    h+='<div class="merce"><div class="fig"><img src="'+CAT[c].img+'" alt="" style="object-position:50% 32%" /></div><div class="info"><strong>Cestino: '+CAT[c].nome+'</strong><small>Un cestino in più da sistemare domattina.</small>'+
+       '<span class="costo"><span class="c'+(totMateriali()<COSTO_CESTINO?' manca':'')+'">'+COSTO_CESTINO+' materiali a piacere</span></span></div>'+
+       '<button type="button" class="btn btn-blu" data-cest="'+c+'"'+(totMateriali()>=COSTO_CESTINO?'':' disabled')+'>Prendi</button></div>'; });
+  $('bottega').innerHTML=h; $('risorseSera').innerHTML=risHtml();
+  $('bottega').querySelectorAll('[data-prog]').forEach(b=>b.addEventListener('click',()=>{ const p=PROGETTI.find(x=>x.id===b.dataset.prog); paga(p.costo); S.progetti.push(p.id); S.foglie+=p.foglie; SFX.compra(); salva(); renderBottega(); renderMappa(); }));
+  $('bottega').querySelectorAll('[data-att]').forEach(b=>b.addEventListener('click',()=>{ const a=ATTREZZI.find(x=>x.id===b.dataset.att); paga(a.costo); S.attrezzi[a.id]=true; SFX.compra(); salva(); renderBottega(); renderMappa(); }));
+  $('bottega').querySelectorAll('[data-cest]').forEach(b=>b.addEventListener('click',()=>{ pagaQualsiasi(COSTO_CESTINO); S.magazzino.push(b.dataset.cest); SFX.compra(); salva(); renderBottega(); }));
+}
+function notte(){
+  $('sera').classList.remove('aperto');
+  if(S.giorno>=GIORNI.length-1){ fineSettimana(); return; }
+  S.giorno++; S.fase='mattino'; S.rapporto=null;
+  S.orto.forEach(a=>{ if(a.st==='germoglio'&&a.g<S.giorno) a.st='pronto'; });
+  salva(); renderMappa();
+  const pronte=S.orto.filter(a=>a.st==='pronto').length;
+  toast(GIORNI[S.giorno]+' mattina.'+(S.magazzino.length?' Hai '+S.magazzino.length+' cestini da sistemare.':'')+(pronte?' Nell’orto c’è qualcosa da raccogliere!':''),4200);
+}
+
+/* ====================== Fine settimana + debrief ====================== */
+function fineSettimana(){
+  const germ=S.orto.filter(a=>a.st==='germoglio').length;
+  if(germ && !S.contatoGerm){ S.foglie+=germ*2; S.contatoGerm=true; }
+  S.fase='fine'; salva(); SFX.fine(); renderMappa();
+  const liv = S.foglie>=40?'Campus rigoglioso':S.foglie>=22?'Campus in fiore':'Campus in germoglio';
+  $('finaleLivello').textContent=liv+' · '+S.foglie+' foglie';
+  $('finaleTesto').textContent='In una settimana hai trasformato i rifiuti della scuola in '+(S.progetti.length===1?'una miglioria':S.progetti.length+' migliorie')+' per il campus'+(germ===1?', e nell’orto c’è un’aiuola che crescerà ancora.':germ?', e nell’orto ci sono '+germ+' aiuole che cresceranno ancora.':'.');
+  $('finaleStat').innerHTML=[[S.stat.giusti,'rifiuti nel cestino giusto'],[S.stat.contam,'cestini ritirati a metà'],[S.stat.sprechi,'riciclabili finiti nell’indifferenziato'],[S.progetti.length+' su '+PROGETTI.length,'progetti realizzati']]
+    .map(s=>'<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>').join('');
+  const err=Object.keys(S.stat.errori).sort((a,b)=>S.stat.errori[b]-S.stat.errori[a]).slice(0,5);
+  $('finaleErrori').innerHTML = err.length ? '<h2>I rifiuti che ti hanno ingannato</h2><div class="rapporto">'+err.map(r=>'<div class="rap avviso" style="--c:'+CAT[RIFIUTI[r].cat].col+'"><span class="tacca"></span><span class="txt"><strong>'+RIFIUTI[r].nome+'</strong> va in <strong>'+CAT[RIFIUTI[r].cat].nome+'</strong>. '+RIFIUTI[r].perche+'</span></div>').join('')+'</div>'
+    : '<h2>Nessun rifiuto ti ha ingannato</h2><p class="sotto">Ogni rifiuto è finito nel suo cestino.</p>';
+  $('finale').classList.add('aperto'); $('finale').querySelector('.carta-ov').scrollTop=0;
+}
+
+/* ====================== Tutorial 4 momenti ====================== */
+const TUTOR=[
+  {lbl:'Passo 1 di 4 · Il contesto',tit:'Una settimana a scuola',fig:'foglia',txt:'Ogni giorno la scuola produce rifiuti: in mensa, nelle aule, ai campi. Tu e la tua casata avete una settimana per trasformarli in qualcosa di bello per il campus.'},
+  {lbl:'Passo 2 di 4 · L’obiettivo',tit:'Fai crescere il campus',fig:'compost',txt:'I rifiuti smistati bene diventano materiali: carta, plastica, vetro, compost. Con i materiali realizzi i progetti chiesti dalle casate e coltivi l’orto. Ogni miglioria vale foglie.'},
+  {lbl:'Passo 3 di 4 · Come si gioca',tit:'Mattino, scuola, sera',fig:'bottiglia',txt:'Al mattino sistemi i cestini nelle isole (solo tre posti ciascuna). Suonata la campanella compaiono i rifiuti: tocca un’isola, scegli un rifiuto e poi il cestino. Se manca il cestino giusto, portalo altrove con lo zaino. La sera passa il camion.'},
+  {lbl:'Passo 4 di 4 · In breve',tit:'Attento al camion',fig:'fazzoletto',txt:'Il camion controlla i cestini: se trova un rifiuto sbagliato ritira solo metà del contenuto e ti spiega perché. I materiali non bastano per tutto: decidi tu che cosa viene prima.'}
+];
+let tPasso=0;
+function renderTutor(){
+  const t=TUTOR[tPasso]; $('tutorIcona').innerHTML=ico(t.fig); $('tutorLbl').textContent=t.lbl; $('tutorTitolo').textContent=t.tit; $('tutorTesto').textContent=t.txt;
+  $('tutor').querySelectorAll('.passi i').forEach((n,i)=>n.classList.toggle('on',i===tPasso));
+  $('tutorIndietro').style.visibility=tPasso?'visible':'hidden'; $('tutorAvanti').textContent=tPasso===TUTOR.length-1?'Si comincia':'Avanti';
+}
+function apriTutor(){ tPasso=0; renderTutor(); $('tutor').classList.add('aperto'); $('tutorAvanti').focus(); }
+$('tutorAvanti').addEventListener('click',()=>{ if(tPasso<TUTOR.length-1){ tPasso++; renderTutor(); } else { $('tutor').classList.remove('aperto'); localStorage.setItem('eco_tutorVisto','1'); } });
+$('tutorIndietro').addEventListener('click',()=>{ if(tPasso){ tPasso--; renderTutor(); } });
+$('btnGuida').addEventListener('click',apriTutor);
+
+/* ====================== Comandi generali e avvio ====================== */
+$('btnAzione').addEventListener('click',()=>{
+  if(inPausa()) return;
+  if(S.fase==='mattino'){
+    if(!ISOLE.some(i=>S.cestini[i.id].length)){ toast('Prima sistema almeno un cestino in un’isola.',3200); SFX.no(); return; }
+    suonaCampanella();
+  }else if(S.fase==='giorno'){
+    const n=rifiutiInGiro();
+    if(n && !confirm('Restano '+n+' rifiuti in giro: li ritroverai domani. Chiudere la giornata?')) return;
+    chiudiGiornata();
+  }else if(S.fase==='fine'){ $('finale').classList.add('aperto'); }
+});
+$('btnNotte').addEventListener('click',notte);
+$('btnSuoni').addEventListener('click',function(){ sfxOn=!sfxOn; localStorage.setItem('eco_sfx',sfxOn?'1':'0'); this.classList.toggle('spento',!sfxOn); this.setAttribute('aria-pressed',sfxOn?'true':'false'); if(sfxOn) SFX.prendi(); });
+$('btnNuova').addEventListener('click',()=>{ if(confirm('Vuoi ricominciare la settimana da capo?')) mostraTitolo(); });
+$('finaleGuarda').addEventListener('click',()=>{ $('finale').classList.remove('aperto'); $('btnAzione').textContent='Rivedi il risultato'; $('suggerimento').textContent='Ecco il tuo campus dopo una settimana.'; });
+$('finaleRigioca').addEventListener('click',()=>{ $('finale').classList.remove('aperto'); mostraTitolo(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && pannello.classList.contains('aperto')){ chiudiPannello(); renderMappa(); } });
+window.addEventListener('resize',layout);
+
+let casataScelta='tasso';
+function mostraTitolo(){
+  $('casate').innerHTML=Object.keys(CASATE).map(k=>'<button type="button" class="casata'+(k===casataScelta?' scelta':'')+'" role="radio" aria-checked="'+(k===casataScelta)+'" data-k="'+k+'"><img src="eco/'+k+'_full.webp" alt="" /><span>'+CASATE[k].nome+'</span></button>').join('');
+  $('casate').querySelectorAll('.casata').forEach(b=>b.addEventListener('click',()=>{ casataScelta=b.dataset.k; SFX.prendi(); mostraTitolo(); }));
+  $('btnGioca').textContent='Inizia la settimana'; $('btnGioca').dataset.modo='nuova';
+  $('titolo').classList.add('aperto');
+}
+function entra(){
+  $('eroeImg').src='eco/'+S.casata+'_full.webp'; eroe.style.left=S.pos.x+'%'; eroe.style.top=S.pos.y+'%';
+  chiudiPannello(); renderMappa();
+  if(S.fase==='sera' && S.rapporto) apriSera();
+  if(S.fase==='fine') fineSettimana();
+}
+$('btnGioca').addEventListener('click',function(){
+  if(this.dataset.modo==='continua'){ $('titolo').classList.remove('aperto'); entra(); return; }
+  nuovoStato(casataScelta); $('titolo').classList.remove('aperto'); entra();
+  if(!localStorage.getItem('eco_tutorVisto')) apriTutor();
+});
+(function avvia(){
+  layout(); $('logoEco').innerHTML=ico('foglia');
+  $('btnSuoni').classList.toggle('spento',!sfxOn);
+  mostraTitolo();
+  if(carica() && S.fase!=='fine'){
+    casataScelta=S.casata; mostraTitolo();
+    const b=$('btnGioca'); b.textContent='Continua da '+GIORNI[S.giorno].toLowerCase(); b.dataset.modo='continua';
+    $('casate').insertAdjacentHTML('afterend','<p style="margin:-8px 0 14px;font-size:.9rem">Hai una settimana in corso. Per ricominciare scegli una casata.</p>');
+    $('casate').querySelectorAll('.casata').forEach(c=>c.addEventListener('click',()=>{ $('btnGioca').textContent='Inizia una settimana nuova'; $('btnGioca').dataset.modo='nuova'; }));
+  }else{ nuovoStato('tasso'); }
+  entra();
+  requestAnimationFrame(ciclo);
+})();
+</script>
+</body>
+</html>

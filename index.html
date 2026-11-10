@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Lume di Lanterna — Il Castello al Buio</title>
 <link rel="icon" href="logo.svg" />
 <link rel="apple-touch-icon" href="logo.jpg" />
@@ -12,171 +12,234 @@
 <style>
   :root{
     /* Palette dedicata "castello magico" (esperienza con identità propria) */
-    --notte:#0e0b1f;        /* fondo notte profonda */
-    --notte-2:#161232;
-    --indaco:#241a48;
-    --pergamena:#efe4c8;
-    --pergamena-2:#e2d3ab;
-    --oro:#e0b64a;          /* luce di candela / accento */
-    --oro-caldo:#f3cf74;
-    --oro-scuro:#b8860b;
-    --ottone:#9c7a35;
+    --notte:#0e0b1f; --notte-2:#161232; --indaco:#241a48;
+    --pergamena:#efe4c8; --pergamena-2:#e2d3ab;
+    --oro:#e0b64a; --oro-caldo:#f3cf74; --oro-scuro:#b8860b; --ottone:#9c7a35;
     --fiamma:#ffb347;       /* bagliore fuoco (mai rosso) */
-    --inchiostro:#2a2416;   /* testo su pergamena */
-    --nebbia:#6f6a8f;
-    --verde-ok:#4fae84;
-    --raggio:16px;
-    --ombra:0 18px 48px rgba(0,0,0,.55);
+    --inchiostro:#2a2416; --nebbia:#8f8ab0; --blu:#123E90;
+    --ombra:0 18px 48px rgba(0,0,0,.6);
     --font-corpo:"Atkinson Hyperlegible",system-ui,sans-serif;
     --font-ui:"Lexend",system-ui,sans-serif;
     --font-magico:"Cinzel",Georgia,serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%}
-  body{
-    font-family:var(--font-corpo);
-    font-size:18px;line-height:1.5;color:var(--pergamena);
-    background:var(--notte);
-    -webkit-font-smoothing:antialiased;
-    height:100vh;height:100dvh;overflow:hidden;
-    display:flex;flex-direction:row;
-  }
-  h1,h2,h3{font-family:var(--font-ui);font-weight:600;margin:0;}
-  .magico{font-family:var(--font-magico);letter-spacing:.02em;}
-  button{font-family:var(--font-ui);}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden}
+  body{font-family:var(--font-corpo);font-size:18px;line-height:1.5;color:var(--pergamena);background:#05040e;
+    -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  h1,h2,h3{font-family:var(--font-ui);font-weight:600;margin:0}
+  .magico{font-family:var(--font-magico);letter-spacing:.02em}
+  button{font-family:var(--font-ui)}
 
-  /* ---------------- Sidebar ---------------- */
-  .sidebar{
-    flex:0 0 268px;display:flex;flex-direction:column;gap:18px;
-    padding:22px 20px;background:linear-gradient(180deg,#120e28,#0b0818);
-    border-right:1px solid rgba(224,182,74,.28);overflow:auto;z-index:3;
-  }
-  .brand{display:flex;align-items:center;gap:12px}
-  .brand .stemma{flex:0 0 46px}
-  .brand .stemma svg{width:46px;height:46px;display:block;filter:drop-shadow(0 0 8px rgba(224,182,74,.4))}
-  .brand h1{font-family:var(--font-magico);font-size:1.18rem;line-height:1.05;color:var(--oro-caldo);font-weight:700}
-  .brand p{margin:3px 0 0;font-size:.78rem;color:var(--nebbia)}
+  /* ====================== Mondo di gioco ====================== */
+  #gioco{position:fixed;inset:0;overflow:hidden}
+  #vista{position:absolute;inset:0;overflow:hidden;cursor:pointer;touch-action:none}
+  #mappa{position:absolute;left:0;top:0;will-change:transform}
+  #mappa .sfondo{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;
+    filter:brightness(.82) saturate(.85) contrast(1.05);-webkit-user-drag:none}
+  #buio{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 
-  /* Lanterna / olio */
-  .lanterna{
-    background:rgba(36,26,72,.5);border:1px solid rgba(224,182,74,.25);
-    border-radius:var(--raggio);padding:14px 15px;display:flex;flex-direction:column;gap:10px;
-  }
-  .lanterna .riga{display:flex;align-items:center;gap:11px}
-  .lanterna .ic-lanterna{flex:0 0 34px}
-  .lanterna .ic-lanterna svg{width:34px;height:34px;display:block}
-  .fiamma-glow{animation:fiammaFlicker 2.4s ease-in-out infinite}
-  @keyframes fiammaFlicker{0%,100%{opacity:1}45%{opacity:.78}70%{opacity:.92}}
-  .lanterna .olio-val{font-family:var(--font-magico);font-size:1.5rem;font-weight:700;color:var(--oro-caldo);line-height:1}
-  .lanterna .olio-lbl{font-size:.74rem;color:var(--nebbia);text-transform:uppercase;letter-spacing:.09em}
-  .serbatoio{height:12px;border-radius:99px;background:#07050f;border:1px solid rgba(224,182,74,.22);overflow:hidden;position:relative}
-  .serbatoio > span{display:block;height:100%;width:50%;border-radius:99px;
-    background:linear-gradient(90deg,var(--oro-scuro),var(--oro-caldo));transition:width .45s ease}
-  .olio-delta{font-size:.8rem;color:var(--oro-caldo);min-height:1.1em;font-weight:700}
+  /* luoghi sulla mappa (sotto il velo di buio: li rivela solo la luce) */
+  .luogo{position:absolute;width:0;height:0;pointer-events:none;z-index:2}
+  .luogo .cerchio{position:absolute;left:-20px;top:-20px}
+  .luogo .nome{position:absolute;left:0;bottom:26px;transform:translateX(-50%)}
+  .luogo .cerchio{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.3s}
+  .luogo .cerchio svg{width:20px;height:20px;display:block}
+  .luogo .nome{font-family:var(--font-ui);font-size:.78rem;font-weight:600;white-space:nowrap;color:var(--pergamena);
+    background:rgba(8,6,18,.8);border:1px solid rgba(224,182,74,.35);padding:2px 9px;border-radius:99px}
+  .luogo.ignoto .cerchio{background:rgba(20,16,40,.75);border:1.5px dashed rgba(239,228,200,.6);color:var(--pergamena)}
+  .luogo.ignoto .nome{display:none}
+  .luogo.scoperta .cerchio{background:radial-gradient(circle,#d9dcec,#8d93b5);border:2px solid #eef0ff;color:#1b1838;
+    animation:invito 1.5s ease-in-out infinite}
+  @keyframes invito{0%,100%{box-shadow:0 0 0 0 rgba(238,240,255,.5)}50%{box-shadow:0 0 0 12px rgba(238,240,255,0)}}
+  .luogo.sveglia .cerchio{background:radial-gradient(circle,var(--oro-caldo),var(--oro-scuro));border:2px solid var(--oro-caldo);
+    color:#241a06;box-shadow:0 0 24px 6px rgba(224,182,74,.55)}
+  .luogo .torcia-badge{position:absolute;right:-8px;top:-10px;width:22px;height:22px;border-radius:50%;background:#2b1c05;
+    border:1.5px solid var(--fiamma);display:none;align-items:center;justify-content:center;color:var(--fiamma)}
+  .luogo .torcia-badge svg{width:13px;height:13px}
+  .luogo.torcia .torcia-badge{display:flex}
 
-  /* Progresso + stelle */
-  .pannello{background:rgba(36,26,72,.38);border:1px solid rgba(224,182,74,.18);
-    border-radius:var(--raggio);padding:13px 15px;display:flex;flex-direction:column;gap:9px}
-  .pannello .conteggio{font-family:var(--font-ui);font-weight:600;color:var(--pergamena);font-size:1rem}
-  .barra{height:10px;border-radius:99px;background:#07050f;overflow:hidden;border:1px solid rgba(224,182,74,.18)}
-  .barra > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ottone),var(--oro-caldo));transition:width .5s ease}
-  .stelle{display:flex;align-items:center;gap:6px}
-  .stelle .lbl{font-size:.78rem;color:var(--nebbia);margin-right:2px}
-  .stelle svg{width:21px;height:21px;display:block}
+  /* il personaggio */
+  .mago{position:absolute;width:44px;height:58px;margin:-52px 0 0 -22px;z-index:3;pointer-events:none}
+  .mago .verso{display:block;width:100%;height:100%}
+  .mago.sx .verso{transform:scaleX(-1)}
+  .mago svg{width:100%;height:100%;display:block;overflow:visible}
+  .mago.cammina svg{animation:passo .34s ease-in-out infinite alternate}
+  @keyframes passo{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-4px) rotate(3deg)}}
+  .mago .lume{animation:lume 1.1s ease-in-out infinite alternate}
+  @keyframes lume{from{opacity:.75}to{opacity:1}}
+  .bersaglio{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(243,207,116,.9);
+    z-index:2;pointer-events:none;display:none;animation:bersaglio 1s ease-out infinite}
+  .bersaglio.on{display:block}
+  @keyframes bersaglio{from{transform:scale(.5);opacity:1}to{transform:scale(1.3);opacity:0}}
+
+  /* ====================== HUD ====================== */
+  .hud{position:absolute;left:14px;top:14px;z-index:8;display:flex;gap:10px;align-items:stretch;pointer-events:none}
+  .hud-box{background:rgba(14,11,31,.82);border:1px solid rgba(224,182,74,.4);border-radius:16px;padding:10px 14px;
+    display:flex;align-items:center;gap:11px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+  .hud-box .ic{flex:0 0 34px}
+  .hud-box .ic svg{width:34px;height:34px;display:block}
+  .fiamma-glow{animation:lume 1.1s ease-in-out infinite alternate}
+  .olio-num{display:flex;align-items:baseline;gap:7px}
+  .olio-num b{font-family:var(--font-magico);font-size:1.45rem;color:var(--oro-caldo);line-height:1}
+  .olio-num small{font-family:var(--font-ui);font-size:.68rem;color:var(--nebbia);text-transform:uppercase;letter-spacing:.08em}
+  .serbatoio{width:150px;height:10px;margin-top:6px;border-radius:99px;background:#05040e;border:1px solid rgba(224,182,74,.3);overflow:hidden}
+  .serbatoio > span{display:block;height:100%;width:50%;border-radius:99px;background:linear-gradient(90deg,var(--oro-scuro),var(--oro-caldo));transition:width .25s}
+  .serbatoio.basso > span{background:linear-gradient(90deg,#7a5a12,var(--fiamma));animation:lume .5s ease-in-out infinite alternate}
+  .conta b{font-family:var(--font-magico);font-size:1.45rem;color:var(--oro-caldo);line-height:1}
+  .conta small{display:block;font-family:var(--font-ui);font-size:.68rem;color:var(--nebbia);text-transform:uppercase;letter-spacing:.08em}
+  .stelle{display:flex;gap:3px}
+  .stelle svg{width:22px;height:22px;display:block}
   .stella-piena path{fill:var(--oro-caldo);stroke:var(--oro-caldo)}
-  .stella-vuota path{fill:none;stroke:rgba(224,182,74,.35)}
+  .stella-vuota path{fill:none;stroke:rgba(224,182,74,.4)}
+  .olio-delta{position:absolute;left:18px;top:86px;z-index:8;font-family:var(--font-ui);font-weight:700;font-size:.95rem;color:var(--oro-caldo);
+    text-shadow:0 2px 8px #000;opacity:0;transition:opacity .4s;pointer-events:none}
 
-  .azioni-side{display:flex;flex-direction:column;gap:9px;margin-top:2px}
-  .btn-side{display:inline-flex;align-items:center;gap:9px;justify-content:flex-start;
-    border:1px solid rgba(224,182,74,.3);background:rgba(224,182,74,.06);color:var(--oro-caldo);
-    font-family:var(--font-ui);font-size:.88rem;font-weight:600;padding:9px 14px;border-radius:99px;cursor:pointer;transition:.18s}
-  .btn-side:hover{background:rgba(224,182,74,.16);border-color:var(--oro-caldo)}
-  .btn-side svg{width:17px;height:17px;display:block;flex:0 0 17px}
-  .btn-side.attiva{background:var(--oro);color:#241a06;border-color:var(--oro)}
-  .btn-side .ic-on{display:none}
-  .btn-side.attiva .ic-off{display:none}
-  .btn-side.attiva .ic-on{display:inline-flex}
+  .hud-dx{position:absolute;right:14px;top:14px;z-index:8;display:flex;gap:8px}
+  .hud-btn{width:46px;height:46px;border-radius:50%;border:1px solid rgba(224,182,74,.45);background:rgba(14,11,31,.82);color:var(--oro-caldo);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+  .hud-btn:hover{background:rgba(224,182,74,.22)}
+  .hud-btn svg{width:21px;height:21px;display:block}
+  .hud-btn.attiva{background:var(--oro);color:#241a06;border-color:var(--oro)}
+  .hud-btn .ic-on{display:none}
+  .hud-btn.attiva .ic-off{display:none}
+  .hud-btn.attiva .ic-on{display:block}
+  .hud-btn:focus-visible,.btn:focus-visible{outline:3px solid var(--oro-caldo);outline-offset:3px}
 
-  .pie{margin-top:auto;font-size:.74rem;color:var(--nebbia);line-height:1.5}
-  .pie strong{color:var(--oro);font-family:var(--font-ui);font-weight:600;font-size:.78rem}
-  .yt-audio{position:fixed;left:0;bottom:0;width:300px;height:170px;opacity:0;pointer-events:none;border:0;z-index:-1}
+  .minimappa{position:absolute;right:14px;bottom:14px;z-index:8;width:210px;border-radius:14px;overflow:hidden;cursor:pointer;
+    border:1px solid rgba(224,182,74,.5);box-shadow:0 8px 22px rgba(0,0,0,.5);background:#05040e;touch-action:none}
+  .minimappa img{display:block;width:100%;height:auto;filter:brightness(.38) saturate(.6);pointer-events:none}
+  .minimappa i{position:absolute;width:9px;height:9px;margin:-4.5px;border-radius:50%;pointer-events:none}
+  .minimappa i.ignoto{background:transparent;border:1.5px solid rgba(239,228,200,.75)}
+  .minimappa i.scoperta{background:#dfe2f5}
+  .minimappa i.sveglia{background:var(--oro-caldo);box-shadow:0 0 6px 2px rgba(243,207,116,.7)}
+  .minimappa i.io{width:11px;height:11px;margin:-5.5px;background:#fff;border:2px solid var(--fiamma);box-shadow:0 0 8px 3px rgba(255,179,71,.8);z-index:2}
+  .minimappa .tit{position:absolute;left:8px;top:5px;font-family:var(--font-ui);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,228,200,.8);pointer-events:none}
 
-  /* ---------------- Mappa ---------------- */
-  .mappa-scroll{flex:1 1 auto;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;padding:18px 22px;position:relative}
-  .mappa{position:relative;max-width:100%;max-height:100%;border-radius:18px;overflow:hidden;
-    box-shadow:var(--ombra);border:1px solid rgba(224,182,74,.25)}
-  .mappa .sfondo{display:block;max-width:100%;max-height:calc(100vh - 36px);max-height:calc(100dvh - 36px);
-    width:auto;height:auto;filter:brightness(.42) saturate(.7) contrast(1.02)}
-  /* Velo di nebbia/notte sopra la mappa */
-  .velo{position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(120% 120% at 50% 42%, rgba(10,8,24,.18) 0%, rgba(10,8,24,.55) 55%, rgba(6,4,15,.82) 100%);
-    mix-blend-mode:multiply;z-index:1}
-  .vignetta{position:absolute;inset:0;pointer-events:none;z-index:2;
-    box-shadow:inset 0 0 160px 40px rgba(4,3,12,.85)}
+  .suggerimento{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:8;max-width:min(560px,calc(100vw - 480px));
+    background:rgba(14,11,31,.88);border:1px solid rgba(224,182,74,.45);border-radius:14px;padding:10px 18px;text-align:center;
+    font-size:.98rem;color:var(--pergamena);box-shadow:0 8px 22px rgba(0,0,0,.45);pointer-events:none;transition:opacity .4s}
+  .suggerimento:empty{opacity:0}
 
-  /* Marker stanze */
-  .marker{position:absolute;transform:translate(-50%,-50%);z-index:4;border:0;background:transparent;
-    padding:0;cursor:default;--sz:30px;width:var(--sz);height:var(--sz)}
-  .marker .disco{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.25s}
-  .marker .etichetta{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);
-    white-space:nowrap;font-family:var(--font-ui);font-size:.72rem;font-weight:600;
-    color:var(--pergamena);background:rgba(8,6,18,.82);border:1px solid rgba(224,182,74,.3);
-    padding:3px 8px;border-radius:99px;opacity:0;transition:.2s;pointer-events:none}
-  .marker:hover .etichetta,.marker:focus-visible .etichetta{opacity:1}
+  /* ---------- Mondo REALE (secondo livello) ---------- */
+  body.reale #buio,body.reale .mago,body.reale .bersaglio,body.reale .minimappa,body.reale .luogo.ignoto{display:none}
+  body.reale #mappa .sfondo{filter:none}
+  body.reale #gioco{background:#0a0f1c}
+  body.reale .luogo .cerchio{background:radial-gradient(circle,#2f5fc0,var(--blu));border:2px solid #cfe0ff;color:#fff;
+    box-shadow:0 0 14px 3px rgba(60,110,210,.6);animation:none}
+  body.reale .luogo .nome{border-color:rgba(60,110,210,.7);background:rgba(8,14,34,.88)}
+  body.reale .luogo .torcia-badge{display:none}
+  .nota-mondo{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:8px;
+    background:rgba(8,14,34,.9);border:1px solid rgba(60,110,210,.6);color:#cfe0ff;font-family:var(--font-ui);font-size:.86rem;font-weight:500;
+    padding:8px 16px;border-radius:99px;pointer-events:none}
+  body.reale .nota-mondo{display:inline-flex}
+  body.reale #btnMondo{background:var(--blu);border-color:#cfe0ff;color:#fff}
 
-  /* Stato: BUIO (nascosta, non adiacente) */
-  .marker.buio{opacity:0;pointer-events:none}
-  /* Stato: CONFINE (illuminabile) */
-  .marker.confine{cursor:pointer;--sz:34px}
-  .marker.confine .disco{background:radial-gradient(circle,rgba(111,106,143,.5),rgba(111,106,143,.08));
-    border:1.5px dashed rgba(224,182,74,.55);animation:pulsaConfine 2.6s ease-in-out infinite}
-  .marker.confine .disco svg{width:16px;height:16px;opacity:.85;color:var(--pergamena)}
-  @keyframes pulsaConfine{0%,100%{box-shadow:0 0 0 0 rgba(224,182,74,.22)}50%{box-shadow:0 0 0 9px rgba(224,182,74,0)}}
-  /* Tepore: torcia vicina */
-  .marker.confine.tepore .disco{border-color:var(--fiamma);
-    background:radial-gradient(circle,rgba(255,179,71,.45),rgba(255,179,71,.05));animation:tepore 1.8s ease-in-out infinite}
-  @keyframes tepore{0%,100%{box-shadow:0 0 14px 2px rgba(255,179,71,.35)}50%{box-shadow:0 0 26px 7px rgba(255,179,71,.6)}}
-  /* Stato: ILLUMINATA */
-  .marker.accesa{--sz:30px}
-  .marker.accesa .disco{background:radial-gradient(circle,var(--oro-caldo),var(--oro-scuro));
-    border:2px solid var(--oro-caldo);box-shadow:0 0 22px 5px rgba(224,182,74,.55);cursor:pointer}
-  .marker.accesa .disco svg{width:15px;height:15px;color:#241a06}
-  .marker.accesa.con-torcia .disco{box-shadow:0 0 26px 7px rgba(255,179,71,.7)}
-  .marker:focus-visible{outline:none}
-  .marker:focus-visible .disco{outline:3px solid var(--oro-caldo);outline-offset:3px}
+  /* ====================== Overlay generici ====================== */
+  .overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(6,4,14,.84)}
+  .overlay.aperto{display:flex}
+  .btn{border:0;border-radius:99px;font-family:var(--font-ui);font-weight:600;font-size:1rem;padding:12px 24px;cursor:pointer;transition:.18s}
+  .btn-primario{background:linear-gradient(180deg,var(--oro-caldo),var(--oro-scuro));color:#241a06;box-shadow:0 8px 20px rgba(184,134,11,.4)}
+  .btn-primario:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn-ghost{background:transparent;border:1.5px solid rgba(224,182,74,.55);color:var(--oro-caldo)}
+  .btn-ghost:hover{background:rgba(224,182,74,.14)}
+  .btn-carta{background:transparent;border:1.5px solid rgba(156,122,53,.7);color:#5a3d0a}
+  .btn-carta:hover{background:rgba(156,122,53,.14)}
+  .btn svg{width:18px;height:18px;vertical-align:-3px;margin-right:7px}
 
-  /* Aura luminosa delle stanze accese sulla mappa (buca il velo) */
-  .aura{position:absolute;transform:translate(-50%,-50%);border-radius:50%;z-index:1;pointer-events:none;
-    width:150px;height:150px;background:radial-gradient(circle,rgba(243,207,116,.33) 0%,rgba(243,207,116,.12) 40%,rgba(243,207,116,0) 70%);
-    mix-blend-mode:screen;opacity:0;transition:opacity .6s ease}
-  .aura.on{opacity:1}
+  /* Schermata del titolo */
+  #titolo{z-index:60;padding:0;background:#05040e}
+  #titolo .sfondo-titolo{position:absolute;inset:0;background:url('Castle/Castle_2.png') center/cover no-repeat;filter:brightness(.42) saturate(.8)}
+  #titolo .velo-titolo{position:absolute;inset:0;background:radial-gradient(90% 80% at 50% 45%,rgba(14,11,31,.15),rgba(5,4,14,.92))}
+  .titolo-box{position:relative;text-align:center;padding:24px;max-width:760px}
+  .titolo-box .stemma svg{width:96px;height:96px;filter:drop-shadow(0 0 18px rgba(224,182,74,.55))}
+  .titolo-box h1{font-family:var(--font-magico);font-weight:700;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1;color:var(--oro-caldo);
+    text-shadow:0 0 34px rgba(224,182,74,.45),0 4px 14px #000;margin:10px 0 8px}
+  .titolo-box .sotto{font-family:var(--font-magico);font-size:1.15rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pergamena)}
+  .titolo-box p{color:#d8d2ea;max-width:48ch;margin:18px auto 26px}
+  .titolo-box .azioni{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .titolo-box .btn-primario{font-size:1.15rem;padding:15px 34px}
+  .titolo-box .crediti{margin-top:34px;font-size:.78rem;color:var(--nebbia)}
+  .titolo-box .crediti strong{color:var(--oro);font-family:var(--font-ui);font-weight:600}
 
-  /* ---------------- Overlay generico ---------------- */
-  .overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
-    padding:22px;background:rgba(6,4,14,.82)}
-  .overlay.aperto{display:flex;animation:fadeIn .25s ease}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  /* Tutorial 4 momenti */
+  .tutor{width:min(640px,94vw);border-radius:20px;background:linear-gradient(180deg,#1b1540,#120e2c);
+    border:1px solid rgba(224,182,74,.4);box-shadow:var(--ombra);padding:28px 28px 24px;text-align:center}
+  .tutor .icona-grande{width:74px;height:74px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;
+    border-radius:50%;background:radial-gradient(circle at 40% 30%,rgba(243,207,116,.3),rgba(36,26,72,.2));border:1px solid rgba(224,182,74,.4)}
+  .tutor .icona-grande svg{width:40px;height:40px;color:var(--oro-caldo)}
+  .tutor .passo-lbl{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-family:var(--font-ui);font-weight:600}
+  .tutor h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.5rem;margin:6px 0 10px}
+  .tutor p{font-size:1.02rem;line-height:1.6;color:#d8d2ea;margin:0 auto;max-width:48ch}
+  .tutor .passi{display:flex;justify-content:center;gap:8px;margin:20px 0 16px}
+  .tutor .passi i{width:9px;height:9px;border-radius:50%;background:rgba(224,182,74,.25);transition:.2s}
+  .tutor .passi i.on{background:var(--oro-caldo);transform:scale(1.25)}
+  .tutor .nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
 
-  /* Scheda pergamena */
-  .scheda{width:min(960px,96vw);max-height:92vh;overflow:auto;border-radius:20px;
-    background:linear-gradient(180deg,var(--pergamena),var(--pergamena-2));color:var(--inchiostro);
-    border:1px solid rgba(156,122,53,.6);box-shadow:var(--ombra);position:relative}
-  .scheda-head{display:flex;align-items:center;gap:13px;padding:18px 22px 10px}
-  .scheda-head .sigillo{flex:0 0 42px;width:42px;height:42px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,var(--oro-caldo),var(--oro-scuro));
-    display:flex;align-items:center;justify-content:center;color:#241a06;font-family:var(--font-magico);font-weight:700;font-size:1.05rem;
-    box-shadow:0 0 0 3px rgba(156,122,53,.3)}
-  .scheda-head h2{font-family:var(--font-magico);font-weight:700;color:#4a3a12;font-size:1.3rem;line-height:1.1}
-  .scheda-head .sub{font-size:.82rem;color:#6e5b2e;margin-top:2px;font-family:var(--font-ui);font-weight:500}
-  .chiudi{margin-left:auto;background:transparent;border:0;color:#6e5b2e;font-size:1.7rem;line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}
-  .chiudi:hover{background:rgba(156,122,53,.15)}
+  /* Toast: fuoco di fortuna */
+  .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;background:linear-gradient(180deg,#1b1540,#120e2c);
+    border:1px solid rgba(255,179,71,.6);border-radius:18px;padding:22px 26px;box-shadow:var(--ombra);display:none;max-width:min(520px,92vw);text-align:center}
+  .toast.on{display:block}
+  .toast h3{font-family:var(--font-magico);color:var(--oro-caldo);font-size:1.25rem;margin-bottom:8px}
+  .toast p{font-size:.98rem;color:#d8d2ea;margin:0 0 16px}
 
-  /* Interno animato della stanza */
-  /* La scena adotta le proporzioni esatte dell'immagine (--ar impostato via JS al load):
-     cosi le coordinate percentuali degli oggetti animati coincidono sempre con la foto. */
-  .scena{position:relative;margin:4px auto 0;border-radius:14px;overflow:hidden;--ar:1.79;
-    aspect-ratio:var(--ar);width:min(calc(100% - 44px),calc(46vh * var(--ar)));
-    background:#1a1407;border:1px solid rgba(156,122,53,.5)}
+  /* ====================== Stanza a tutto schermo ====================== */
+  .ov-scena{position:fixed;inset:0;z-index:40;background:#05030c;display:none;align-items:center;justify-content:center}
+  .ov-scena.aperto{display:flex}
+  /* La scena adotta le proporzioni esatte dell'immagine (--ar via JS): le coordinate % degli oggetti coincidono con la foto */
+  .scena{position:relative;--ar:1.79;aspect-ratio:var(--ar);width:min(100vw,calc(100vh * var(--ar)));width:min(100vw,calc(100dvh * var(--ar)));
+    overflow:hidden;background:#120d05;touch-action:none;cursor:crosshair}
+  .scena .foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .7s ease;-webkit-user-drag:none}
+  .scena .foto-reale{opacity:0}
+  .scena.mostra-reale .foto-magica{opacity:0}
+  .scena.mostra-reale .foto-reale{opacity:1}
+  .scena.mostra-reale .strato,.scena.mostra-reale .scena-buio,.scena.mostra-reale .hots{opacity:0;pointer-events:none}
+  .scena .strato{position:absolute;inset:0;overflow:hidden;pointer-events:none;transition:opacity .5s}
+  .pannello-reale{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;
+    padding:24px;background:linear-gradient(180deg,#0f1830,#0a1020);color:#cfe0ff}
+  .scena.mostra-reale .pannello-reale.attivo{display:flex}
+  .pannello-reale .ic{width:60px;height:60px;color:#6f93d8}
+  .pannello-reale .ic svg{width:100%;height:100%}
+  .pannello-reale strong{font-family:var(--font-ui);font-size:1.3rem;color:#dbe8ff}
+  .pannello-reale span.txt{font-size:1rem;color:#9fb6e0;max-width:44ch}
+  /* il buio della stanza: la lanterna segue il dito o il mouse */
+  .scena-buio{position:absolute;inset:0;pointer-events:none;transition:opacity 1.4s ease;
+    background:radial-gradient(circle 26vmin at var(--mx,50%) var(--my,45%),rgba(5,3,12,0) 0,rgba(5,3,12,.12) 45%,rgba(5,3,12,.9) 100%)}
+  .scena.sveglia .scena-buio{opacity:0}
+  .hots{position:absolute;inset:0;transition:opacity .4s}
+  .hot{position:absolute;border:0;background:transparent;padding:0;cursor:pointer;border-radius:22%}
+  .hot.rappr::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px;border-radius:50%;
+    background:radial-gradient(circle,#fffbe6,rgba(243,207,116,.65) 40%,rgba(243,207,116,0) 72%);animation:lumino 1.5s ease-in-out infinite}
+  @keyframes lumino{0%,100%{transform:scale(.6);opacity:.45}50%{transform:scale(1.25);opacity:1}}
+  .scoppio{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;border:2px solid #fff3c4;pointer-events:none;
+    box-shadow:0 0 14px 4px rgba(243,207,116,.8);animation:scoppio .65s ease-out forwards}
+  @keyframes scoppio{from{transform:scale(.4);opacity:1}to{transform:scale(8);opacity:0}}
+  /* stanza addormentata: tutto fermo e spento, tranne ciò che il giocatore risveglia */
+  .strato.dorme .an{animation-play-state:paused;visibility:hidden}
+  .strato.dorme .an-ruota,.strato.dorme .an-dondola,.strato.dorme .an-galleggia{visibility:visible}
+  .strato.dorme .an.sveglio{animation-play-state:running;visibility:visible}
+
+  .scena-top{position:absolute;left:0;right:0;top:0;z-index:6;display:flex;align-items:center;gap:13px;padding:14px 18px 34px;
+    background:linear-gradient(180deg,rgba(5,3,12,.88),rgba(5,3,12,0));pointer-events:none}
+  .scena-top .sigillo{flex:0 0 44px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--oro-caldo),var(--oro-scuro));
+    display:flex;align-items:center;justify-content:center;color:#241a06;font-family:var(--font-magico);font-weight:700;font-size:1.1rem}
+  .scena-top h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.45rem;line-height:1.1;text-shadow:0 2px 10px #000}
+  .scena-top .sub{font-family:var(--font-ui);font-size:.86rem;color:var(--pergamena);opacity:.85}
+  .missione{margin-left:auto;display:flex;align-items:center;gap:9px;background:rgba(14,11,31,.85);border:1px solid rgba(224,182,74,.5);
+    border-radius:99px;padding:8px 16px;font-family:var(--font-ui);font-weight:600;font-size:.92rem;color:var(--pergamena)}
+  .missione .pallini{display:flex;gap:5px}
+  .missione .pallini i{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--oro-caldo)}
+  .missione .pallini i.on{background:var(--oro-caldo);box-shadow:0 0 8px 2px rgba(243,207,116,.7)}
+  .scena.sveglia .missione{display:none}
+  .scena-info{position:absolute;left:50%;bottom:16px;z-index:7;width:min(900px,94%);transform:translate(-50%,140%);transition:transform .7s cubic-bezier(.2,.9,.3,1);
+    background:linear-gradient(180deg,rgba(239,228,200,.97),rgba(226,211,171,.97));color:var(--inchiostro);border:1px solid rgba(156,122,53,.7);
+    border-radius:18px;padding:14px 18px;box-shadow:var(--ombra);-webkit-user-select:text;user-select:text}
+  .scena.sveglia .scena-info{transform:translate(-50%,0)}
+  .scena-info p{margin:0;font-size:1rem;line-height:1.5}
+  .scena-info p strong{color:#4a3a12}
+  .scena-info .riga-btn{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
+  .scena-info .btn{padding:10px 18px;font-size:.95rem}
+  .btn-torcia{background:linear-gradient(180deg,#ffd27a,var(--fiamma));color:#3a2203;box-shadow:0 0 18px 4px rgba(255,179,71,.55);animation:lume .7s ease-in-out infinite alternate}
+  .btn-torcia[disabled]{animation:none;box-shadow:none;background:rgba(156,122,53,.25);color:#6e5b2e;cursor:default}
 
   /* ====== Primitive di animazione ancorate agli oggetti (vedi ANIM nel JS) ====== */
   .strato .an{position:absolute;pointer-events:none}
@@ -269,61 +332,18 @@
     -webkit-mask-image:none !important;mask-image:none !important;background-image:none !important;background-color:rgba(255,210,63,.22)}
   .scena img.foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .scena .strato{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-  .scena .cornice-luce{position:absolute;inset:0;box-shadow:inset 0 0 90px 24px rgba(10,6,0,.6);pointer-events:none}
 
-  .scheda-corpo{padding:16px 22px 22px}
-  .lore{font-size:1.02rem;line-height:1.6}
-  .lore .reale{display:block;margin-top:12px;padding:12px 14px;border-left:4px solid var(--ottone);
-    background:rgba(156,122,53,.1);border-radius:0 10px 10px 0;font-size:.95rem}
-  .lore .reale strong{color:#4a3a12}
-  .bottino{display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 14px;border-radius:12px;
-    background:rgba(255,179,71,.16);border:1px solid rgba(184,134,11,.4);font-family:var(--font-ui);font-weight:600;color:#5a3d0a}
-  .bottino[hidden]{display:none}
-  .bottino svg{width:24px;height:24px;flex:0 0 24px;color:var(--oro-scuro)}
-  .scheda-azioni{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-
-  .btn{border:0;border-radius:99px;font-family:var(--font-ui);font-weight:600;font-size:1rem;padding:12px 24px;cursor:pointer;transition:.18s}
-  .btn-primario{background:linear-gradient(180deg,var(--oro-caldo),var(--oro-scuro));color:#241a06;box-shadow:0 8px 20px rgba(184,134,11,.4)}
-  .btn-primario:hover{filter:brightness(1.06);transform:translateY(-1px)}
-  .btn-ghost{background:transparent;border:1.5px solid rgba(156,122,53,.6);color:#5a3d0a}
-  .btn-ghost:hover{background:rgba(156,122,53,.12)}
-
-  /* Tutorial 4 momenti */
-  .tutor{width:min(620px,94vw);border-radius:20px;background:linear-gradient(180deg,#1b1540,#120e2c);
-    border:1px solid rgba(224,182,74,.35);box-shadow:var(--ombra);padding:28px 28px 24px;text-align:center;color:var(--pergamena)}
-  .tutor .icona-grande{width:74px;height:74px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;
-    border-radius:50%;background:radial-gradient(circle at 40% 30%,rgba(243,207,116,.3),rgba(36,26,72,.2));border:1px solid rgba(224,182,74,.4)}
-  .tutor .icona-grande svg{width:40px;height:40px;color:var(--oro-caldo)}
-  .tutor .passo-lbl{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-family:var(--font-ui);font-weight:600}
-  .tutor h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.5rem;margin:6px 0 10px}
-  .tutor p{font-size:1.02rem;line-height:1.6;color:#d8d2ea;margin:0 auto;max-width:46ch}
-  .tutor .passi{display:flex;justify-content:center;gap:8px;margin:20px 0 16px}
-  .tutor .passi i{width:9px;height:9px;border-radius:50%;background:rgba(224,182,74,.25);transition:.2s}
-  .tutor .passi i.on{background:var(--oro-caldo);transform:scale(1.25)}
-  .tutor .nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
-
-  /* Toast fuoco di fortuna */
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);z-index:80;
-    background:linear-gradient(180deg,#1b1540,#120e2c);border:1px solid rgba(255,179,71,.5);border-radius:16px;
-    padding:16px 20px;box-shadow:var(--ombra);display:none;max-width:min(520px,92vw);color:var(--pergamena);text-align:center}
-  .toast.on{display:block;animation:toastUp .3s ease forwards}
-  @keyframes toastUp{to{transform:translateX(-50%) translateY(0)}}
-  .toast h3{font-family:var(--font-magico);color:var(--oro-caldo);font-size:1.15rem;margin-bottom:6px}
-  .toast p{font-size:.92rem;color:#d8d2ea;margin:0 0 14px}
-  .toast .riga-btn{display:flex;gap:10px;justify-content:center}
-
-  /* Traguardo + debrief */
+  /* ====================== Traguardo + debrief ====================== */
   .traguardo{width:min(760px,95vw);max-height:92vh;overflow:auto;border-radius:22px;text-align:center;
-    background:linear-gradient(180deg,#1d1748,#100c26);border:1px solid rgba(224,182,74,.45);box-shadow:var(--ombra);padding:30px 28px}
-  .traguardo .coppa{width:150px;height:auto;border-radius:16px;margin:0 auto 8px;display:block;box-shadow:0 0 40px rgba(224,182,74,.4)}
+    background:linear-gradient(180deg,#1d1748,#100c26);border:1px solid rgba(224,182,74,.45);box-shadow:var(--ombra);padding:30px 28px;
+    -webkit-user-select:text;user-select:text}
+  .traguardo .coppa{width:170px;height:auto;border-radius:16px;margin:0 auto 8px;display:block;box-shadow:0 0 40px rgba(224,182,74,.4)}
   .traguardo h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.7rem;margin:6px 0}
-  .traguardo .stelle-finali{display:flex;justify-content:center;gap:10px;margin:14px 0}
-  .traguardo .stelle-finali svg{width:40px;height:40px}
+  .stelle-finali{display:flex;justify-content:center;gap:10px;margin:14px 0}
+  .stelle-finali svg{width:40px;height:40px}
   .traguardo .riepilogo{color:#d8d2ea;font-size:1rem;max-width:52ch;margin:0 auto 10px}
-  .debrief{margin:22px auto 10px;max-width:56ch;text-align:left;background:rgba(36,26,72,.5);
-    border:1px solid rgba(224,182,74,.25);border-radius:16px;padding:18px 20px}
-  .debrief h3{font-family:var(--font-ui);color:var(--oro-caldo);font-size:1.05rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
-  .debrief h3 svg{width:20px;height:20px}
+  .debrief{margin:22px auto 10px;max-width:56ch;text-align:left;background:rgba(36,26,72,.5);border:1px solid rgba(224,182,74,.25);border-radius:16px;padding:18px 20px}
+  .debrief h3{font-family:var(--font-ui);color:var(--oro-caldo);font-size:1.05rem;margin-bottom:6px}
   .debrief p{color:#cfc8e6;font-size:.95rem;margin:0 0 12px}
   .debrief label{display:block;font-size:.85rem;color:var(--oro);margin:10px 0 5px;font-family:var(--font-ui);font-weight:500}
   .debrief textarea{width:100%;min-height:72px;resize:vertical;border-radius:10px;border:1px solid rgba(224,182,74,.3);
@@ -332,153 +352,143 @@
   .pergamena-finale{margin:16px auto;max-width:60ch;text-align:left;columns:2;column-gap:22px;font-size:.84rem;color:#cfc8e6}
   .pergamena-finale .voce{break-inside:avoid;margin-bottom:8px;padding-left:14px;position:relative}
   .pergamena-finale .voce::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--oro-caldo)}
-  @media(max-width:640px){.pergamena-finale{columns:1}}
+  .yt-audio{position:fixed;left:0;bottom:0;width:300px;height:170px;opacity:0;pointer-events:none;border:0;z-index:-1}
 
-  /* ---------------- Mondo REALE (livello 2) ---------------- */
-  body.reale{background:#0a0f1c}
-  body.reale .sidebar{background:linear-gradient(180deg,#0f1830,#0a1020);border-right-color:rgba(18,62,144,.5)}
-  body.reale .brand h1{color:#bcd0f2}
-  body.reale .mappa .sfondo{filter:brightness(.98) saturate(1.02) contrast(1)}
-  body.reale .velo{opacity:0}
-  body.reale .vignetta{box-shadow:inset 0 0 120px 20px rgba(6,12,28,.5)}
-  body.reale .aura{display:none}
-  /* in reale: solo i luoghi gia scoperti, stile istituzionale blu */
-  body.reale .marker.buio,body.reale .marker.confine{opacity:0;pointer-events:none}
-  body.reale .marker.accesa .disco{background:radial-gradient(circle,#2f5fc0,#123E90);
-    border-color:#bcd0f2;box-shadow:0 0 16px 3px rgba(60,110,210,.6)}
-  body.reale .marker.accesa .disco svg{color:#fff}
-  body.reale .marker .etichetta{border-color:rgba(60,110,210,.6)}
-  .nota-mondo{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;
-    background:rgba(8,12,28,.82);border:1px solid rgba(60,110,210,.5);color:#cfe0ff;
-    font-family:var(--font-ui);font-size:.82rem;font-weight:500;padding:7px 15px;border-radius:99px;display:none;align-items:center;gap:8px}
-  body.reale .nota-mondo{display:inline-flex}
-  .nota-mondo svg{width:16px;height:16px}
-  .btn-side.mondo-btn.attiva{background:#123E90;color:#fff;border-color:#123E90}
-
-  /* ---------------- Trasfigurazione nella scena ---------------- */
-  .scena .foto{transition:opacity .7s ease}
-  .scena .foto-reale{opacity:0}
-  .scena.mostra-reale .foto-magica{opacity:0}
-  .scena.mostra-reale .foto-reale{opacity:1}
-  .scena.mostra-reale .strato{opacity:0;transition:opacity .5s ease}
-  .scena .pannello-reale{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-    gap:10px;text-align:center;padding:24px;background:linear-gradient(180deg,#0f1830,#0a1020);color:#cfe0ff;opacity:0;transition:opacity .6s ease}
-  .scena.mostra-reale .pannello-reale.attivo{display:flex;opacity:1}
-  .scena .pannello-reale .ic{width:52px;height:52px;color:#6f93d8}
-  .scena .pannello-reale .ic svg{width:100%;height:100%}
-  .scena .pannello-reale strong{font-family:var(--font-ui);font-size:1.1rem;color:#dbe8ff}
-  .scena .pannello-reale span{font-size:.88rem;color:#9fb6e0;max-width:38ch}
-  .flip-mondo{position:absolute;right:12px;bottom:12px;z-index:6;display:inline-flex;align-items:center;gap:8px;
-    border:1px solid rgba(255,255,255,.5);background:rgba(10,8,18,.68);color:#fff;backdrop-filter:blur(4px);
-    font-family:var(--font-ui);font-size:.82rem;font-weight:600;padding:9px 15px;border-radius:99px;cursor:pointer;transition:.18s}
-  .flip-mondo:hover{background:rgba(224,182,74,.85);color:#241a06;border-color:transparent}
-  .flip-mondo svg{width:16px;height:16px}
-
+  @media (max-width:760px){
+    .serbatoio{width:96px}.minimappa{width:140px}
+    .suggerimento{max-width:calc(100vw - 28px);bottom:128px}
+    .pergamena-finale{columns:1}
+    .scena-top h2{font-size:1.1rem}
+  }
   @media (prefers-reduced-motion:reduce){
     *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.08s !important}
     .an-sc,.an-nota,.an-lucc,.an-mote,.an-volo,.an-bx,.an-dirig{display:none}
-  }
-  @media (max-width:820px){
-    body{flex-direction:column}
-    .sidebar{flex:0 0 auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;border-right:0;border-bottom:1px solid rgba(224,182,74,.28)}
-    .brand{flex:1 1 100%}.pie{display:none}.lanterna,.pannello{flex:1 1 180px}
-    .mappa .sfondo{max-height:none;width:100%}
   }
 </style>
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="brand">
-    <span class="stemma" aria-hidden="true">
-      <svg viewBox="0 0 48 48" fill="none">
-        <path d="M24 3l4.5 9.2 10.2 1.5-7.4 7.2 1.8 10.1L24 36l-9.1 4.7 1.8-10.1-7.4-7.2 10.2-1.5z" fill="#241a48" stroke="#e0b64a" stroke-width="1.6" stroke-linejoin="round"/>
-        <circle cx="24" cy="22" r="4.4" fill="#f3cf74"/>
-        <path d="M24 22v16M18 44h12" stroke="#e0b64a" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
-    </span>
-    <div>
-      <h1 class="magico">Lume di Lanterna</h1>
-      <p>Il castello al buio · Scuola Sacra Famiglia</p>
+<div id="gioco">
+  <div id="vista" aria-label="Il castello al buio: tocca un punto per camminare">
+    <div id="mappa">
+      <img class="sfondo" src="Campus.png" alt="" draggable="false" />
+      <div class="bersaglio" id="bersaglio"></div>
+      <div class="mago" id="mago" aria-hidden="true"><span class="verso">
+        <svg viewBox="0 0 44 58">
+          <ellipse cx="22" cy="55" rx="12" ry="3" fill="rgba(0,0,0,.45)"/>
+          <path d="M22 19C13 19 9.500 33 7 51h30C34.500 33 31 19 22 19z" fill="#2b2156" stroke="#e0b64a" stroke-width="1"/>
+          <path d="M22 21v30" stroke="#e0b64a" stroke-width=".8" opacity=".6"/>
+          <rect x="15.500" y="20" width="13" height="3.400" rx="1.500" fill="#e0b64a"/>
+          <circle cx="22" cy="15" r="5.600" fill="#f0d2b0"/>
+          <path d="M22 0l8.500 12.500h-17z" fill="#2b2156" stroke="#e0b64a" stroke-width=".8" stroke-linejoin="round"/>
+          <ellipse cx="22" cy="12.500" rx="11.500" ry="2.600" fill="#1c1540" stroke="#e0b64a" stroke-width=".8"/>
+          <path d="M30 29l7 3" stroke="#2b2156" stroke-width="3.400" stroke-linecap="round"/>
+          <path d="M38 31v3" stroke="#e0b64a" stroke-width="1"/>
+          <rect x="34.500" y="34" width="7" height="9" rx="2" fill="#3a2c10" stroke="#e0b64a" stroke-width="1"/>
+          <circle class="lume" cx="38" cy="38.500" r="2.500" fill="#ffd98a"/>
+        </svg></span>
+      </div>
+      <!-- i luoghi sono generati via JS -->
     </div>
+    <canvas id="buio"></canvas>
   </div>
 
-  <div class="lanterna">
-    <div class="riga">
-      <span class="ic-lanterna" aria-hidden="true">
-        <svg viewBox="0 0 34 34" fill="none">
-          <path d="M11 6h12M13 6v-2h8v2" stroke="#9c7a35" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M9 10h16l-1.5 18a2 2 0 0 1-2 1.8H12.5a2 2 0 0 1-2-1.8z" fill="#241a48" stroke="#9c7a35" stroke-width="1.8" stroke-linejoin="round"/>
-          <ellipse class="fiamma-glow" cx="17" cy="20" rx="4" ry="6" fill="#ffb347"/>
-          <ellipse class="fiamma-glow" cx="17" cy="21" rx="2" ry="3.4" fill="#fff0c4"/>
-        </svg>
-      </span>
+  <div class="hud">
+    <div class="hud-box">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 34 34" fill="none">
+        <path d="M11 6h12M13 6V4h8v2" stroke="#9c7a35" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M9 10h16l-1.500 18a2 2 0 0 1-2 1.800h-9a2 2 0 0 1-2-1.800z" fill="#241a48" stroke="#9c7a35" stroke-width="1.8" stroke-linejoin="round"/>
+        <ellipse class="fiamma-glow" cx="17" cy="20" rx="4" ry="6" fill="#ffb347"/>
+        <ellipse class="fiamma-glow" cx="17" cy="21" rx="2" ry="3.400" fill="#fff0c4"/></svg></span>
       <div>
-        <div class="olio-val"><span id="olioVal">0</span></div>
-        <div class="olio-lbl">Olio della lanterna</div>
+        <div class="olio-num"><b id="olioVal">0</b><small>gocce d'olio</small></div>
+        <div class="serbatoio" id="serbatoio" aria-hidden="true"><span id="serbatoioFill"></span></div>
       </div>
     </div>
-    <div class="serbatoio" aria-hidden="true"><span id="serbatoioFill"></span></div>
-    <div class="olio-delta" id="olioDelta" role="status" aria-live="polite"></div>
-  </div>
-
-  <div class="pannello">
-    <div class="conteggio"><span id="conteggio">1</span> di 16 stanze illuminate</div>
-    <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
-    <div class="stelle" aria-label="Stelle della lanterna">
-      <span class="lbl">Lanterna:</span>
-      <span id="stelleWrap"></span>
+    <div class="hud-box conta">
+      <div><b><span id="conteggio">0</span>/16</b><small>stanze risvegliate</small></div>
+      <div class="stelle" id="stelleWrap" aria-label="Stelle della lanterna"></div>
     </div>
   </div>
+  <div class="olio-delta" id="olioDelta" role="status" aria-live="polite"></div>
+  <span class="nota-mondo"><span>Campus reale · tocca i luoghi che hai già scoperto nel castello</span></span>
 
-  <div class="azioni-side">
-    <button class="btn-side" id="btnGuida" type="button">
-      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></span>
-      <span>Come si gioca</span>
+  <div class="hud-dx">
+    <button class="hud-btn" id="btnMondo" type="button" aria-pressed="false" aria-label="Passa al campus reale" title="Campus reale / Castello">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.700L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.700L3 16M3 21v-5h5"/></svg>
     </button>
-    <button class="btn-side mondo-btn" id="btnMondo" type="button" aria-pressed="false">
-      <span class="ic-off" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span>
-      <span class="ic-on" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg></span>
-      <span class="lbl">Vedi il campus reale</span>
+    <button class="hud-btn" id="btnMusica" type="button" aria-pressed="false" aria-label="Musica d'atmosfera" title="Musica">
+      <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg>
+      <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
     </button>
-    <button class="btn-side" id="btnMusica" type="button" aria-pressed="false">
-      <span class="ic-off" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></span>
-      <span class="ic-on" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.5a9 9 0 0 1 0 13"/></svg></span>
-      <span class="lbl">Musica d'atmosfera</span>
+    <button class="hud-btn attiva" id="btnSuoni" type="button" aria-pressed="true" aria-label="Effetti sonori" title="Effetti sonori">
+      <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+      <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.500 8.500a5 5 0 0 1 0 7"/><path d="M18.800 5.500a9 9 0 0 1 0 13"/></svg>
     </button>
-    <button class="btn-side" id="btnRiparti" type="button">
-      <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/></svg></span>
-      <span>Nuova esplorazione</span>
+    <button class="hud-btn" id="btnGuida" type="button" aria-label="Come si gioca" title="Come si gioca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.300a2.600 2.600 0 1 1 3.600 2.400c-.700.400-1.100 1-1.100 1.800M12 17h.01"/></svg>
+    </button>
+    <button class="hud-btn" id="btnRiparti" type="button" aria-label="Nuova esplorazione" title="Nuova esplorazione">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.700M3 4v4h4"/></svg>
     </button>
   </div>
 
-  <p class="pie">
-    <strong>Scuola Sacra Famiglia</strong><br />
-    Animatore Digitale Andrea Cerioli<br />
-    <span style="opacity:.7">&copy; 2026</span>
-  </p>
-</aside>
-
-<main class="mappa-scroll">
-  <div class="mappa" id="mappa">
-    <img class="sfondo" src="Campus.png" alt="La mappa del castello, avvolta nella notte" />
-    <div class="velo"></div>
-    <div class="vignetta"></div>
-    <span class="nota-mondo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-3 11c.5.3 1 1 1 2h4c0-1 .5-1.7 1-2a6 6 0 0 0-3-11z"/></svg> Campus reale · tocca i luoghi già illuminati nel castello</span>
-    <!-- aure e marker generati via JS -->
+  <div class="minimappa" id="minimappa" aria-label="Minimappa: tocca per camminare fin lì">
+    <img src="Campus.png" alt="" draggable="false" />
+    <span class="tit">Mappa</span>
   </div>
-</main>
+  <div class="suggerimento" id="suggerimento" role="status" aria-live="polite"></div>
+</div>
 
 <iframe id="ytAudio" class="yt-audio" title="Musica d'atmosfera" allow="autoplay; encrypted-media" src=""></iframe>
 <iframe id="ytPremio" class="yt-audio" title="Musica del premio finale" allow="autoplay; encrypted-media" src=""></iframe>
+
+<!-- Stanza a tutto schermo -->
+<div class="ov-scena" id="ovScena" role="dialog" aria-modal="true" aria-labelledby="scenaTitolo">
+  <div class="scena" id="scena">
+    <img class="foto foto-magica" id="scenaFoto" src="" alt="" draggable="false" />
+    <img class="foto foto-reale" id="scenaFotoReale" src="" alt="" draggable="false" />
+    <div class="strato" id="scenaStrato"></div>
+    <div class="scena-buio"></div>
+    <div class="hots" id="hots"></div>
+    <div class="pannello-reale" id="pannelloReale">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/></svg></span>
+      <strong id="pannelloReTitolo">Luogo reale</strong>
+      <span class="txt">Di questo luogo non abbiamo ancora una foto: lo si riconosce dall'alto, sulla mappa del campus reale.</span>
+    </div>
+    <div class="scena-top">
+      <span class="sigillo" id="scenaSigillo">1</span>
+      <div>
+        <h2 id="scenaTitolo">Stanza</h2>
+        <div class="sub" id="scenaSub"></div>
+      </div>
+      <div class="missione" id="missione"><span id="missioneTxt">Risveglia gli oggetti</span><span class="pallini" id="missionePallini"></span></div>
+    </div>
+    <div class="scena-info" id="scenaInfo">
+      <p id="scenaFatto"></p>
+      <div class="riga-btn">
+        <button class="btn btn-torcia" id="btnTorcia" type="button" hidden>Raccogli la torcia</button>
+        <button class="btn btn-carta" id="flipMondo" type="button"><span id="flipLbl">Guarda com'è davvero</span></button>
+        <button class="btn btn-primario" id="scenaEsci" type="button">Torna nel castello</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fuoco di fortuna -->
+<div class="toast" id="toastFuoco" role="alertdialog" aria-labelledby="toastTitolo">
+  <h3 id="toastTitolo">La lanterna è a secco</h3>
+  <p>Raccogli i rami intorno e accendi un <strong>fuoco di fortuna</strong>: recuperi olio per ripartire, ma la lanterna perde una stella.</p>
+  <button class="btn btn-primario" id="fuocoSi" type="button">Accendi il fuoco</button>
+</div>
 
 <!-- Tutorial 4 momenti -->
 <div class="overlay" id="tutorOverlay" role="dialog" aria-modal="true" aria-labelledby="tutorTitolo">
   <div class="tutor">
     <div class="icona-grande" id="tutorIcona" aria-hidden="true"></div>
-    <div class="passo-lbl" id="tutorLbl">Passo 1 di 4</div>
-    <h2 id="tutorTitolo">Titolo</h2>
-    <p id="tutorTesto">Testo</p>
+    <div class="passo-lbl" id="tutorLbl"></div>
+    <h2 id="tutorTitolo"></h2>
+    <p id="tutorTesto"></p>
     <div class="passi" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="nav">
       <button class="btn btn-ghost" id="tutorIndietro" type="button">Indietro</button>
@@ -487,67 +497,19 @@
   </div>
 </div>
 
-<!-- Scheda stanza (interno animato + lore) -->
-<div class="overlay" id="schedaOverlay" role="dialog" aria-modal="true" aria-labelledby="schedaTitolo">
-  <div class="scheda">
-    <div class="scheda-head">
-      <span class="sigillo" id="schedaSigillo">1</span>
-      <div>
-        <h2 id="schedaTitolo" class="magico">Stanza</h2>
-        <div class="sub" id="schedaSub">Il luogo reale</div>
-      </div>
-      <button class="chiudi" id="schedaChiudi" type="button" aria-label="Chiudi la scheda">&times;</button>
-    </div>
-    <div class="scena" id="scena">
-      <img class="foto foto-magica" id="scenaFoto" src="" alt="" />
-      <img class="foto foto-reale" id="scenaFotoReale" src="" alt="" />
-      <div class="strato" id="scenaStrato"></div>
-      <div class="pannello-reale" id="pannelloReale">
-        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/></svg></span>
-        <strong id="pannelloReTitolo">Luogo reale</strong>
-        <span id="pannelloReTesto">Di questo angolo del campus non abbiamo ancora una foto dall'interno: lo si vede però dall'alto, sulla mappa.</span>
-      </div>
-      <div class="cornice-luce"></div>
-      <button class="flip-mondo" id="flipMondo" type="button">
-        <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg></span>
-        <span id="flipLbl">Guarda com'è davvero</span>
-      </button>
-    </div>
-    <div class="scheda-corpo">
-      <div class="lore" id="schedaLore"></div>
-      <div class="bottino" id="schedaBottino" hidden>
-        <span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 6c-3 0-5 2.2-5 5 0 2.3 1.4 3.4 2 5 .4 1 .3 2 .3 2h5.4s-.1-1 .3-2c.6-1.6 2-2.7 2-5 0-2.8-2-5-5-5z"/><path d="M9.5 20h5M10.5 22h3"/></svg></span>
-        <span id="bottinoTesto">Hai trovato una torcia: +3 olio!</span>
-      </div>
-      <div class="scheda-azioni">
-        <button class="btn btn-primario" id="schedaProsegui" type="button">Prosegui l'esplorazione</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Toast: fuoco di fortuna -->
-<div class="toast" id="toastFuoco" role="alertdialog" aria-labelledby="toastTitolo">
-  <h3 id="toastTitolo" class="magico">La lanterna è a secco</h3>
-  <p>Puoi accendere un <strong>fuoco di fortuna</strong> con i rami intorno: recuperi 3 unità d'olio, ma la lanterna perde una stella.</p>
-  <div class="riga-btn">
-    <button class="btn btn-primario" id="fuocoSi" type="button">Accendi il fuoco (+3 olio)</button>
-  </div>
-</div>
-
 <!-- Traguardo + debrief -->
 <div class="overlay" id="traguardoOverlay" role="dialog" aria-modal="true" aria-labelledby="traguardoTitolo">
   <div class="traguardo">
-    <img class="coppa" src="coppa.jpg" alt="La coppa delle stanze illuminate" />
-    <h2 id="traguardoTitolo" class="magico">Il castello è tutto illuminato</h2>
+    <img class="coppa" src="coppa.jpg" alt="La coppa del castello risvegliato" />
+    <h2 id="traguardoTitolo">Il castello si è risvegliato</h2>
     <div class="stelle-finali" id="stelleFinali"></div>
     <p class="riepilogo" id="traguardoRiepilogo"></p>
     <div class="debrief">
-      <h3><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7V18h8v-2.3A7 7 0 0 0 12 3z"/><path d="M9 21h6M10 18v3M14 18v3"/></svg></span> Ripensa al tuo cammino</h3>
+      <h3>Ripensa al tuo cammino</h3>
       <p>Il premio non è il punteggio: è capire come hai deciso. Prenditi un momento.</p>
-      <label for="dbr1">Quale scelta ti ha fatto risparmiare più olio?</label>
+      <label for="dbr1">Quale scelta di percorso ti ha fatto risparmiare più olio?</label>
       <textarea id="dbr1" placeholder="Es. Ho seguito il tepore verso la torcia prima di spingermi lontano..."></textarea>
-      <label for="dbr2">Se ricominciassi, quale strada proveresti per prima, e perché?</label>
+      <label for="dbr2">Se ricominciassi, da quale parte del castello partiresti, e perché?</label>
       <textarea id="dbr2" placeholder="Es. Partirei verso l'ala della primaria perché..."></textarea>
     </div>
     <details>
@@ -555,9 +517,28 @@
       <div class="pergamena-finale" id="pergamenaFinale"></div>
     </details>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-ghost" id="traguardoChiudi" type="button">Resta a guardare il castello</button>
+      <button class="btn btn-ghost" id="traguardoChiudi" type="button">Passeggia nel castello illuminato</button>
       <button class="btn btn-primario" id="traguardoRigioca" type="button">Esplora un castello nuovo</button>
     </div>
+  </div>
+</div>
+
+<!-- Schermata del titolo -->
+<div class="overlay aperto" id="titolo" role="dialog" aria-modal="true" aria-labelledby="titoloH">
+  <div class="sfondo-titolo"></div><div class="velo-titolo"></div>
+  <div class="titolo-box">
+    <span class="stemma" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none">
+      <path d="M24 3l4.500 9.200 10.200 1.500-7.400 7.200 1.800 10.100L24 36l-9.100 4.700 1.800-10.100-7.400-7.200 10.200-1.500z" fill="#241a48" stroke="#e0b64a" stroke-width="1.6" stroke-linejoin="round"/>
+      <circle cx="24" cy="22" r="4.400" fill="#f3cf74"/></svg></span>
+    <h1 id="titoloH">Lume di Lanterna</h1>
+    <div class="sotto">Il castello al buio</div>
+    <p>La notte è scesa sul castello della Scuola Sacra Famiglia. Prendi la lanterna, attraversa il buio e risveglia le sue sedici stanze.</p>
+    <div class="azioni">
+      <button class="btn btn-primario" id="btnGioca" type="button">Inizia l'esplorazione</button>
+      <button class="btn btn-ghost" id="btnNuova" type="button" hidden>Ricomincia da capo</button>
+    </div>
+    <p style="margin:22px auto 0"><a class="btn btn-ghost" href="eco-fattoria.html" style="display:inline-block;text-decoration:none">Altro gioco · Eco-Campus, la fattoria del riciclo</a></p>
+    <div class="crediti"><strong>Scuola Sacra Famiglia</strong> · Animatore Digitale Andrea Cerioli · &copy; 2026</div>
   </div>
 </div>
 
@@ -598,323 +579,306 @@ const LUOGHI = [
   {id:15, x:33.28,y:12.67, foto:"Castle/Castle_15.png", magico:"Il Giardino d'Acqua",         reale:"Il parco della piscina", fatto:"Prato e alberi attorno alle vasche: il respiro verde del castello."},
   {id:16, x:84.00,y:5.67,  foto:"Castle/Castle_16.png", magico:"La Rimessa dei Destrieri di Ferro", reale:"Il garage dei bus", fatto:"Dormono qui i grandi mezzi che ogni giorno portano gli studenti a scuola."}
 ];
-
-/* ====================== Grafo di adiacenza (deterministico, dai luoghi) ====================== */
-function dist(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
-function costruisciGrafo(nodi, k=3){
-  const adj = {}; nodi.forEach(n=>adj[n.id]=new Set());
-  // k vicini piu prossimi (reciproci)
-  nodi.forEach(n=>{
-    const vicini = nodi.filter(m=>m.id!==n.id).sort((a,b)=>dist(n,a)-dist(n,b)).slice(0,k);
-    vicini.forEach(v=>{ adj[n.id].add(v.id); adj[v.id].add(n.id); });
-  });
-  // garantisco la connessione: unisco le componenti separate col ponte piu corto
-  function componenti(){
-    const visti=new Set(), comps=[];
-    for(const n of nodi){ if(visti.has(n.id))continue;
-      const stack=[n.id], c=[]; visti.add(n.id);
-      while(stack.length){ const u=stack.pop(); c.push(u);
-        adj[u].forEach(w=>{ if(!visti.has(w)){visti.add(w);stack.push(w);} }); }
-      comps.push(c);
-    } return comps;
-  }
-  let comps=componenti(), guard=0;
-  while(comps.length>1 && guard++<40){
-    let best=null;
-    for(let i=1;i<comps.length;i++){
-      for(const a of comps[0]) for(const b of comps[i]){
-        const d=dist(byId(a),byId(b));
-        if(!best||d<best.d) best={a,b,d};
-      }
-    }
-    if(!best)break;
-    adj[best.a].add(best.b); adj[best.b].add(best.a);
-    comps=componenti();
-  }
-  return adj;
-}
-
-/* ====================== Generazione torce con solvibilità garantita ====================== */
-// Posiziono N torce. Verifico che un esploratore perfetto non vada mai sotto zero
-// espandendo dal bordo e dando priorita alle torce raggiungibili.
-function simulaPerfetto(torce, startId, olioIniziale, costo, bonus){
-  let olio = olioIniziale;
-  const accese = new Set([startId]);
-  const totale = LUOGHI.length;
-  let minOlio = olio;
-  while(accese.size < totale){
-    // frontiera = stanze spente adiacenti a una accesa
-    const front = [];
-    LUOGHI.forEach(l=>{
-      if(accese.has(l.id)) return;
-      for(const w of GRAFO[l.id]) if(accese.has(w)){ front.push(l.id); break; }
-    });
-    if(!front.length) return {ok:false};
-    // priorita: stanze con torcia
-    front.sort((a,b)=> (torce.has(b)?1:0)-(torce.has(a)?1:0));
-    const scelto = front[0];
-    olio -= costo;
-    if(torce.has(scelto)) olio += bonus;
-    if(olio < 0) return {ok:false, minOlio:olio};
-    minOlio = Math.min(minOlio, olio);
-    accese.add(scelto);
-  }
-  return {ok:true, minOlio, residuo:olio};
-}
-function generaTorce(r, startId, nTorce, olioIniziale, costo, bonus){
-  const candidati = LUOGHI.filter(l=>l.id!==startId).map(l=>l.id);
-  for(let tent=0; tent<120; tent++){
-    // mescolo e prendo le prime nTorce
-    const a=[...candidati];
-    for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-    const torce=new Set(a.slice(0,nTorce));
-    const sim=simulaPerfetto(torce,startId,olioIniziale,costo,bonus);
-    if(sim.ok) return torce;
-  }
-  // fallback: torce sui primi nTorce vicini allo start (quasi mai necessario)
-  return new Set(candidati.slice(0,nTorce));
-}
-
-/* ====================== Stato di gioco ====================== */
-const COSTO=1, BONUS=3, OLIO_INIZIALE=6, N_TORCE=5;
-let GRAFO = {};
 const byId = id => LUOGHI.find(l=>l.id===id);
+const $ = id => document.getElementById(id);
+const PARAMS = new URLSearchParams(location.search);
+const DEBUG_ANIM = PARAMS.get('debug')==='1';
 
-let S = null;        // stato corrente
-let RNG = null;
-let SEED = "";
+/* ====================== Regole: distanze, olio, torce ====================== */
+const MAR = 2482/1728;                 // proporzioni della mappa (larghezza/altezza)
+// unita di distanza = 1% della LARGHEZZA della mappa (x,y dei luoghi sono in % di larghezza/altezza)
+const dU = (a,b) => Math.hypot(a.x-b.x,(a.y-b.y)/MAR);
+const START = LUOGHI.find(l=>l.start) || LUOGHI[0];
+// giro "ingenuo" (sempre il luogo piu vicino): serve da metro per tarare l'olio
+const GIRO = (function(){
+  let cur=START, rest=LUOGHI.filter(l=>l!==START), L=0; const tappe=[];
+  while(rest.length){
+    rest.sort((a,b)=>dU(cur,a)-dU(cur,b));
+    const n=rest.shift(), d=dU(cur,n); L+=d; tappe.push({id:n.id,d}); cur=n;
+  }
+  return {L,tappe};
+})();
+const GOCCIA = GIRO.L/100;             // unita di cammino per goccia: il giro ingenuo costa 100 gocce
+const OLIO_INIZIALE=40, BONUS=18, FUOCO=20, N_TORCE=5;
+const VELOCITA=9.5;                    // unita al secondo
+const R_ARRIVO=2.6;                    // entro questo raggio una stanza ignota viene scoperta
+const R_TOCCO=4;                       // tocco "vicino a un luogo"
+const R_SENSO=30;                      // distanza a cui si avverte il tepore di una torcia
 
-function nuovoStato(fromSeed){
-  const params = new URLSearchParams(location.search);
-  SEED = fromSeed || params.get('seed') || (sid()+"-"+run());
-  RNG = mulberry32(cyrb53(SEED));
-  GRAFO = costruisciGrafo(LUOGHI, 3);
-  const start = LUOGHI.find(l=>l.start) || LUOGHI[0];
-  const torce = generaTorce(RNG, start.id, N_TORCE, OLIO_INIZIALE, COSTO, BONUS);
-  S = {
-    olio: OLIO_INIZIALE,
-    accese: new Set([start.id]),
-    torce,                 // id che contengono una torcia (ancora da raccogliere)
-    torceRaccolte:new Set(),
-    fuochi: 0,             // fuochi di fortuna accesi (abbassano le stelle)
-    startId: start.id,
-    mosse: 0,
-    seed: SEED,
-    fine:false
-  };
+// Solvibilita garantita: le torce si accettano solo se chi segue il giro ingenuo non resta mai a secco.
+function generaTorce(r){
+  const cand=LUOGHI.filter(l=>l!==START).map(l=>l.id);
+  for(let t=0;t<400;t++){
+    const a=[...cand];
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    const torce=new Set(a.slice(0,N_TORCE));
+    let olio=OLIO_INIZIALE, ok=true;
+    for(const tp of GIRO.tappe){ olio-=tp.d/GOCCIA; if(olio<3){ok=false;break;} if(torce.has(tp.id)) olio+=BONUS; }
+    if(ok) return torce;
+  }
+  return new Set([1,4,7,10,13].map(i=>GIRO.tappe[i].id));   // ripiego: torce spaziate lungo il giro
+}
+
+/* ====================== Stato ====================== */
+let S=null, SEED='';
+let mondo='hogwarts';
+const CHIAVE='ldl2_stato';
+function nuovoStato(){
+  SEED = PARAMS.get('seed') || (sid()+'-'+run());
+  const r=mulberry32(cyrb53(SEED));
+  S={ seed:SEED, olio:OLIO_INIZIALE, x:START.x, y:START.y+3.4,
+      scoperte:new Set([START.id]), sveglie:new Set(), torce:generaTorce(r), raccolte:new Set(),
+      fuochi:0, cammino:0, fine:false, mosso:false };
   salva();
 }
-
-/* ====================== Persistenza (localStorage) ====================== */
 function salva(){
   if(!S) return;
-  try{
-    localStorage.setItem('ldl_stato', JSON.stringify({
-      ...S, accese:[...S.accese], torce:[...S.torce], torceRaccolte:[...S.torceRaccolte]
-    }));
-  }catch(e){}
+  try{ localStorage.setItem(CHIAVE, JSON.stringify({...S, scoperte:[...S.scoperte], sveglie:[...S.sveglie], torce:[...S.torce], raccolte:[...S.raccolte]})); }catch(e){}
 }
 function carica(){
   try{
-    const raw=localStorage.getItem('ldl_stato'); if(!raw) return false;
-    const o=JSON.parse(raw);
-    SEED=o.seed; RNG=mulberry32(cyrb53(SEED)); GRAFO=costruisciGrafo(LUOGHI,3);
-    S={...o, accese:new Set(o.accese), torce:new Set(o.torce), torceRaccolte:new Set(o.torceRaccolte)};
-    return true;
+    const o=JSON.parse(localStorage.getItem(CHIAVE)||'null'); if(!o||!o.torce) return false;
+    S={...o, scoperte:new Set(o.scoperte), sveglie:new Set(o.sveglie), torce:new Set(o.torce), raccolte:new Set(o.raccolte)};
+    SEED=S.seed; return true;
   }catch(e){ return false; }
 }
+const stelleOra = () => S.fuochi===0?3:S.fuochi<=2?2:1;
 
-/* ====================== Logica: frontiera, tepore ====================== */
-function isFrontiera(id){
-  if(S.accese.has(id)) return false;
-  for(const w of GRAFO[id]) if(S.accese.has(w)) return true;
-  return false;
+/* ====================== Effetti sonori (WebAudio, niente file) ====================== */
+let actx=null, sfxOn = localStorage.getItem('ldl_sfx')!=='0';
+function tono(f,dur,tipo,vol,quando){
+  if(!sfxOn) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+    const t=actx.currentTime+(quando||0), o=actx.createOscillator(), g=actx.createGain();
+    o.type=tipo||'sine'; o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol||.07,t+.015); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.05);
+  }catch(e){}
 }
-// "tepore": una stanza di confine emette calore se LEI o una sua vicina (ancora spenta)
-// nasconde una torcia non ancora raccolta. Informazione parziale e ambigua.
-function haTepore(id){
-  if(S.torce.has(id) && !S.torceRaccolte.has(id)) return true;
-  for(const w of GRAFO[id]){
-    if(!S.accese.has(w) && S.torce.has(w) && !S.torceRaccolte.has(w)) return true;
+const SFX={
+  passo(){ tono(85+Math.random()*30,.07,'triangle',.035); },
+  scoperta(){ tono(392,.28); tono(523,.32,'sine',.07,.12); tono(659,.5,'sine',.07,.24); },
+  sveglia(n){ tono(587*Math.pow(1.189,n),.4,'triangle',.09); tono(1174*Math.pow(1.189,n),.25,'sine',.04,.05); },
+  stanza(){ [523,659,784,1047].forEach((f,i)=>tono(f,.6,'sine',.07,i*.09)); },
+  torcia(){ [587,740,880,1175].forEach((f,i)=>tono(f,.32,'triangle',.08,i*.07)); },
+  vuoto(){ tono(110,.6,'sawtooth',.04); tono(82,.8,'sine',.06,.1); },
+  vittoria(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tono(f,.8,'sine',.07,i*.14)); }
+};
+
+/* ====================== Vista: mondo, telecamera, buio ====================== */
+const vista=$('vista'), mappaEl=$('mappa'), mago=$('mago'), bersaglioEl=$('bersaglio'), cv=$('buio'), ctx=cv.getContext('2d');
+let vw=0, vh=0, WW=0, WH=0; const cam={x:0,y:0};
+function layout(){
+  vw=innerWidth; vh=innerHeight;
+  if(mondo==='reale') WW=Math.min(vw, vh*MAR);               // mappa intera, di giorno
+  else WW=Math.max(vw*1.8, vh*1.5*MAR);                       // mondo piu grande dello schermo: la telecamera segue il mago
+  WH=WW/MAR;
+  mappaEl.style.width=WW+'px'; mappaEl.style.height=WH+'px';
+  cv.width=vw; cv.height=vh;
+  telecamera();
+}
+function telecamera(){
+  if(mondo==='reale'){ cam.x=-(vw-WW)/2; cam.y=-(vh-WH)/2; }
+  else{
+    cam.x=Math.max(0,Math.min(WW-vw, S.x/100*WW - vw/2));
+    cam.y=Math.max(0,Math.min(WH-vh, S.y/100*WH - vh*.52));
   }
-  return false;
+  mappaEl.style.transform='translate3d('+(-cam.x).toFixed(1)+'px,'+(-cam.y).toFixed(1)+'px,0)';
+}
+function disegnaBuio(t){
+  const c=ctx;
+  c.globalCompositeOperation='source-over';
+  c.clearRect(0,0,vw,vh);
+  c.fillStyle='rgba(5,4,14,.91)'; c.fillRect(0,0,vw,vh);
+  c.globalCompositeOperation='destination-out';
+  const buco=(px,py,r,a)=>{
+    const g=c.createRadialGradient(px,py,0,px,py,r);
+    g.addColorStop(0,'rgba(0,0,0,'+a+')'); g.addColorStop(.5,'rgba(0,0,0,'+(a*.8)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=g; c.beginPath(); c.arc(px,py,r,0,6.2832); c.fill();
+  };
+  for(const l of LUOGHI){
+    if(!S.scoperte.has(l.id)) continue;
+    const sv=S.sveglie.has(l.id), r=WW*(sv?.09:.045), px=l.x/100*WW-cam.x, py=l.y/100*WH-cam.y;
+    if(px<-r||px>vw+r||py<-r||py>vh+r) continue;
+    buco(px,py,r,sv?.96:.6);
+  }
+  const ax=S.x/100*WW-cam.x, ay=S.y/100*WH-cam.y-22;
+  const trem=1+Math.sin(t/130)*.025+Math.sin(t/47)*.015;
+  const ra=WW*.105*trem*(S.olio>0||S.fine?1:.5);
+  buco(ax,ay,ra,1);
+  // tepore: le torce non ancora scoperte scaldano il buio quando ci si avvicina
+  c.globalCompositeOperation='lighter';
+  for(const id of S.torce){
+    if(S.scoperte.has(id)) continue;
+    const l=byId(id), d=dU(S,l); if(d>R_SENSO) continue;
+    const k=(1-d/R_SENSO), puls=.6+.4*Math.sin(t/420+id), r=WW*.07, px=l.x/100*WW-cam.x, py=l.y/100*WH-cam.y;
+    const g=c.createRadialGradient(px,py,0,px,py,r);
+    g.addColorStop(0,'rgba(255,186,90,'+Math.min(.95,(.35+.9*k)*puls).toFixed(3)+')'); g.addColorStop(.4,'rgba(255,170,70,'+(.45*k*puls).toFixed(3)+')'); g.addColorStop(1,'rgba(255,170,70,0)');
+    c.fillStyle=g; c.beginPath(); c.arc(px,py,r,0,6.2832); c.fill();
+    if(k>.2 && !visti.tepore && S.sveglie.size){ visti.tepore=true; suggerisci('Vedi quel tepore dorato nel buio? Lì si nasconde una torcia.',6000); }
+  }
+  const g2=c.createRadialGradient(ax,ay,0,ax,ay,ra*.8);
+  g2.addColorStop(0,'rgba(255,190,110,.12)'); g2.addColorStop(1,'rgba(255,190,110,0)');
+  c.fillStyle=g2; c.beginPath(); c.arc(ax,ay,ra*.8,0,6.2832); c.fill();
 }
 
-/* ====================== Render mappa ====================== */
-const mappaEl = document.getElementById('mappa');
-function render(){
-  // pulizia marker/aure
-  mappaEl.querySelectorAll('.marker,.aura').forEach(n=>n.remove());
-  LUOGHI.forEach(l=>{
-    const acc = S.accese.has(l.id);
-    // aura luminosa per stanze accese
-    if(acc){
-      const au=document.createElement('div');
-      au.className='aura on';
-      au.style.left=l.x+'%'; au.style.top=l.y+'%';
-      mappaEl.appendChild(au);
-    }
-    const b=document.createElement('button');
-    b.className='marker';
-    b.style.left=l.x+'%'; b.style.top=l.y+'%';
-    b.dataset.id=l.id;
-    b.setAttribute('type','button');
-    let stato;
-    if(acc){ stato='accesa'; if(S.torceRaccolte.has(l.id)) b.classList.add('con-torcia'); }
-    else if(isFrontiera(l.id)){ stato='confine'; if(haTepore(l.id)) b.classList.add('tepore'); }
-    else stato='buio';
-    b.classList.add(stato);
-
-    let etichetta = acc ? l.magico : (stato==='confine' ? 'Stanza ignota' : '');
-    b.setAttribute('aria-label',
-      acc ? ('Stanza illuminata: '+l.magico) :
-      stato==='confine' ? ('Stanza di confine, illuminabile per 1 olio'+(haTepore(l.id)?', senti un tepore vicino':'')) :
-      'Stanza ancora nel buio');
-    b.innerHTML =
-      '<span class="disco" aria-hidden="true">'+ (
-        acc ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11c.5.3 1 1 1 2h4c0-1 .5-1.7 1-2a6 6 0 0 0-3-11z"/></svg>'
-        : stato==='confine' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v8M8 12h8"/></svg>'
-        : ''
-      ) + '</span>' +
-      (etichetta ? '<span class="etichetta">'+etichetta+'</span>' : '');
-
-    if(stato==='confine') b.addEventListener('click',()=>illumina(l.id));
-    else if(acc) b.addEventListener('click',()=>apriScheda(l, false));
-    mappaEl.appendChild(b);
-  });
-  renderHUD();
-}
-
-function renderHUD(){
-  document.getElementById('olioVal').textContent = S.olio;
-  const pct = Math.max(0, Math.min(100, (S.olio/ (OLIO_INIZIALE+6))*100));
-  document.getElementById('serbatoioFill').style.width = pct+'%';
-  document.getElementById('conteggio').textContent = S.accese.size;
-  document.getElementById('barraFill').style.width = (S.accese.size/LUOGHI.length*100)+'%';
-  // stelle: 3 se 0 fuochi, 2 se 1-2, 1 se 3+
-  const st = S.fuochi===0?3:S.fuochi<=2?2:1;
-  document.getElementById('stelleWrap').innerHTML = stelleSvg(st,3);
+/* ====================== Luoghi e minimappa ====================== */
+const IC={
+  ignoto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V7a6 6 0 0 1 12 0v14M4 21h16M14.500 13h.01"/></svg>',
+  scoperta:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V7a6 6 0 0 1 12 0v14M4 21h16"/><path d="M10 12l3 2.500-3 2.500"/></svg>',
+  sveglia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11c.500.300 1 1 1 2h4c0-1 .500-1.700 1-2a6 6 0 0 0-3-11z"/></svg>',
+  torcia:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3 4 4.500 4 8a4 4 0 0 1-8 0c0-1.500.700-2.500 1.500-3.500.300 1.200 1 1.800 1.500 2C11 6.500 11.500 4 12 2zM10 15h4l-.700 7h-2.600z"/></svg>'
+};
+const statoLuogo = l => S.sveglie.has(l.id)?'sveglia':S.scoperte.has(l.id)?'scoperta':'ignoto';
+function renderLuoghi(){
+  mappaEl.querySelectorAll('.luogo').forEach(n=>n.remove());
+  $('minimappa').querySelectorAll('i').forEach(n=>n.remove());
+  for(const l of LUOGHI){
+    const st=statoLuogo(l), d=document.createElement('div');
+    d.className='luogo '+st+((S.torce.has(l.id)&&S.scoperte.has(l.id)&&!S.raccolte.has(l.id))?' torcia':'');
+    d.style.left=l.x+'%'; d.style.top=l.y+'%';
+    d.innerHTML='<span class="cerchio">'+IC[st]+'<span class="torcia-badge">'+IC.torcia+'</span></span>'+
+      '<span class="nome">'+(mondo==='reale'?l.reale:l.magico)+'</span>';
+    mappaEl.appendChild(d);
+    const p=document.createElement('i'); p.className=st; p.style.left=l.x+'%'; p.style.top=l.y+'%';
+    $('minimappa').appendChild(p);
+  }
+  const io=document.createElement('i'); io.className='io'; io.id='miniIo'; $('minimappa').appendChild(io);
+  aggiornaHUD();
 }
 function stelleSvg(piene,tot){
-  let out='';
-  for(let i=0;i<tot;i++){
-    const cls = i<piene?'stella-piena':'stella-vuota';
-    out+='<svg class="'+cls+'" viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z" stroke-width="1.4" stroke-linejoin="round"/></svg>';
-  }
-  return out;
+  let o=''; for(let i=0;i<tot;i++) o+='<svg class="'+(i<piene?'stella-piena':'stella-vuota')+'" viewBox="0 0 24 24"><path d="M12 3l2.600 5.300 5.900.900-4.300 4.100 1 5.800L12 16.900 6.800 19.100l1-5.800L3.500 9.200l5.900-.900z" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  return o;
 }
-
+let olioMostrato=-1;
+function aggiornaHUD(){
+  const n=Math.ceil(S.olio);
+  if(n!==olioMostrato){
+    olioMostrato=n; $('olioVal').textContent=n;
+    $('serbatoioFill').style.width=Math.max(0,Math.min(100,S.olio/60*100))+'%';
+    $('serbatoio').classList.toggle('basso', S.olio<10 && !S.fine);
+  }
+  $('conteggio').textContent=S.sveglie.size;
+  $('stelleWrap').innerHTML=stelleSvg(stelleOra(),3);
+}
 function mostraDelta(txt){
-  const d=document.getElementById('olioDelta');
-  d.textContent=txt;
-  d.style.opacity='1';
-  clearTimeout(d._t);
-  d._t=setTimeout(()=>{ d.style.opacity='.0'; },2200);
+  const d=$('olioDelta'); d.textContent=txt; d.style.opacity='1';
+  clearTimeout(d._t); d._t=setTimeout(()=>{ d.style.opacity='0'; },2400);
+}
+const visti={tepore:false};
+function suggerisci(txt,ms){
+  const el=$('suggerimento'); el.textContent=txt; clearTimeout(el._t);
+  if(ms) el._t=setTimeout(()=>{ if(el.textContent===txt) suggerimentoBase(); },ms);
+}
+function suggerimentoBase(){
+  const el=$('suggerimento');
+  if(mondo==='reale'){ el.textContent=''; return; }
+  if(S.fine) el.textContent='';
+  else if(!S.sveglie.size && S.scoperte.size===1) el.textContent='Sei davanti alla Soglia. Tocca la porta che pulsa per entrare.';
+  else if(!S.mosso) el.textContent='Tocca un punto della mappa (o usa le frecce) per camminare nel buio.';
+  else if(S.scoperte.size<3) el.textContent='Cerca le porte nel buio: la minimappa ti mostra dove sono.';
+  else el.textContent='';
 }
 
-/* ====================== Azione: illumina una stanza ====================== */
-function illumina(id){
-  if(S.fine) return;
-  if(!isFrontiera(id)) return;
-  if(S.olio < COSTO){ chiediFuoco(); return; }
-  const l=byId(id);
-  S.olio -= COSTO;
-  S.accese.add(id);
-  S.mosse++;
-  let torciaTrovata=false;
-  if(S.torce.has(id) && !S.torceRaccolte.has(id)){
-    S.torceRaccolte.add(id);
-    S.olio += BONUS; torciaTrovata=true;
+/* ====================== Comandi ====================== */
+let bersaglio=null;                 // {x,y,luogo?}
+const tasti={};
+function schermoAMondo(cx,cy){ return {x:(cx+cam.x)/WW*100, y:(cy+cam.y)/WH*100}; }
+function luogoVicino(p,raggio,filtro){
+  let best=null, bd=raggio;
+  for(const l of LUOGHI){ if(filtro && !filtro(l)) continue; const d=dU(p,l); if(d<bd){bd=d;best=l;} }
+  return best;
+}
+function puntaVerso(p){
+  const l=luogoVicino(p,R_TOCCO,l=>S.scoperte.has(l.id));
+  bersaglio = l ? {x:l.x,y:l.y+3.4,luogo:l} : {x:Math.max(1,Math.min(99,p.x)), y:Math.max(2,Math.min(98,p.y))};
+  // gia sul posto: si entra subito
+  if(l && dU(S,bersaglio)<.4){ bersaglio=null; bersaglioEl.classList.remove('on'); premuto=false; apriScena(l); return; }
+  bersaglioEl.style.left=bersaglio.x+'%'; bersaglioEl.style.top=bersaglio.y+'%'; bersaglioEl.classList.add('on');
+}
+let premuto=false;
+vista.addEventListener('pointerdown',e=>{
+  if(inPausa()) return;
+  const p=schermoAMondo(e.clientX,e.clientY);
+  if(mondo==='reale'){
+    const l=luogoVicino(p,5,l=>S.scoperte.has(l.id)); if(l) apriScena(l,'reale');
+    return;
   }
-  mostraDelta(torciaTrovata ? ('−'+COSTO+' per la stanza, +'+BONUS+' dalla torcia') : ('−'+COSTO+' olio'));
-  salva();
-  render();
-  apriScheda(l, torciaTrovata, true);
-  if(S.accese.size===LUOGHI.length){ setTimeout(()=>finePartita(), 500); }
-}
-
-/* ====================== Scheda stanza + interno animato ====================== */
-const schedaOverlay=document.getElementById('schedaOverlay');
-const scenaEl=document.getElementById('scena');
-let ultimoFocus=null;
-let luogoCorrente=null;
-function apriScheda(l, torcia, primaVolta){
-  luogoCorrente=l;
-  ultimoFocus=document.activeElement;
-  document.getElementById('schedaSigillo').textContent=l.id;
-  document.getElementById('schedaTitolo').textContent=l.magico;
-  document.getElementById('schedaSub').textContent=l.reale;
-  const foto=document.getElementById('scenaFoto');
-  // le animazioni si costruiscono a immagine caricata: servono le sue proporzioni reali
-  document.getElementById('scenaStrato').innerHTML='';
-  foto.onload=()=>{
-    if(luogoCorrente!==l) return;
-    const ar=foto.naturalWidth/foto.naturalHeight;
-    scenaEl.style.setProperty('--ar', ar.toFixed(4));
-    animaScena(l, ar);
-  };
-  foto.alt='Interno magico di '+l.magico;
-  if(foto.getAttribute('src')===l.foto && foto.complete && foto.naturalWidth) foto.onload();
-  else foto.src=l.foto;
-  // lato reale: foto se c'e, altrimenti pannello di testo
-  const fotoReale=document.getElementById('scenaFotoReale');
-  const pannello=document.getElementById('pannelloReale');
-  if(l.fotoReale){
-    fotoReale.src=l.fotoReale; fotoReale.alt='Foto reale di '+l.reale;
-    fotoReale.style.display='block'; pannello.classList.remove('attivo');
-  }else{
-    fotoReale.removeAttribute('src'); fotoReale.style.display='none';
-    pannello.classList.add('attivo');
-    document.getElementById('pannelloReTitolo').textContent=l.reale;
-    document.getElementById('pannelloReTesto').textContent='Di questo luogo non abbiamo ancora una foto dall’interno: lo si riconosce dall’alto, sulla mappa del campus reale.';
+  premuto=true; puntaVerso(p);
+});
+vista.addEventListener('pointermove',e=>{ if(premuto && !inPausa() && mondo==='hogwarts') puntaVerso(schermoAMondo(e.clientX,e.clientY)); });
+window.addEventListener('pointerup',()=>{ premuto=false; });
+window.addEventListener('pointercancel',()=>{ premuto=false; });
+$('minimappa').addEventListener('pointerdown',e=>{
+  if(inPausa()||mondo!=='hogwarts') return;
+  const r=$('minimappa').getBoundingClientRect();
+  puntaVerso({x:(e.clientX-r.left)/r.width*100, y:(e.clientY-r.top)/r.height*100});
+});
+const FRECCE={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1]};
+document.addEventListener('keydown',e=>{
+  if(e.target && /TEXTAREA|INPUT/.test(e.target.tagName)) return;
+  if(e.key==='Escape'){ if($('ovScena').classList.contains('aperto')) chiudiScena(); return; }
+  if(inPausa()) return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(FRECCE[k]){ tasti[k]=true; e.preventDefault(); }
+  if((e.key==='Enter'||e.key===' ') && mondo==='hogwarts'){
+    const l=luogoVicino(S,4.2,l=>S.scoperte.has(l.id)); if(l){ e.preventDefault(); apriScena(l); }
   }
-  document.getElementById('schedaLore').innerHTML =
-    '<p style="margin:0">Mentre la luce si diffonde, gli oggetti della stanza sembrano prendere vita. Ma sotto l’incantesimo c’è un luogo che conosci bene.</p>'+
-    '<span class="reale"><strong>'+l.reale+'.</strong> '+l.fatto+'</span>';
-  const bott=document.getElementById('schedaBottino');
-  if(torcia){ bott.hidden=false; document.getElementById('bottinoTesto').textContent='Hai trovato una torcia nascosta: +'+BONUS+' olio per la lanterna!'; }
-  else bott.hidden=true;
-  // faccia iniziale secondo il mondo attivo
-  mostraFaccia(mondo==='reale' ? 'reale' : 'magico');
-  schedaOverlay.classList.add('aperto');
-  document.getElementById('schedaProsegui').focus();
-}
-function mostraFaccia(faccia){
-  const reale = (faccia==='reale');
-  scenaEl.classList.toggle('mostra-reale', reale);
-  document.getElementById('flipLbl').textContent = reale ? 'Rilancia l’incantesimo' : 'Guarda com’è davvero';
-}
-document.getElementById('flipMondo').addEventListener('click',()=>{
-  mostraFaccia(scenaEl.classList.contains('mostra-reale') ? 'magico' : 'reale');
 });
-function chiudiScheda(){
-  schedaOverlay.classList.remove('aperto');
-  scenaEl.classList.remove('mostra-reale');
-  const strato=document.getElementById('scenaStrato'); strato.innerHTML='';
-  if(ultimoFocus && ultimoFocus.focus) ultimoFocus.focus();
+document.addEventListener('keyup',e=>{ const k=e.key.length===1?e.key.toLowerCase():e.key; delete tasti[k]; });
+function inPausa(){ return !!document.querySelector('.overlay.aperto,.ov-scena.aperto,.toast.on'); }
+
+/* ====================== Ciclo di gioco ====================== */
+let ultimo=0, tPasso=0, tSalva=0;
+function ciclo(t){
+  const dt=Math.min(.05,(t-ultimo)/1000||0); ultimo=t;
+  if(S && mondo==='hogwarts' && !inPausa()){
+    let ux=0, uy=0, daTasti=false;
+    for(const k in tasti){ if(FRECCE[k]){ ux+=FRECCE[k][0]; uy+=FRECCE[k][1]; daTasti=true; } }
+    if(daTasti){ bersaglio=null; bersaglioEl.classList.remove('on'); }
+    else if(bersaglio){ ux=bersaglio.x-S.x; uy=(bersaglio.y-S.y)/MAR; }
+    let dist=Math.hypot(ux,uy), inMoto=false;
+    if(dist>.001){
+      if(S.olio<=0 && !S.fine){ bersaglio=null; bersaglioEl.classList.remove('on'); chiediFuoco(); }
+      else{
+        let passo=VELOCITA*dt;
+        if(!daTasti && passo>=dist){ passo=dist; }
+        S.x=Math.max(1,Math.min(99,S.x+ux/dist*passo));
+        S.y=Math.max(2,Math.min(98,S.y+uy/dist*passo*MAR));
+        inMoto=true; S.cammino+=passo;
+        if(!S.mosso){ S.mosso=true; suggerimentoBase(); }
+        if(!S.fine){ S.olio=Math.max(0,S.olio-passo/GOCCIA); if(S.olio<=0){ SFX.vuoto(); } }
+        if(Math.abs(ux)>.05) mago.classList.toggle('sx',ux<0);
+        tPasso+=dt; if(tPasso>.3){ tPasso=0; SFX.passo(); }
+        if(!daTasti && bersaglio && dU(S,bersaglio)<.15){
+          const l=bersaglio.luogo; bersaglio=null; bersaglioEl.classList.remove('on');
+          if(l && S.scoperte.has(l.id)) apriScena(l);
+        }
+        // scoperta: arrivando vicino a una stanza ancora nel buio
+        const nuovo=luogoVicino(S,R_ARRIVO,l=>!S.scoperte.has(l.id));
+        if(nuovo) scopri(nuovo);
+        aggiornaHUD();
+        tSalva+=dt; if(tSalva>2){ tSalva=0; salva(); }
+      }
+    }
+    mago.classList.toggle('cammina',inMoto);
+    mago.style.left=S.x+'%'; mago.style.top=S.y+'%';
+    const io=$('miniIo'); if(io){ io.style.left=S.x+'%'; io.style.top=S.y+'%'; }
+    telecamera();
+    disegnaBuio(t);
+  }
+  requestAnimationFrame(ciclo);
+}
+function scopri(l){
+  S.scoperte.add(l.id); bersaglio=null; bersaglioEl.classList.remove('on');
+  SFX.scoperta(); salva(); renderLuoghi();
+  mostraDelta('Hai trovato una stanza!');
+  setTimeout(()=>apriScena(l),450);
 }
 
-/* ====================== Commutazione mondo (livello reale / Hogwarts) ====================== */
-let mondo='hogwarts';
-function impostaMondo(m){
-  mondo=m;
-  document.body.classList.toggle('reale', m==='reale');
-  const btn=document.getElementById('btnMondo');
-  btn.classList.toggle('attiva', m==='reale');
-  btn.setAttribute('aria-pressed', m==='reale'?'true':'false');
-  btn.querySelector('.lbl').textContent = m==='reale' ? 'Torna al castello' : 'Vedi il campus reale';
-  if(musicaOn && !premioOn) avviaMusica();   // la traccia cambia insieme al mondo
-}
-document.getElementById('btnMondo').addEventListener('click',()=>{
-  impostaMondo(mondo==='reale' ? 'hogwarts' : 'reale');
-});
-/* ====================== Oggetti animati, immagine per immagine ======================
-   SOLUZIONE RIUSABILE — far muovere un oggetto DIPINTO in una foto raster senza video:
-   si ritaglia dalla STESSA immagine (background-image + background-size/position calcolati)
-   la porzione che contiene l'oggetto e si anima quel ritaglio sul posto, con bordo sfumato
-   (mask) cosi la giunzione non si vede. Tondo che ruota = 'ruota'; appeso che oscilla = 'dondola'.
-   Coordinate in % dell'immagine: x,l,w,d sulla LARGHEZZA; y,tp,h sull'ALTEZZA.
-   Per verificare i posizionamenti: index.html?scena=3&debug=1 (contorni visibili, moto fermo). */
+/* ====================== Oggetti animati, immagine per immagine ====================== */
 const ANIM = {
   1:[ // Santuario: rosone, planetario, sfere armillari appese
     {t:'raggio',l:60,tp:-10,w:28,h:120,rot:-16,op:.5},
@@ -1170,142 +1134,259 @@ const PRIM = {
     return '<div class="an an-clip" style="left:'+s.l+'%;top:'+s.tp+'%;width:'+s.w+'%;height:'+s.h+'%"><div class="an-dirig" style="animation-duration:'+(s.dur||34)+'s">'+SVG_DIRIG+'</div></div>';
   }
 };
-const DEBUG_ANIM = new URLSearchParams(location.search).get('debug')==='1';
-function animaScena(l, ar){
-  const strato=document.getElementById('scenaStrato');
-  const r=mulberry32(cyrb53('anim-'+l.id));
-  const url="url('"+l.foto+"')";
-  strato.classList.toggle('dbg', DEBUG_ANIM);
-  strato.innerHTML=(ANIM[l.id]||[]).map(s=>PRIM[s.t](s,ar,url,r)).join('');
+
+/* ====================== La stanza: lanterna, oggetti da risvegliare, torcia ====================== */
+const ovScena=$('ovScena'), scenaEl=$('scena'), strato=$('scenaStrato'), hots=$('hots');
+let scn=null;       // stanza aperta: {l, gruppi, svegliati, need}
+const eHot = s => s.t==='ruota'||s.t==='dondola'||s.t==='galleggia'||s.t==='fiamma'||s.t==='candela'||(s.t==='glow' && s.d>=2.5 && (s.op==null||s.op>=.6));
+function boxHot(s,ar){   // centro e ingombro in % (w sulla larghezza, h sull'altezza)
+  if(s.t==='dondola'||s.t==='galleggia') return {x:s.l+s.w/2,y:s.tp+s.h/2,w:s.w,h:s.h};
+  if(s.t==='candela') return {x:s.x,y:s.y-1,w:3,h:3*ar};
+  return {x:s.x,y:s.y,w:s.d,h:s.d*ar};
 }
+function apriScena(l, faccia){
+  if(!l) return;
+  bersaglio=null; bersaglioEl.classList.remove('on'); premuto=false;
+  for(const k in tasti) delete tasti[k];
+  scn={l, gruppi:[], svegliati:0, need:0};
+  $('scenaSigillo').textContent=l.id;
+  $('scenaTitolo').textContent=l.magico;
+  $('scenaSub').textContent=l.reale;
+  $('scenaFatto').innerHTML='Sotto l’incantesimo c’è un luogo che conosci: <strong>'+l.reale+'.</strong> '+l.fatto;
+  strato.innerHTML=''; hots.innerHTML='';
+  scenaEl.classList.remove('sveglia','mostra-reale');
+  scenaEl.style.setProperty('--mx','50%'); scenaEl.style.setProperty('--my','45%');
+  // lato reale: foto se c'e, altrimenti pannello di testo
+  const fr=$('scenaFotoReale'), pr=$('pannelloReale');
+  if(l.fotoReale){ fr.src=l.fotoReale; fr.alt='Foto reale: '+l.reale; fr.style.display='block'; pr.classList.remove('attivo'); }
+  else{ fr.removeAttribute('src'); fr.style.display='none'; pr.classList.add('attivo'); $('pannelloReTitolo').textContent=l.reale; }
+  const foto=$('scenaFoto');
+  foto.onload=()=>{
+    if(!scn||scn.l!==l) return;
+    const ar=foto.naturalWidth/foto.naturalHeight;
+    scenaEl.style.setProperty('--ar',ar.toFixed(4));
+    costruisciScena(l,ar);
+  };
+  foto.alt='Stanza magica: '+l.magico;
+  if(foto.getAttribute('src')===l.foto && foto.complete && foto.naturalWidth) foto.onload(); else foto.src=l.foto;
+  aggiornaTorcia();
+  mostraFaccia(faccia||'magico');
+  ovScena.classList.add('aperto');
+}
+function costruisciScena(l,ar){
+  const url="url('"+l.foto+"')", r=mulberry32(cyrb53('anim-'+l.id)), specs=ANIM[l.id]||[];
+  strato.innerHTML=''; hots.innerHTML='';
+  specs.forEach((s,i)=>{
+    const tmp=document.createElement('div'); tmp.innerHTML=PRIM[s.t](s,ar,url,r);
+    [...tmp.children].forEach(el=>{ el.dataset.i=i; strato.appendChild(el); });
+  });
+  strato.classList.toggle('dbg',DEBUG_ANIM);
+  const giaSveglia=S.sveglie.has(l.id)||DEBUG_ANIM;
+  strato.classList.toggle('dorme',!giaSveglia);
+  scenaEl.classList.toggle('sveglia',giaSveglia);
+  if(giaSveglia) return;
+  // oggetti risvegliabili, raggruppati quando coincidono (es. lanterna + il suo bagliore)
+  const hot=[]; specs.forEach((s,i)=>{ if(eHot(s)) hot.push({i,b:boxHot(s,ar)}); });
+  const dentro=(a,b)=>Math.abs(a.x-b.x)<=b.w/2 && Math.abs(a.y-b.y)<=b.h/2;
+  const gruppi=[];
+  hot.forEach(h=>{
+    const g=gruppi.find(g=>g.some(o=>Math.hypot(o.b.x-h.b.x,(o.b.y-h.b.y)/ar)<4.5||dentro(h.b,o.b)||dentro(o.b,h.b)));
+    if(g) g.push(h); else gruppi.push([h]);
+  });
+  scn.gruppi=gruppi; scn.need=Math.min(3,gruppi.length); scn.svegliati=0;
+  const lista=[]; gruppi.forEach((g,gi)=>{
+    const rappr=g.reduce((a,b)=>(a.b.w*a.b.h<=b.b.w*b.b.h?a:b));
+    g.forEach(h=>lista.push({h,gi,rappr:h===rappr}));
+  });
+  lista.sort((a,b)=>b.h.b.w*b.h.b.h-a.h.b.w*a.h.b.h);     // i piccoli sopra i grandi
+  lista.forEach(o=>{
+    const b=o.h.b, w=Math.max(b.w,5.5), h=Math.max(b.h,5.5*ar);
+    const btn=document.createElement('button');
+    btn.type='button'; btn.className='hot'+(o.rappr?' rappr':''); btn.dataset.g=o.gi;
+    btn.setAttribute('aria-label','Oggetto addormentato: tocca per risvegliarlo');
+    if(!o.rappr) btn.tabIndex=-1;
+    btn.style.cssText='left:'+(b.x-w/2)+'%;top:'+(b.y-h/2)+'%;width:'+w+'%;height:'+h+'%';
+    btn.addEventListener('click',ev=>svegliaGruppo(o.gi,ev,btn));
+    hots.appendChild(btn);
+  });
+  if(!gruppi.length){ risvegliaStanza(); return; }
+  aggiornaMissione();
+  if(!S.sveglie.size) suggerisci('',0);
+}
+function aggiornaMissione(){
+  $('missioneTxt').textContent='Muovi la lanterna e risveglia gli oggetti che luccicano';
+  let p=''; for(let i=0;i<scn.need;i++) p+='<i class="'+(i<scn.svegliati?'on':'')+'"></i>';
+  $('missionePallini').innerHTML=p;
+}
+function svegliaGruppo(gi,ev,btn){
+  if(!scn) return;
+  const g=scn.gruppi[gi]; if(!g||g.fatto) return; g.fatto=true;
+  g.forEach(h=>strato.querySelectorAll('[data-i="'+h.i+'"]').forEach(el=>el.classList.add('sveglio')));
+  hots.querySelectorAll('[data-g="'+gi+'"]').forEach(b=>b.remove());
+  const r=scenaEl.getBoundingClientRect(), br=btn.getBoundingClientRect();
+  const px=(ev && ev.clientX)?ev.clientX-r.left:br.left+br.width/2-r.left, py=(ev && ev.clientY)?ev.clientY-r.top:br.top+br.height/2-r.top;
+  const sc=document.createElement('div'); sc.className='scoppio'; sc.style.left=px+'px'; sc.style.top=py+'px';
+  scenaEl.appendChild(sc); setTimeout(()=>sc.remove(),700);
+  SFX.sveglia(scn.svegliati);
+  scn.svegliati++; aggiornaMissione();
+  if(scn.svegliati>=scn.need) setTimeout(risvegliaStanza,550);
+}
+function risvegliaStanza(){
+  if(!scn) return;
+  const l=scn.l;
+  S.sveglie.add(l.id); salva();
+  strato.classList.remove('dorme'); scenaEl.classList.add('sveglia'); hots.innerHTML='';
+  SFX.stanza(); aggiornaTorcia(); renderLuoghi();
+  setTimeout(()=>{ const b=$('btnTorcia'); (b.hidden||b.disabled?$('scenaEsci'):b).focus(); },700);
+}
+function aggiornaTorcia(){
+  const b=$('btnTorcia'), l=scn.l;
+  if(!S.torce.has(l.id)){ b.hidden=true; return; }
+  b.hidden=false;
+  if(S.raccolte.has(l.id)){ b.disabled=true; b.textContent='Torcia raccolta'; }
+  else{ b.disabled=false; b.textContent='Raccogli la torcia: +'+BONUS+' gocce'; }
+}
+$('btnTorcia').addEventListener('click',()=>{
+  const l=scn.l; if(S.raccolte.has(l.id)) return;
+  S.raccolte.add(l.id); S.olio+=BONUS; SFX.torcia(); salva();
+  aggiornaTorcia(); renderLuoghi(); mostraDelta('Torcia raccolta: +'+BONUS+' gocce d’olio');
+});
+function mostraFaccia(f){
+  const reale=(f==='reale');
+  scenaEl.classList.toggle('mostra-reale',reale);
+  $('flipLbl').textContent = reale ? 'Rilancia l’incantesimo' : 'Guarda com’è davvero';
+  // dal campus reale la stanza si guarda soltanto: info sempre visibile
+  $('scenaInfo').style.transform = reale ? 'translate(-50%,0)' : '';
+}
+$('flipMondo').addEventListener('click',()=>mostraFaccia(scenaEl.classList.contains('mostra-reale')?'magico':'reale'));
+function chiudiScena(){
+  ovScena.classList.remove('aperto'); strato.innerHTML=''; hots.innerHTML=''; scn=null;
+  suggerimentoBase(); aggiornaHUD();
+  if(S.sveglie.size===LUOGHI.length && !S.fine) setTimeout(finePartita,700);
+}
+$('scenaEsci').addEventListener('click',chiudiScena);
+// la lanterna segue il puntatore dentro la stanza
+scenaEl.addEventListener('pointermove',e=>{
+  const r=scenaEl.getBoundingClientRect();
+  scenaEl.style.setProperty('--mx',(e.clientX-r.left)+'px'); scenaEl.style.setProperty('--my',(e.clientY-r.top)+'px');
+});
+scenaEl.addEventListener('pointerdown',e=>{
+  const r=scenaEl.getBoundingClientRect();
+  scenaEl.style.setProperty('--mx',(e.clientX-r.left)+'px'); scenaEl.style.setProperty('--my',(e.clientY-r.top)+'px');
+});
 
 /* ====================== Fuoco di fortuna (niente game over) ====================== */
-const toast=document.getElementById('toastFuoco');
-function chiediFuoco(){ toast.classList.add('on'); document.getElementById('fuocoSi').focus(); }
-document.getElementById('fuocoSi').addEventListener('click',()=>{
-  S.olio += BONUS; S.fuochi++;
-  toast.classList.remove('on');
-  mostraDelta('Fuoco di fortuna: +'+BONUS+' olio (−1 stella)');
-  salva(); render();
+function chiediFuoco(){ if($('toastFuoco').classList.contains('on')) return; $('toastFuoco').classList.add('on'); $('fuocoSi').focus(); }
+$('fuocoSi').addEventListener('click',()=>{
+  S.olio+=FUOCO; S.fuochi++; $('toastFuoco').classList.remove('on');
+  SFX.torcia(); mostraDelta('Fuoco di fortuna: +'+FUOCO+' gocce, una stella in meno'); salva(); aggiornaHUD();
 });
 
 /* ====================== Fine partita + debrief ====================== */
 function finePartita(){
-  S.fine=true; salva();
-  const st = S.fuochi===0?3:S.fuochi<=2?2:1;
-  document.getElementById('stelleFinali').innerHTML=stelleSvg(st,3);
-  let msg;
-  if(S.fuochi===0) msg='Hai illuminato ogni stanza senza mai restare a secco: un cammino pianificato alla perfezione, con '+S.olio+' unità d\'olio d\'avanzo.';
-  else msg='Hai illuminato tutte le 16 stanze. Hai acceso '+S.fuochi+' fuoco'+(S.fuochi>1?'chi':' ')+' di fortuna quando l\'olio è finito: la prossima volta puoi provare un percorso che intercetti prima le torce.';
-  document.getElementById('traguardoRiepilogo').textContent=msg;
-  // pergamena dei luoghi
-  document.getElementById('pergamenaFinale').innerHTML =
-    LUOGHI.map(l=>'<div class="voce"><strong>'+l.magico+'</strong> — '+l.reale+'</div>').join('');
-  document.getElementById('traguardoOverlay').classList.add('aperto');
+  S.fine=true; salva(); SFX.vittoria(); suggerimentoBase();
+  $('stelleFinali').innerHTML=stelleSvg(stelleOra(),3);
+  $('traguardoRiepilogo').textContent = S.fuochi===0
+    ? 'Hai risvegliato tutte le 16 stanze senza mai restare a secco: un cammino pianificato con cura, con '+Math.ceil(S.olio)+' gocce d’olio d’avanzo.'
+    : 'Hai risvegliato tutte le 16 stanze. Per '+S.fuochi+(S.fuochi>1?' volte':' volta')+' l’olio è finito e hai acceso un fuoco di fortuna: la prossima volta prova un percorso che incontri prima le torce.';
+  $('pergamenaFinale').innerHTML=LUOGHI.map(l=>'<div class="voce"><strong>'+l.magico+'</strong> — '+l.reale+'</div>').join('');
+  $('traguardoOverlay').classList.add('aperto');
   avviaPremio();
 }
 
 /* ====================== Tutorial 4 momenti ====================== */
 const TUTOR=[
   {lbl:'Passo 1 di 4 · Il contesto', tit:'Un castello al buio',
-   txt:'Cala la notte sul castello della Scuola Sacra Famiglia. Tu sei l\'esploratore con in mano una lanterna: solo la tua luce può risvegliare le stanze addormentate.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/><path d="M11 12h2"/></svg>'},
-  {lbl:'Passo 2 di 4 · L\'obiettivo', tit:'Illumina tutte le 16 stanze',
-   txt:'Vinci quando ogni stanza del castello torna a splendere. Ogni stanza accesa ti rivela il suo interno che prende vita e che cosa si fa, davvero, in quel luogo della scuola.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-3 11c.5.3 1 1 1 2h4c0-1 .5-1.7 1-2a6 6 0 0 0-3-11z"/><path d="M9 18h6M10 21h4"/></svg>'},
-  {lbl:'Passo 3 di 4 · La meccanica', tit:'Olio, confini e torce',
-   txt:'Puoi illuminare solo le stanze di confine, adiacenti a quelle già accese: il buio si ritira a poco a poco. Ogni stanza nuova costa 1 olio. Alcune nascondono una torcia (+3 olio): quando senti un tepore dorato, una torcia è lì vicino. Scegli bene la direzione.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h6l-1 14a1 1 0 0 1-1 .9h-2a1 1 0 0 1-1-.9z"/><path d="M10 6V4h4v2"/><path d="M12 10v6"/></svg>'},
-  {lbl:'Passo 4 di 4 · In breve', tit:'Pronto a esplorare',
-   txt:'Espandi la luce dal confine, segui i tepori per non restare a secco, scopri ogni luogo. Se l\'olio finisce puoi sempre accendere un fuoco di fortuna: non si perde mai, ma la lanterna costa una stella. Buona esplorazione.',
+   txt:'La notte è scesa sul castello della Scuola Sacra Famiglia e le sue stanze si sono addormentate. Tu sei l’esploratore: hai solo una lanterna e la voglia di scoprire che cosa nasconde il buio.',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg>'},
+  {lbl:'Passo 2 di 4 · L’obiettivo', tit:'Risveglia le 16 stanze',
+   txt:'Trova nel buio tutte le stanze del castello ed entra in ognuna per risvegliarla. Dietro ogni stanza magica si nasconde un luogo vero della tua scuola: sta a te riconoscerlo.',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-3 11c.500.300 1 1 1 2h4c0-1 .500-1.700 1-2a6 6 0 0 0-3-11z"/><path d="M9 18h6M10 21h4"/></svg>'},
+  {lbl:'Passo 3 di 4 · Come si gioca', tit:'Passi, olio e torce',
+   txt:'Tocca la mappa o usa le frecce per camminare: ogni passo consuma l’olio della lanterna. Alcune stanze nascondono una torcia che la ricarica: quando vedi un tepore dorato nel buio, una torcia è vicina. Dentro una stanza muovi la lanterna e tocca gli oggetti che luccicano.',
+   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h6l-1 14a1 1 0 0 1-1 .900h-2a1 1 0 0 1-1-.900z"/><path d="M10 6V4h4v2"/><path d="M12 10v6"/></svg>'},
+  {lbl:'Passo 4 di 4 · In breve', tit:'Scegli bene la strada',
+   txt:'L’olio non basta per vagare a caso: guarda la minimappa e decidi in che ordine raggiungere le stanze. Se resti a secco puoi accendere un fuoco di fortuna: non si perde mai, ma la lanterna perde una stella.',
    ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>'}
 ];
 let tutorPasso=0;
-const tutorOverlay=document.getElementById('tutorOverlay');
 function renderTutor(){
   const t=TUTOR[tutorPasso];
-  document.getElementById('tutorIcona').innerHTML=t.ic;
-  document.getElementById('tutorLbl').textContent=t.lbl;
-  document.getElementById('tutorTitolo').textContent=t.tit;
-  document.getElementById('tutorTesto').textContent=t.txt;
-  tutorOverlay.querySelectorAll('.passi i').forEach((n,i)=>n.classList.toggle('on',i===tutorPasso));
-  document.getElementById('tutorIndietro').style.visibility = tutorPasso===0?'hidden':'visible';
-  document.getElementById('tutorAvanti').textContent = tutorPasso===TUTOR.length-1 ? 'Entra nel castello' : 'Avanti';
+  $('tutorIcona').innerHTML=t.ic; $('tutorLbl').textContent=t.lbl; $('tutorTitolo').textContent=t.tit; $('tutorTesto').textContent=t.txt;
+  $('tutorOverlay').querySelectorAll('.passi i').forEach((n,i)=>n.classList.toggle('on',i===tutorPasso));
+  $('tutorIndietro').style.visibility = tutorPasso===0?'hidden':'visible';
+  $('tutorAvanti').textContent = tutorPasso===TUTOR.length-1 ? 'Entra nel castello' : 'Avanti';
 }
-function apriTutor(){ tutorPasso=0; renderTutor(); tutorOverlay.classList.add('aperto'); document.getElementById('tutorAvanti').focus(); }
-document.getElementById('tutorAvanti').addEventListener('click',()=>{
+function apriTutor(){ tutorPasso=0; renderTutor(); $('tutorOverlay').classList.add('aperto'); $('tutorAvanti').focus(); }
+$('tutorAvanti').addEventListener('click',()=>{
   if(tutorPasso<TUTOR.length-1){ tutorPasso++; renderTutor(); }
-  else { tutorOverlay.classList.remove('aperto'); localStorage.setItem('ldl_tutorVisto','1'); }
+  else { $('tutorOverlay').classList.remove('aperto'); localStorage.setItem('ldl_tutorVisto','1'); suggerimentoBase(); }
 });
-document.getElementById('tutorIndietro').addEventListener('click',()=>{ if(tutorPasso>0){tutorPasso--;renderTutor();} });
+$('tutorIndietro').addEventListener('click',()=>{ if(tutorPasso>0){tutorPasso--;renderTutor();} });
+$('btnGuida').addEventListener('click',apriTutor);
 
-/* ====================== Musica d'atmosfera (YouTube nascosto) ====================== */
+/* ====================== Musica (YouTube nascosto) ====================== */
 // Tracce gia scelte da Andrea nell'app originale: una per mondo + quella del premio finale.
 const TRACCIA_REALE='4Eg0GmYe1m4', TRACCIA_CASTLE='a7z8HGXVR80', PREMIO_ID='1-13AkxQyts', PREMIO_START=36;
-const ytAudio=document.getElementById('ytAudio'), ytPremio=document.getElementById('ytPremio');
+const ytAudio=$('ytAudio'), ytPremio=$('ytPremio');
 let musicaOn=false, premioOn=false;
-function ytSrc(id, start){
-  return 'https://www.youtube.com/embed/'+id+'?autoplay=1&loop=1&playlist='+id+(start?'&start='+start:'')+
-    '&controls=0&rel=0&playsinline=1&enablejsapi=1';
+function ytSrc(id,start){
+  return 'https://www.youtube.com/embed/'+id+'?autoplay=1&loop=1&playlist='+id+(start?'&start='+start:'')+'&controls=0&rel=0&playsinline=1&enablejsapi=1';
 }
-// la traccia di sottofondo segue il mondo attivo (reale / castello)
-function avviaMusica(){ ytAudio.src = ytSrc(mondo==='reale' ? TRACCIA_REALE : TRACCIA_CASTLE); }
-document.getElementById('btnMusica').addEventListener('click',function(){
-  musicaOn=!musicaOn;
-  this.classList.toggle('attiva',musicaOn);
-  this.setAttribute('aria-pressed',musicaOn?'true':'false');
-  this.querySelector('.lbl').textContent = musicaOn ? 'Musica attiva' : 'Musica d’atmosfera';
+function avviaMusica(){ ytAudio.src = ytSrc(mondo==='reale'?TRACCIA_REALE:TRACCIA_CASTLE); }
+$('btnMusica').addEventListener('click',function(){
+  musicaOn=!musicaOn; this.classList.toggle('attiva',musicaOn); this.setAttribute('aria-pressed',musicaOn?'true':'false');
   if(musicaOn && !premioOn) avviaMusica(); else ytAudio.src='';
 });
-// musica del premio: parte al traguardo (solo se la musica e attiva), mette in pausa il sottofondo
-function avviaPremio(){
-  if(!musicaOn) return;
-  premioOn=true; ytAudio.src=''; ytPremio.src=ytSrc(PREMIO_ID, PREMIO_START);
-}
-function fermaPremio(){
-  if(!premioOn) return;
-  premioOn=false; ytPremio.src='';
-  if(musicaOn) avviaMusica();
-}
-function chiudiTraguardo(){
-  document.getElementById('traguardoOverlay').classList.remove('aperto');
-  fermaPremio();
-}
-
-/* ====================== Pulsanti & avvio ====================== */
-document.getElementById('schedaChiudi').addEventListener('click',chiudiScheda);
-document.getElementById('schedaProsegui').addEventListener('click',chiudiScheda);
-document.getElementById('btnGuida').addEventListener('click',apriTutor);
-document.getElementById('traguardoChiudi').addEventListener('click',chiudiTraguardo);
-document.getElementById('traguardoRigioca').addEventListener('click',ripartiDaCapo);
-document.getElementById('btnRiparti').addEventListener('click',()=>{
-  if(confirm('Vuoi iniziare una nuova esplorazione? Il castello tornerà nel buio.')) ripartiDaCapo();
-});
-function ripartiDaCapo(){
-  chiudiTraguardo();
-  chiudiScheda();
-  // forza un seed nuovo in modalita autonoma (se non c'e ?seed in URL)
-  const params=new URLSearchParams(location.search);
-  nuovoStato(params.get('seed')||null);
-  render();
-}
-// Chiusura overlay con ESC
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    if(schedaOverlay.classList.contains('aperto')) chiudiScheda();
-  }
+function avviaPremio(){ if(!musicaOn) return; premioOn=true; ytAudio.src=''; ytPremio.src=ytSrc(PREMIO_ID,PREMIO_START); }
+function fermaPremio(){ if(!premioOn) return; premioOn=false; ytPremio.src=''; if(musicaOn) avviaMusica(); }
+$('btnSuoni').addEventListener('click',function(){
+  sfxOn=!sfxOn; localStorage.setItem('ldl_sfx',sfxOn?'1':'0');
+  this.classList.toggle('attiva',sfxOn); this.setAttribute('aria-pressed',sfxOn?'true':'false');
+  if(sfxOn) SFX.sveglia(0);
 });
 
-function avvia(){
-  const ripreso = carica();
-  if(!ripreso){ nuovoStato(null); }
-  render();
-  // Anteprima diretta di una scena (per docente e per verifica): index.html?scena=7  [+ &debug=1]
-  const anteprima = +new URLSearchParams(location.search).get('scena');
-  if(anteprima && byId(anteprima)){ apriScheda(byId(anteprima), false); return; }
+/* ====================== I due mondi: castello / campus reale ====================== */
+function impostaMondo(m){
+  mondo=m; document.body.classList.toggle('reale',m==='reale');
+  const b=$('btnMondo'); b.setAttribute('aria-pressed',m==='reale'?'true':'false');
+  b.setAttribute('aria-label',m==='reale'?'Torna al castello':'Passa al campus reale');
+  bersaglio=null; bersaglioEl.classList.remove('on');
+  layout(); renderLuoghi(); suggerimentoBase();
+  if(musicaOn && !premioOn) avviaMusica();     // la traccia cambia insieme al mondo
+}
+$('btnMondo').addEventListener('click',()=>impostaMondo(mondo==='reale'?'hogwarts':'reale'));
+
+/* ====================== Avvio ====================== */
+function chiudiTraguardo(){ $('traguardoOverlay').classList.remove('aperto'); fermaPremio(); }
+$('traguardoChiudi').addEventListener('click',chiudiTraguardo);
+function ricomincia(){
+  chiudiTraguardo(); if(scn) chiudiScena();
+  if(mondo==='reale') impostaMondo('hogwarts');
+  nuovoStato(); visti.tepore=false; olioMostrato=-1;
+  layout(); renderLuoghi(); suggerimentoBase();
+}
+$('traguardoRigioca').addEventListener('click',ricomincia);
+$('btnRiparti').addEventListener('click',()=>{ if(confirm('Vuoi iniziare una nuova esplorazione? Il castello tornerà nel buio.')) ricomincia(); });
+$('btnGioca').addEventListener('click',()=>{
+  $('titolo').classList.remove('aperto'); SFX.scoperta();
   if(!localStorage.getItem('ldl_tutorVisto')) apriTutor();
-}
-avvia();
+});
+$('btnNuova').addEventListener('click',()=>{ ricomincia(); $('titolo').classList.remove('aperto'); if(!localStorage.getItem('ldl_tutorVisto')) apriTutor(); });
+window.addEventListener('resize',()=>{ if(S){ layout(); } });
+
+(function avvia(){
+  const ripresa=carica();
+  if(!ripresa) nuovoStato();
+  $('btnSuoni').classList.toggle('attiva',sfxOn); $('btnSuoni').setAttribute('aria-pressed',sfxOn?'true':'false');
+  if(ripresa && (S.mosso||S.sveglie.size)){ $('btnGioca').textContent='Continua l’esplorazione'; $('btnNuova').hidden=false; }
+  layout(); renderLuoghi(); suggerimentoBase();
+  mago.style.left=S.x+'%'; mago.style.top=S.y+'%';
+  requestAnimationFrame(ciclo);
+  // Anteprima diretta di una stanza (docente / verifica): index.html?scena=7  [+ &debug=1 per i contorni]
+  const anteprima=+PARAMS.get('scena');
+  if(anteprima && byId(anteprima)){ $('titolo').classList.remove('aperto'); apriScena(byId(anteprima)); }
+})();
 </script>
 </body>
 </html>
