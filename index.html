@@ -2,1390 +2,1586 @@
 <html lang="it">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Lume di Lanterna — Il Castello al Buio</title>
-<link rel="icon" href="logo.svg" />
-<link rel="apple-touch-icon" href="logo.jpg" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Campus Map — Scuola Sacra Famiglia</title>
+<link rel="icon" href="logo.png" />
+<link rel="apple-touch-icon" href="logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lexend:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
 <style>
   :root{
-    /* Palette dedicata "castello magico" (esperienza con identità propria) */
-    --notte:#0e0b1f; --notte-2:#161232; --indaco:#241a48;
-    --pergamena:#efe4c8; --pergamena-2:#e2d3ab;
-    --oro:#e0b64a; --oro-caldo:#f3cf74; --oro-scuro:#b8860b; --ottone:#9c7a35;
-    --fiamma:#ffb347;       /* bagliore fuoco (mai rosso) */
-    --inchiostro:#2a2416; --nebbia:#8f8ab0; --blu:#123E90;
-    --ombra:0 18px 48px rgba(0,0,0,.6);
-    --font-corpo:"Atkinson Hyperlegible",system-ui,sans-serif;
-    --font-ui:"Lexend",system-ui,sans-serif;
-    --font-magico:"Cinzel",Georgia,serif;
+    --blu:#123E90;          /* blu istituzionale Scuola Sacra Famiglia */
+    --blu-scuro:#0C2C68;
+    --blu-chiaro:#E8EEFA;
+    --oro:#D4A017;          /* accento / inviti all'azione */
+    --oro-scuro:#B8860B;
+    --carta:#F7F5F0;
+    --inchiostro:#1F2430;
+    --grigio:#5B6472;
+    --verde-ok:#2E7D5B;
+    --ombra:0 10px 30px rgba(18,62,144,.18);
+    --raggio:16px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%;overflow:hidden}
-  body{font-family:var(--font-corpo);font-size:18px;line-height:1.5;color:var(--pergamena);background:#05040e;
-    -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-  h1,h2,h3{font-family:var(--font-ui);font-weight:600;margin:0}
-  .magico{font-family:var(--font-magico);letter-spacing:.02em}
-  button{font-family:var(--font-ui)}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:"Atkinson Hyperlegible",system-ui,sans-serif;
+    font-size:18px;
+    line-height:1.5;
+    color:var(--inchiostro);
+    background:var(--carta);
+    -webkit-font-smoothing:antialiased;
+    /* pagina senza scroll: sidebar + mappa entrano nella schermata */
+    height:100vh;height:100dvh;overflow:hidden;
+    display:flex;flex-direction:row;
+  }
+  h1,h2,h3,.font-titolo{font-family:"Lexend",system-ui,sans-serif;font-weight:600;}
 
-  /* ====================== Mondo di gioco ====================== */
-  #gioco{position:fixed;inset:0;overflow:hidden}
-  #vista{position:absolute;inset:0;overflow:hidden;cursor:pointer;touch-action:none}
-  #mappa{position:absolute;left:0;top:0;will-change:transform}
-  #mappa .sfondo{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;
-    filter:brightness(.82) saturate(.85) contrast(1.05);-webkit-user-drag:none}
-  #buio{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+  /* ---------- Header ---------- */
+  .sidebar{
+    flex:0 0 260px;
+    display:flex;flex-direction:column;gap:18px;
+    padding:24px 20px;
+    background:#fff;
+    border-right:3px solid var(--blu);
+    overflow:auto;
+  }
+  .sidebar img.logo{width:150px;height:auto;max-width:100%;align-self:center;display:block}
+  .titolo-wrap{flex:0 0 auto}
+  .sidebar h1{font-size:1.5rem;margin:0;color:var(--blu);line-height:1.1}
+  .sidebar p.sub{margin:6px 0 0;font-size:.95rem;color:var(--grigio)}
 
-  /* luoghi sulla mappa (sotto il velo di buio: li rivela solo la luce) */
-  .luogo{position:absolute;width:0;height:0;pointer-events:none;z-index:2}
-  .luogo .cerchio{position:absolute;left:-20px;top:-20px}
-  .luogo .nome{position:absolute;left:0;bottom:26px;transform:translateX(-50%)}
-  .luogo .cerchio{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.3s}
-  .luogo .cerchio svg{width:20px;height:20px;display:block}
-  .luogo .nome{font-family:var(--font-ui);font-size:.78rem;font-weight:600;white-space:nowrap;color:var(--pergamena);
-    background:rgba(8,6,18,.8);border:1px solid rgba(224,182,74,.35);padding:2px 9px;border-radius:99px}
-  .luogo.ignoto .cerchio{background:rgba(20,16,40,.75);border:1.5px dashed rgba(239,228,200,.6);color:var(--pergamena)}
-  .luogo.ignoto .nome{display:none}
-  .luogo.scoperta .cerchio{background:radial-gradient(circle,#d9dcec,#8d93b5);border:2px solid #eef0ff;color:#1b1838;
-    animation:invito 1.5s ease-in-out infinite}
-  @keyframes invito{0%,100%{box-shadow:0 0 0 0 rgba(238,240,255,.5)}50%{box-shadow:0 0 0 12px rgba(238,240,255,0)}}
-  .luogo.sveglia .cerchio{background:radial-gradient(circle,var(--oro-caldo),var(--oro-scuro));border:2px solid var(--oro-caldo);
-    color:#241a06;box-shadow:0 0 24px 6px rgba(224,182,74,.55)}
-  .luogo .torcia-badge{position:absolute;right:-8px;top:-10px;width:22px;height:22px;border-radius:50%;background:#2b1c05;
-    border:1.5px solid var(--fiamma);display:none;align-items:center;justify-content:center;color:var(--fiamma)}
-  .luogo .torcia-badge svg{width:13px;height:13px}
-  .luogo.torcia .torcia-badge{display:flex}
-
-  /* il personaggio */
-  .mago{position:absolute;width:44px;height:58px;margin:-52px 0 0 -22px;z-index:3;pointer-events:none}
-  .mago .verso{display:block;width:100%;height:100%}
-  .mago.sx .verso{transform:scaleX(-1)}
-  .mago svg{width:100%;height:100%;display:block;overflow:visible}
-  .mago.cammina svg{animation:passo .34s ease-in-out infinite alternate}
-  @keyframes passo{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-4px) rotate(3deg)}}
-  .mago .lume{animation:lume 1.1s ease-in-out infinite alternate}
-  @keyframes lume{from{opacity:.75}to{opacity:1}}
-  .bersaglio{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(243,207,116,.9);
-    z-index:2;pointer-events:none;display:none;animation:bersaglio 1s ease-out infinite}
-  .bersaglio.on{display:block}
-  @keyframes bersaglio{from{transform:scale(.5);opacity:1}to{transform:scale(1.3);opacity:0}}
-
-  /* ====================== HUD ====================== */
-  .hud{position:absolute;left:14px;top:14px;z-index:8;display:flex;gap:10px;align-items:stretch;pointer-events:none}
-  .hud-box{background:rgba(14,11,31,.82);border:1px solid rgba(224,182,74,.4);border-radius:16px;padding:10px 14px;
-    display:flex;align-items:center;gap:11px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
-  .hud-box .ic{flex:0 0 34px}
-  .hud-box .ic svg{width:34px;height:34px;display:block}
-  .fiamma-glow{animation:lume 1.1s ease-in-out infinite alternate}
-  .olio-num{display:flex;align-items:baseline;gap:7px}
-  .olio-num b{font-family:var(--font-magico);font-size:1.45rem;color:var(--oro-caldo);line-height:1}
-  .olio-num small{font-family:var(--font-ui);font-size:.68rem;color:var(--nebbia);text-transform:uppercase;letter-spacing:.08em}
-  .serbatoio{width:150px;height:10px;margin-top:6px;border-radius:99px;background:#05040e;border:1px solid rgba(224,182,74,.3);overflow:hidden}
-  .serbatoio > span{display:block;height:100%;width:50%;border-radius:99px;background:linear-gradient(90deg,var(--oro-scuro),var(--oro-caldo));transition:width .25s}
-  .serbatoio.basso > span{background:linear-gradient(90deg,#7a5a12,var(--fiamma));animation:lume .5s ease-in-out infinite alternate}
-  .conta b{font-family:var(--font-magico);font-size:1.45rem;color:var(--oro-caldo);line-height:1}
-  .conta small{display:block;font-family:var(--font-ui);font-size:.68rem;color:var(--nebbia);text-transform:uppercase;letter-spacing:.08em}
-  .stelle{display:flex;gap:3px}
-  .stelle svg{width:22px;height:22px;display:block}
-  .stella-piena path{fill:var(--oro-caldo);stroke:var(--oro-caldo)}
-  .stella-vuota path{fill:none;stroke:rgba(224,182,74,.4)}
-  .olio-delta{position:absolute;left:18px;top:86px;z-index:8;font-family:var(--font-ui);font-weight:700;font-size:.95rem;color:var(--oro-caldo);
-    text-shadow:0 2px 8px #000;opacity:0;transition:opacity .4s;pointer-events:none}
-
-  .hud-dx{position:absolute;right:14px;top:14px;z-index:8;display:flex;gap:8px}
-  .hud-btn{width:46px;height:46px;border-radius:50%;border:1px solid rgba(224,182,74,.45);background:rgba(14,11,31,.82);color:var(--oro-caldo);
-    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s;box-shadow:0 8px 22px rgba(0,0,0,.45)}
-  .hud-btn:hover{background:rgba(224,182,74,.22)}
-  .hud-btn svg{width:21px;height:21px;display:block}
-  .hud-btn.attiva{background:var(--oro);color:#241a06;border-color:var(--oro)}
-  .hud-btn .ic-on{display:none}
-  .hud-btn.attiva .ic-off{display:none}
-  .hud-btn.attiva .ic-on{display:block}
-  .hud-btn:focus-visible,.btn:focus-visible{outline:3px solid var(--oro-caldo);outline-offset:3px}
-
-  .minimappa{position:absolute;right:14px;bottom:14px;z-index:8;width:210px;border-radius:14px;overflow:hidden;cursor:pointer;
-    border:1px solid rgba(224,182,74,.5);box-shadow:0 8px 22px rgba(0,0,0,.5);background:#05040e;touch-action:none}
-  .minimappa img{display:block;width:100%;height:auto;filter:brightness(.38) saturate(.6);pointer-events:none}
-  .minimappa i{position:absolute;width:9px;height:9px;margin:-4.5px;border-radius:50%;pointer-events:none}
-  .minimappa i.ignoto{background:transparent;border:1.5px solid rgba(239,228,200,.75)}
-  .minimappa i.scoperta{background:#dfe2f5}
-  .minimappa i.sveglia{background:var(--oro-caldo);box-shadow:0 0 6px 2px rgba(243,207,116,.7)}
-  .minimappa i.io{width:11px;height:11px;margin:-5.5px;background:#fff;border:2px solid var(--fiamma);box-shadow:0 0 8px 3px rgba(255,179,71,.8);z-index:2}
-  .minimappa .tit{position:absolute;left:8px;top:5px;font-family:var(--font-ui);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,228,200,.8);pointer-events:none}
-
-  .suggerimento{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:8;max-width:min(560px,calc(100vw - 480px));
-    background:rgba(14,11,31,.88);border:1px solid rgba(224,182,74,.45);border-radius:14px;padding:10px 18px;text-align:center;
-    font-size:.98rem;color:var(--pergamena);box-shadow:0 8px 22px rgba(0,0,0,.45);pointer-events:none;transition:opacity .4s}
-  .suggerimento:empty{opacity:0}
-
-  /* ---------- Mondo REALE (secondo livello) ---------- */
-  body.reale #buio,body.reale .mago,body.reale .bersaglio,body.reale .minimappa,body.reale .luogo.ignoto{display:none}
-  body.reale #mappa .sfondo{filter:none}
-  body.reale #gioco{background:#0a0f1c}
-  body.reale .luogo .cerchio{background:radial-gradient(circle,#2f5fc0,var(--blu));border:2px solid #cfe0ff;color:#fff;
-    box-shadow:0 0 14px 3px rgba(60,110,210,.6);animation:none}
-  body.reale .luogo .nome{border-color:rgba(60,110,210,.7);background:rgba(8,14,34,.88)}
-  body.reale .luogo .torcia-badge{display:none}
-  .nota-mondo{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:8px;
-    background:rgba(8,14,34,.9);border:1px solid rgba(60,110,210,.6);color:#cfe0ff;font-family:var(--font-ui);font-size:.86rem;font-weight:500;
-    padding:8px 16px;border-radius:99px;pointer-events:none}
-  body.reale .nota-mondo{display:inline-flex}
-  body.reale #btnMondo{background:var(--blu);border-color:#cfe0ff;color:#fff}
-
-  /* ====================== Overlay generici ====================== */
-  .overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(6,4,14,.84)}
-  .overlay.aperto{display:flex}
-  .btn{border:0;border-radius:99px;font-family:var(--font-ui);font-weight:600;font-size:1rem;padding:12px 24px;cursor:pointer;transition:.18s}
-  .btn-primario{background:linear-gradient(180deg,var(--oro-caldo),var(--oro-scuro));color:#241a06;box-shadow:0 8px 20px rgba(184,134,11,.4)}
-  .btn-primario:hover{filter:brightness(1.07);transform:translateY(-1px)}
-  .btn-ghost{background:transparent;border:1.5px solid rgba(224,182,74,.55);color:var(--oro-caldo)}
-  .btn-ghost:hover{background:rgba(224,182,74,.14)}
-  .btn-carta{background:transparent;border:1.5px solid rgba(156,122,53,.7);color:#5a3d0a}
-  .btn-carta:hover{background:rgba(156,122,53,.14)}
-  .btn svg{width:18px;height:18px;vertical-align:-3px;margin-right:7px}
-
-  /* Schermata del titolo */
-  #titolo{z-index:60;padding:0;background:#05040e}
-  #titolo .sfondo-titolo{position:absolute;inset:0;background:url('Castle/Castle_2.png') center/cover no-repeat;filter:brightness(.42) saturate(.8)}
-  #titolo .velo-titolo{position:absolute;inset:0;background:radial-gradient(90% 80% at 50% 45%,rgba(14,11,31,.15),rgba(5,4,14,.92))}
-  .titolo-box{position:relative;text-align:center;padding:24px;max-width:760px}
-  .titolo-box .stemma svg{width:96px;height:96px;filter:drop-shadow(0 0 18px rgba(224,182,74,.55))}
-  .titolo-box h1{font-family:var(--font-magico);font-weight:700;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1;color:var(--oro-caldo);
-    text-shadow:0 0 34px rgba(224,182,74,.45),0 4px 14px #000;margin:10px 0 8px}
-  .titolo-box .sotto{font-family:var(--font-magico);font-size:1.15rem;letter-spacing:.2em;text-transform:uppercase;color:var(--pergamena)}
-  .titolo-box p{color:#d8d2ea;max-width:48ch;margin:18px auto 26px}
-  .titolo-box .azioni{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .titolo-box .btn-primario{font-size:1.15rem;padding:15px 34px}
-  .titolo-box .crediti{margin-top:34px;font-size:.78rem;color:var(--nebbia)}
-  .titolo-box .crediti strong{color:var(--oro);font-family:var(--font-ui);font-weight:600}
-
-  /* Tutorial 4 momenti */
-  .tutor{width:min(640px,94vw);border-radius:20px;background:linear-gradient(180deg,#1b1540,#120e2c);
-    border:1px solid rgba(224,182,74,.4);box-shadow:var(--ombra);padding:28px 28px 24px;text-align:center}
-  .tutor .icona-grande{width:74px;height:74px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;
-    border-radius:50%;background:radial-gradient(circle at 40% 30%,rgba(243,207,116,.3),rgba(36,26,72,.2));border:1px solid rgba(224,182,74,.4)}
-  .tutor .icona-grande svg{width:40px;height:40px;color:var(--oro-caldo)}
-  .tutor .passo-lbl{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-family:var(--font-ui);font-weight:600}
-  .tutor h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.5rem;margin:6px 0 10px}
-  .tutor p{font-size:1.02rem;line-height:1.6;color:#d8d2ea;margin:0 auto;max-width:48ch}
-  .tutor .passi{display:flex;justify-content:center;gap:8px;margin:20px 0 16px}
-  .tutor .passi i{width:9px;height:9px;border-radius:50%;background:rgba(224,182,74,.25);transition:.2s}
-  .tutor .passi i.on{background:var(--oro-caldo);transform:scale(1.25)}
-  .tutor .nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
-
-  /* Toast: fuoco di fortuna */
-  .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:45;background:linear-gradient(180deg,#1b1540,#120e2c);
-    border:1px solid rgba(255,179,71,.6);border-radius:18px;padding:22px 26px;box-shadow:var(--ombra);display:none;max-width:min(520px,92vw);text-align:center}
-  .toast.on{display:block}
-  .toast h3{font-family:var(--font-magico);color:var(--oro-caldo);font-size:1.25rem;margin-bottom:8px}
-  .toast p{font-size:.98rem;color:#d8d2ea;margin:0 0 16px}
-
-  /* ====================== Stanza a tutto schermo ====================== */
-  .ov-scena{position:fixed;inset:0;z-index:40;background:#05030c;display:none;align-items:center;justify-content:center}
-  .ov-scena.aperto{display:flex}
-  /* La scena adotta le proporzioni esatte dell'immagine (--ar via JS): le coordinate % degli oggetti coincidono con la foto */
-  .scena{position:relative;--ar:1.79;aspect-ratio:var(--ar);width:min(100vw,calc(100vh * var(--ar)));width:min(100vw,calc(100dvh * var(--ar)));
-    overflow:hidden;background:#120d05;touch-action:none;cursor:crosshair}
-  .scena .foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .7s ease;-webkit-user-drag:none}
-  .scena .foto-reale{opacity:0}
-  .scena.mostra-reale .foto-magica{opacity:0}
-  .scena.mostra-reale .foto-reale{opacity:1}
-  .scena.mostra-reale .strato,.scena.mostra-reale .scena-buio,.scena.mostra-reale .hots{opacity:0;pointer-events:none}
-  .scena .strato{position:absolute;inset:0;overflow:hidden;pointer-events:none;transition:opacity .5s}
-  .pannello-reale{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;
-    padding:24px;background:linear-gradient(180deg,#0f1830,#0a1020);color:#cfe0ff}
-  .scena.mostra-reale .pannello-reale.attivo{display:flex}
-  .pannello-reale .ic{width:60px;height:60px;color:#6f93d8}
-  .pannello-reale .ic svg{width:100%;height:100%}
-  .pannello-reale strong{font-family:var(--font-ui);font-size:1.3rem;color:#dbe8ff}
-  .pannello-reale span.txt{font-size:1rem;color:#9fb6e0;max-width:44ch}
-  /* il buio della stanza: la lanterna segue il dito o il mouse */
-  .scena-buio{position:absolute;inset:0;pointer-events:none;transition:opacity 1.4s ease;
-    background:radial-gradient(circle 26vmin at var(--mx,50%) var(--my,45%),rgba(5,3,12,0) 0,rgba(5,3,12,.12) 45%,rgba(5,3,12,.9) 100%)}
-  .scena.sveglia .scena-buio{opacity:0}
-  .hots{position:absolute;inset:0;transition:opacity .4s}
-  .hot{position:absolute;border:0;background:transparent;padding:0;cursor:pointer;border-radius:22%}
-  .hot.rappr::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px;border-radius:50%;
-    background:radial-gradient(circle,#fffbe6,rgba(243,207,116,.65) 40%,rgba(243,207,116,0) 72%);animation:lumino 1.5s ease-in-out infinite}
-  @keyframes lumino{0%,100%{transform:scale(.6);opacity:.45}50%{transform:scale(1.25);opacity:1}}
-  .scoppio{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;border:2px solid #fff3c4;pointer-events:none;
-    box-shadow:0 0 14px 4px rgba(243,207,116,.8);animation:scoppio .65s ease-out forwards}
-  @keyframes scoppio{from{transform:scale(.4);opacity:1}to{transform:scale(8);opacity:0}}
-  /* stanza addormentata: tutto fermo e spento, tranne ciò che il giocatore risveglia */
-  .strato.dorme .an{animation-play-state:paused;visibility:hidden}
-  .strato.dorme .an-ruota,.strato.dorme .an-dondola,.strato.dorme .an-galleggia{visibility:visible}
-  .strato.dorme .an.sveglio{animation-play-state:running;visibility:visible}
-
-  .scena-top{position:absolute;left:0;right:0;top:0;z-index:6;display:flex;align-items:center;gap:13px;padding:14px 18px 34px;
-    background:linear-gradient(180deg,rgba(5,3,12,.88),rgba(5,3,12,0));pointer-events:none}
-  .scena-top .sigillo{flex:0 0 44px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--oro-caldo),var(--oro-scuro));
-    display:flex;align-items:center;justify-content:center;color:#241a06;font-family:var(--font-magico);font-weight:700;font-size:1.1rem}
-  .scena-top h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.45rem;line-height:1.1;text-shadow:0 2px 10px #000}
-  .scena-top .sub{font-family:var(--font-ui);font-size:.86rem;color:var(--pergamena);opacity:.85}
-  .missione{margin-left:auto;display:flex;align-items:center;gap:9px;background:rgba(14,11,31,.85);border:1px solid rgba(224,182,74,.5);
-    border-radius:99px;padding:8px 16px;font-family:var(--font-ui);font-weight:600;font-size:.92rem;color:var(--pergamena)}
-  .missione .pallini{display:flex;gap:5px}
-  .missione .pallini i{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--oro-caldo)}
-  .missione .pallini i.on{background:var(--oro-caldo);box-shadow:0 0 8px 2px rgba(243,207,116,.7)}
-  .scena.sveglia .missione{display:none}
-  .scena-info{position:absolute;left:50%;bottom:16px;z-index:7;width:min(900px,94%);transform:translate(-50%,140%);transition:transform .7s cubic-bezier(.2,.9,.3,1);
-    background:linear-gradient(180deg,rgba(239,228,200,.97),rgba(226,211,171,.97));color:var(--inchiostro);border:1px solid rgba(156,122,53,.7);
-    border-radius:18px;padding:14px 18px;box-shadow:var(--ombra);-webkit-user-select:text;user-select:text}
-  .scena.sveglia .scena-info{transform:translate(-50%,0)}
-  .scena-info p{margin:0;font-size:1rem;line-height:1.5}
-  .scena-info p strong{color:#4a3a12}
-  .scena-info .riga-btn{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
-  .scena-info .btn{padding:10px 18px;font-size:.95rem}
-  .btn-torcia{background:linear-gradient(180deg,#ffd27a,var(--fiamma));color:#3a2203;box-shadow:0 0 18px 4px rgba(255,179,71,.55);animation:lume .7s ease-in-out infinite alternate}
-  .btn-torcia[disabled]{animation:none;box-shadow:none;background:rgba(156,122,53,.25);color:#6e5b2e;cursor:default}
-
-  /* ====== Primitive di animazione ancorate agli oggetti (vedi ANIM nel JS) ====== */
-  .strato .an{position:absolute;pointer-events:none}
-  /* ritaglio circolare della stessa immagine che ruota sul posto: ingranaggi, rosoni, sfere */
-  .an-ruota{border-radius:50%;background-repeat:no-repeat;animation:anGira 20s linear infinite}
-  @keyframes anGira{to{transform:rotate(360deg)}}
-  /* ritaglio rettangolare sfumato che dondola: lanterne e globi appesi, scope, campane */
-  .an-dondola{background-repeat:no-repeat;animation:anDondola 3.5s ease-in-out infinite alternate;
-    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-composite:source-in;mask-composite:intersect}
-  @keyframes anDondola{from{transform:rotate(calc(var(--ang) * -1))}to{transform:rotate(var(--ang))}}
-  /* ritaglio che galleggia (il veliero) */
-  .an-galleggia{background-repeat:no-repeat;animation:anGalleggia 5s ease-in-out infinite alternate;
-    -webkit-mask-image:radial-gradient(ellipse closest-side,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse closest-side,#000 70%,transparent 100%)}
-  @keyframes anGalleggia{from{transform:translateY(-.7%) rotate(-.45deg)}to{transform:translateY(.7%) rotate(.45deg)}}
-  /* bagliore che pulsa (lanterne, globi, piante luminose) */
-  .an-glow{border-radius:50%;aspect-ratio:1;mix-blend-mode:screen;--op:.8;--sy:1;
-    background:radial-gradient(circle,rgba(var(--c),.8),rgba(var(--c),0) 68%);animation:anPulsa 3s ease-in-out infinite}
-  @keyframes anPulsa{0%,100%{opacity:calc(var(--op) * .5);transform:scale(1,var(--sy))}50%{opacity:var(--op);transform:scale(1.14,calc(var(--sy) * 1.14))}}
-  /* fiamma: bagliore irregolare */
-  .an-fiamma{border-radius:50%;aspect-ratio:1;mix-blend-mode:screen;
-    background:radial-gradient(circle,rgba(255,214,140,.95),rgba(255,170,70,.55) 35%,rgba(255,170,70,0) 70%);animation:anFiamma 1.3s linear infinite}
-  @keyframes anFiamma{0%,100%{opacity:.85;transform:scale(1)}18%{opacity:.55;transform:scale(.9)}37%{opacity:1;transform:scale(1.1)}58%{opacity:.68;transform:scale(.95)}79%{opacity:.95;transform:scale(1.05)}}
-  /* regioni con particelle */
-  .an-reg{overflow:visible}
-  .an-sc{position:absolute;bottom:0;width:4px;height:4px;margin-left:-2px;border-radius:50%;opacity:0;
-    background:radial-gradient(circle,rgba(var(--c),1),rgba(var(--c),0));animation:anSali 4s linear infinite}
-  @keyframes anSali{0%{bottom:0;opacity:0}12%{opacity:.95}80%{opacity:.6}100%{bottom:100%;opacity:0}}
-  .an-nota{position:absolute;bottom:0;width:15px;height:15px;margin-left:-7px;opacity:0;color:#fff3c4;
-    filter:drop-shadow(0 0 4px rgba(243,207,116,.9));animation:anNota 6s ease-in infinite}
-  @keyframes anNota{0%{bottom:0;opacity:0;transform:rotate(-12deg)}15%{opacity:1}55%{transform:rotate(12deg)}85%{opacity:.7}100%{bottom:100%;opacity:0;transform:rotate(-8deg)}}
-  .an-lucc{position:absolute;width:5px;height:5px;margin:-2px;border-radius:50%;opacity:0;
-    background:radial-gradient(circle,rgba(var(--c),1),rgba(var(--c),0) 70%);box-shadow:0 0 7px 2px rgba(var(--c),.55);animation:anLucc 4s ease-in-out infinite}
-  @keyframes anLucc{0%,100%{opacity:0;transform:translate(0,0)}35%{opacity:1}50%{opacity:.85;transform:translate(5px,-4px)}70%{opacity:.25}}
-  .an-mote{bottom:-3%;width:5px;height:5px;border-radius:50%;opacity:0;
-    background:radial-gradient(circle,rgba(255,224,160,.95),rgba(255,224,160,0));animation:anMote 9s linear infinite}
-  @keyframes anMote{0%{bottom:-3%;opacity:0}10%{opacity:.85}90%{opacity:.6}100%{bottom:103%;opacity:0}}
-  /* acqua: riflessi che scorrono */
-  .an-acqua{mix-blend-mode:screen;animation:anAcqua 3.2s linear infinite;
-    background-image:repeating-linear-gradient(0deg,rgba(var(--c),0) 0,rgba(var(--c),0) 9px,rgba(var(--c),.26) 11px,rgba(var(--c),.26) 13px,rgba(var(--c),0) 15px,rgba(var(--c),0) 24px);
-    -webkit-mask-image:radial-gradient(ellipse closest-side,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse closest-side,#000 55%,transparent 100%)}
-  @keyframes anAcqua{to{background-position:0 24px}}
-  .an-cascata{mix-blend-mode:screen;animation:anCascata .7s linear infinite;
-    background-image:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.6),rgba(255,255,255,0));background-size:100% 46px;
-    -webkit-mask-image:repeating-linear-gradient(90deg,#000 0,#000 2px,transparent 2px,transparent 5px);mask-image:repeating-linear-gradient(90deg,#000 0,#000 2px,transparent 2px,transparent 5px)}
-  @keyframes anCascata{to{background-position:0 46px}}
-  /* raggio di luce che respira */
-  .an-raggio{--op:.5;background:linear-gradient(to bottom,rgba(255,240,200,.3),rgba(255,240,200,0) 72%);
-    filter:blur(7px);mix-blend-mode:screen;animation:anRaggio 6s ease-in-out infinite}
-  @keyframes anRaggio{0%,100%{opacity:calc(var(--op) * .5)}50%{opacity:var(--op)}}
-  /* brillio a stella */
-  .an-brillio{aspect-ratio:1;opacity:0;animation:anBrillio 3.4s ease-in-out infinite}
-  .an-brillio svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 5px rgba(255,255,255,.9))}
-  @keyframes anBrillio{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
-  /* lancetta d'orologio */
-  .an-lancetta{height:2px;margin-top:-1px;border-radius:2px;background:linear-gradient(90deg,#fff3c4,#e0b64a);
-    box-shadow:0 0 4px rgba(243,207,116,.8);transform-origin:0 50%;animation:anGira 60s linear infinite}
-  /* gufo in volo */
-  .an-volo{left:-8%;animation:anVolo 24s linear infinite}
-  .an-volo svg{width:100%;height:auto;display:block;color:#17110a;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
-  .an-volo .ala{transform-origin:50% 45%;animation:anSbatti .55s ease-in-out infinite}
-  @keyframes anSbatti{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(16deg)}}
-  @keyframes anVolo{from{left:-8%}to{left:108%}}
-  /* sfera dorata alata che sfreccia nel cielo */
-  .an-bx{position:absolute;top:0;bottom:0;left:0;width:0;animation:anBX 6.3s ease-in-out infinite alternate}
-  .an-by{position:absolute;top:0;left:0;animation:anBY 3.7s ease-in-out infinite alternate}
-  @keyframes anBX{from{left:0}to{left:100%}}
-  @keyframes anBY{from{top:0}to{top:100%}}
-  .an-bocc{position:absolute;width:9px;height:9px;margin:-4px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#fff6d0,#e0b64a 60%,#b8860b);box-shadow:0 0 10px 3px rgba(243,207,116,.75)}
-  .an-bocc::before,.an-bocc::after{content:"";position:absolute;top:1px;width:12px;height:5px;border-radius:50%;
-    background:rgba(255,255,255,.8);animation:anAli .12s linear infinite alternate}
-  .an-bocc::before{right:7px;transform-origin:100% 50%}
-  .an-bocc::after{left:7px;transform-origin:0 50%}
-  @keyframes anAli{from{transform:scaleY(1)}to{transform:scaleY(.2)}}
-  /* candela fluttuante */
-  .an-candela{width:7px;height:20px;margin:-10px 0 0 -3px;border-radius:2px;
-    background:linear-gradient(90deg,#cfc4a0,#fff8e1 45%,#b5a983);animation:anBob 3s ease-in-out infinite alternate}
-  .an-candela i{position:absolute;left:50%;top:-11px;width:8px;height:12px;margin-left:-4px;border-radius:50%/60% 60% 40% 40%;
-    background:radial-gradient(ellipse at 50% 70%,#fff6d0,#ffb347 55%,rgba(255,179,71,0) 78%);
-    box-shadow:0 0 14px 5px rgba(255,190,90,.55);animation:anFiamma .9s linear infinite}
-  @keyframes anBob{from{transform:translateY(-5px)}to{transform:translateY(5px)}}
-  /* dirigibile che attraversa una finestra o un quadro */
-  .an-clip{overflow:hidden}
-  .an-dirig{position:absolute;top:22%;left:-30%;width:26%;animation:anDirig 34s linear infinite}
-  .an-dirig svg{width:100%;height:auto;display:block;color:#3a2c18;opacity:.85}
-  @keyframes anDirig{from{left:-30%}to{left:110%}}
-  /* modalita verifica: ?debug=1 mostra i contorni e ferma i movimenti */
-  .strato.dbg .an{outline:1.5px dashed #7CFC8A;animation-play-state:paused !important}
-  .strato.dbg .an-ruota,.strato.dbg .an-dondola,.strato.dbg .an-galleggia{outline-color:#FFD23F;outline-style:solid;
-    -webkit-mask-image:none !important;mask-image:none !important;background-image:none !important;background-color:rgba(255,210,63,.22)}
-  .scena img.foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-  .scena .strato{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-
-  /* ====================== Traguardo + debrief ====================== */
-  .traguardo{width:min(760px,95vw);max-height:92vh;overflow:auto;border-radius:22px;text-align:center;
-    background:linear-gradient(180deg,#1d1748,#100c26);border:1px solid rgba(224,182,74,.45);box-shadow:var(--ombra);padding:30px 28px;
-    -webkit-user-select:text;user-select:text}
-  .traguardo .coppa{width:170px;height:auto;border-radius:16px;margin:0 auto 8px;display:block;box-shadow:0 0 40px rgba(224,182,74,.4)}
-  .traguardo h2{font-family:var(--font-magico);font-weight:700;color:var(--oro-caldo);font-size:1.7rem;margin:6px 0}
-  .stelle-finali{display:flex;justify-content:center;gap:10px;margin:14px 0}
-  .stelle-finali svg{width:40px;height:40px}
-  .traguardo .riepilogo{color:#d8d2ea;font-size:1rem;max-width:52ch;margin:0 auto 10px}
-  .debrief{margin:22px auto 10px;max-width:56ch;text-align:left;background:rgba(36,26,72,.5);border:1px solid rgba(224,182,74,.25);border-radius:16px;padding:18px 20px}
-  .debrief h3{font-family:var(--font-ui);color:var(--oro-caldo);font-size:1.05rem;margin-bottom:6px}
-  .debrief p{color:#cfc8e6;font-size:.95rem;margin:0 0 12px}
-  .debrief label{display:block;font-size:.85rem;color:var(--oro);margin:10px 0 5px;font-family:var(--font-ui);font-weight:500}
-  .debrief textarea{width:100%;min-height:72px;resize:vertical;border-radius:10px;border:1px solid rgba(224,182,74,.3);
-    background:rgba(8,6,18,.5);color:var(--pergamena);font-family:var(--font-corpo);font-size:.95rem;padding:10px 12px}
-  .debrief textarea:focus{outline:2px solid var(--oro-caldo);outline-offset:1px}
-  .pergamena-finale{margin:16px auto;max-width:60ch;text-align:left;columns:2;column-gap:22px;font-size:.84rem;color:#cfc8e6}
-  .pergamena-finale .voce{break-inside:avoid;margin-bottom:8px;padding-left:14px;position:relative}
-  .pergamena-finale .voce::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--oro-caldo)}
+  .progress{display:flex;flex-direction:column;gap:8px;flex:0 0 auto}
+  .progress .conteggio{
+    font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu);
+    font-size:1.05rem;white-space:nowrap;
+  }
+  .barra{width:100%;height:12px;border-radius:99px;background:var(--blu-chiaro);overflow:hidden}
+  .barra > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blu),var(--oro));transition:width .5s ease}
+  .btn-reset{
+    align-self:flex-start;
+    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--grigio);
+    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:500;
+    padding:9px 16px;border-radius:99px;cursor:pointer;
+  }
+  .btn-reset:hover{border-color:var(--oro);color:var(--oro-scuro)}
+  .btn-musica{
+    align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
+    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--blu);
+    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:600;
+    padding:9px 16px;border-radius:99px;cursor:pointer;
+  }
+  .btn-musica:hover{border-color:var(--oro)}
+  .btn-musica.attiva{background:var(--blu);color:#fff;border-color:var(--blu)}
+  .btn-musica svg{width:18px;height:18px;display:block}
+  .btn-musica .ic-on{display:none}
+  .btn-musica.attiva .ic-off{display:none}
+  .btn-musica.attiva .ic-on{display:inline-flex}
+  .btn-castle{
+    align-self:flex-start;display:inline-flex;align-items:center;gap:8px;
+    border:1.5px solid var(--blu-chiaro);background:#fff;color:var(--blu);
+    font-family:"Lexend",sans-serif;font-size:.9rem;font-weight:600;
+    padding:9px 16px;border-radius:99px;cursor:pointer;
+  }
+  .btn-castle:hover{border-color:var(--oro)}
+  .btn-castle svg{width:18px;height:18px;display:block}
+  .btn-castle.attiva{background:#6b4f1d;color:#fff;border-color:#6b4f1d}
+  .link-3d{display:none}
+  body.castle .link-3d{
+    display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+    text-decoration:none;background:#6b4f1d;color:#fff;border:1.5px solid #6b4f1d;
+    font-family:"Lexend",sans-serif;font-weight:600;font-size:.9rem;
+    padding:9px 16px;border-radius:99px;
+  }
+  body.castle .link-3d:hover{background:#5b3a17}
+  .link-3d svg{width:18px;height:18px;display:block}
+  .link-3d span:nth-child(3) svg{width:15px;height:15px;opacity:.85}
+  /* Tema "castello" (eccezione narrativa: Hogwarts) applicato al toggle */
+  body.castle .sidebar{background:#f5edd9;border-right-color:#8a6a2f}
+  body.castle .sidebar h1{color:#5b3a17}
+  body.castle .progress .conteggio{color:#5b3a17}
+  body.castle .barra{background:#e7dab9}
+  body.castle .barra > span{background:linear-gradient(90deg,#8a6a2f,#d4a017)}
+  body.castle .btn-reset,body.castle .btn-musica{background:#fbf7ec}
+  body.castle .btn-musica.attiva{color:var(--blu);border-color:var(--blu)}
+  body.castle .sidebar .pie strong{color:#5b3a17}
+  body.castle .mappa{box-shadow:0 12px 34px rgba(74,48,16,.4)}
+  .sidebar .pie{margin-top:auto;font-size:.8rem;color:var(--grigio);line-height:1.5}
+  .sidebar .pie strong{color:var(--blu);font-family:"Lexend",sans-serif;font-weight:600;font-size:.85rem}
+  .sidebar .pie .copy{opacity:.75}
   .yt-audio{position:fixed;left:0;bottom:0;width:300px;height:170px;opacity:0;pointer-events:none;border:0;z-index:-1}
 
-  @media (max-width:760px){
-    .serbatoio{width:96px}.minimappa{width:140px}
-    .suggerimento{max-width:calc(100vw - 28px);bottom:128px}
-    .pergamena-finale{columns:1}
-    .scena-top h2{font-size:1.1rem}
+  /* ---------- Mappa ---------- */
+  .mappa-scroll{
+    flex:1 1 auto;min-height:0;min-width:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:18px 22px;
   }
+  .mappa{
+    position:relative;
+    /* la larghezza viene calcolata via JS per far entrare tutto senza scroll */
+    aspect-ratio:2482 / 1728;
+    border-radius:var(--raggio);
+    overflow:hidden;
+    box-shadow:var(--ombra);
+    background:#dfe4ea url("Campus.png") center/cover no-repeat;
+  }
+  .mappa img.sfondo{display:block;width:100%;height:100%}
+
+  /* ---------- Marker ---------- */
+  .marker{
+    position:absolute;transform:translate(-50%,-50%);
+    width:clamp(30px,3.4vw,46px);height:clamp(30px,3.4vw,46px);
+    border-radius:50%;
+    border:3px solid #fff;
+    background:var(--oro);
+    color:#fff;
+    font-family:"Lexend",sans-serif;font-weight:700;
+    font-size:clamp(.8rem,1.4vw,1.05rem);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,.35);
+    z-index:5;
+    transition:transform .15s ease, background .3s ease;
+    padding:0;
+  }
+  .marker:hover,.marker:focus-visible{
+    transform:translate(-50%,-50%) scale(1.18);
+    outline:none;z-index:20;
+  }
+  .marker:focus-visible{box-shadow:0 0 0 4px rgba(212,160,23,.5),0 3px 10px rgba(0,0,0,.35)}
+  /* anello che pulsa per invitare al clic */
+  .marker.da-fare::after{
+    content:"";position:absolute;inset:-3px;border-radius:50%;
+    border:3px solid var(--oro);
+    animation:pulsa 1.9s ease-out infinite;
+  }
+  @keyframes pulsa{
+    0%{transform:scale(1);opacity:.85}
+    70%{transform:scale(2.1);opacity:0}
+    100%{transform:scale(2.1);opacity:0}
+  }
+  .marker.fatto{background:var(--blu)}
+  .marker.fatto .num{display:none}
+  .marker.fatto .check{display:block}
+  .marker .check{display:none;width:60%;height:60%}
   @media (prefers-reduced-motion:reduce){
-    *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.08s !important}
-    .an-sc,.an-nota,.an-lucc,.an-mote,.an-volo,.an-bx,.an-dirig{display:none}
+    .marker.da-fare::after{animation:none;opacity:.5}
+  }
+
+  /* ---------- Modale ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(12,44,104,.55);
+    backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;
+    padding:20px;z-index:100;
+  }
+  .overlay.aperto{display:flex}
+  .modale{
+    background:#fff;border-radius:20px;
+    width:min(980px,96vw);max-height:96vh;overflow:auto;
+    box-shadow:var(--ombra);
+    animation:entra .25s ease;
+    display:flex;flex-direction:column;
+  }
+  @keyframes entra{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  .modale-head{
+    background:var(--blu);color:#fff;padding:12px 20px;
+    display:flex;align-items:center;gap:12px;
+    position:sticky;top:0;
+  }
+  .modale-head .badge{
+    flex:0 0 auto;width:40px;height:40px;border-radius:50%;
+    background:var(--oro);display:flex;align-items:center;justify-content:center;
+    font-family:"Lexend",sans-serif;font-weight:700;font-size:1.1rem;
+  }
+  .modale-head h2{margin:0;font-size:1.2rem;flex:1}
+  .modale-head .chiudi{
+    background:rgba(255,255,255,.15);border:none;color:#fff;
+    width:36px;height:36px;border-radius:50%;cursor:pointer;
+    font-size:1.3rem;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .modale-head .chiudi:hover{background:rgba(255,255,255,.3)}
+  .modale-body{padding:16px;display:flex;gap:18px;align-items:stretch;flex:1 1 auto;min-height:0}
+  .modale-body.senza-foto .col-foto{display:none}
+  .col-foto{flex:0 0 40%;min-height:0;position:relative;border-radius:14px;overflow:hidden;background:var(--blu-chiaro)}
+  .col-form{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
+  .foto-luogo{
+    margin:0;display:none;position:absolute;inset:0;
+  }
+  .foto-luogo.mostra{display:block}
+  .foto-luogo img{
+    display:block;width:100%;height:100%;object-fit:cover;
+  }
+  .foto-luogo figcaption{
+    position:absolute;left:0;right:0;bottom:0;margin:0;
+    background:rgba(12,44,104,.72);color:#fff;padding:8px 10px;
+    font-size:.85rem;font-family:"Lexend",sans-serif;font-weight:500;text-align:center;
+  }
+  /* ---------- Attività di trascinamento ---------- */
+  .attivita{display:none;margin:0;padding-bottom:8px;border-bottom:1px solid var(--blu-chiaro)}
+  .attivita.mostra{display:block}
+  .att-consegna{margin:0 0 2px;font-family:"Lexend",sans-serif;font-weight:600;color:var(--blu-scuro);font-size:.98rem}
+  .att-sub{margin:0 0 8px;font-size:.85rem;color:var(--grigio)}
+  .att-zona{
+    min-height:48px;border:2px dashed var(--blu);border-radius:12px;
+    background:rgba(18,62,144,.05);padding:8px;
+    display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start;
+  }
+  .att-zona.hover{background:rgba(212,160,23,.12);border-color:var(--oro)}
+  .att-hint{color:var(--grigio);font-size:.9rem;align-self:center}
+  .att-feedback{min-height:18px;margin:6px 0 2px;font-size:.9rem;font-family:"Lexend",sans-serif;font-weight:600}
+  .att-tray{display:flex;flex-wrap:wrap;gap:7px}
+  .att-chip{
+    touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;
+    border:1.5px solid #D5DBE6;background:#fff;color:var(--inchiostro);
+    border-radius:999px;padding:6px 12px;font-size:.92rem;
+    font-family:"Atkinson Hyperlegible",sans-serif;line-height:1;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .att-chip.ok{background:#EAF3DE;border-color:#639922;color:#27500A;cursor:default}
+  .att-chip .ck{width:15px;height:15px;flex:0 0 auto}
+  .att-chip.dragging{cursor:grabbing;box-shadow:0 8px 22px rgba(0,0,0,.25);position:fixed;z-index:9999}
+
+  /* ---------- Escape room (solo versione Castle) ---------- */
+  .escape{display:none}
+  /* Tre enigmi su tre colonne */
+  .esc-cols{display:flex;gap:12px;align-items:stretch}
+  .esc-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px}
+  .esc-col .esc-testo{
+    flex:1 1 auto;margin:0;font-size:.9rem;line-height:1.4;font-style:italic;color:var(--inchiostro);
+    background:#f7efdd;border:1px solid #e6d6a8;border-radius:12px;padding:10px 12px;
+  }
+  .esc-in-row{display:flex;align-items:center;gap:8px}
+  .esc-gear{width:24px;height:24px;flex:0 0 auto;color:#b9a15f;transition:color .3s ease}
+  .esc-gear svg{width:100%;height:100%;display:block}
+  .esc-gear.on{color:#c9a227}
+  .esc-col input{
+    flex:1 1 auto;min-width:0;font-family:"Atkinson Hyperlegible",sans-serif;font-size:.95rem;
+    padding:9px 12px;border:1.5px solid #d9c48f;border-radius:12px;background:#fffdf6;color:var(--inchiostro);
+  }
+  .esc-col input:focus{outline:none;border-color:#c9a227;box-shadow:0 0 0 3px rgba(201,162,39,.22)}
+  .esc-col input.ok{background:#eef3e3;border-color:#639922;color:#27500A;font-weight:700}
+  .esc-feedback{min-height:20px;margin-top:12px;font-family:"Lexend",sans-serif;font-weight:600;font-size:.95rem}
+  @media (max-width:640px){ .esc-cols{flex-direction:column} }
+  /* Pallino "dal mondo magico" in sovraimpressione sull'immagine (basso a sinistra) */
+  .lore-badge{
+    display:none;position:absolute;left:12px;bottom:12px;z-index:6;
+    width:44px;height:44px;border-radius:50%;
+    background:#6b4f1d;color:#fff;border:2px solid #f0d17a;
+    align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,.35);
+  }
+  body.castle .lore-badge{display:flex;animation:badgeZoom 1.5s ease-in-out infinite}
+  .lore-badge:hover{background:#5b3a17;animation:none;transform:scale(1.12)}
+  .lore-badge svg{width:22px;height:22px}
+  @keyframes badgeZoom{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  @media (prefers-reduced-motion:reduce){ body.castle .lore-badge{animation:none} }
+  /* Traguardo finale */
+  .traguardo-overlay{z-index:140}
+  .traguardo-modale{
+    background:#f7efdd;border:2px solid #c9a227;border-radius:20px;
+    width:min(520px,94vw);padding:20px 22px 26px;text-align:center;
+    box-shadow:var(--ombra);animation:entra .3s ease;
+  }
+  .traguardo-img{width:100%;display:block;border-radius:14px;border:1px solid #d9c48f;margin:0 0 14px}
+  .traguardo-modale h2{margin:6px 0 8px;color:#5b3a17;font-size:1.35rem}
+  .traguardo-modale p{margin:0 0 18px;color:var(--inchiostro);line-height:1.5}
+  /* Secondo popup: la pergamena con la storia */
+  .lore-overlay{z-index:130}
+  .lore-modale{
+    background:#f7efdd;border:2px solid #c9a227;border-radius:18px;
+    width:min(600px,96vw);max-height:88vh;overflow:auto;
+    box-shadow:var(--ombra);display:flex;flex-direction:column;
+    animation:entra .25s ease;
+  }
+  .lore-head{
+    background:#6b4f1d;color:#fff;padding:14px 20px;
+    display:flex;align-items:center;gap:12px;position:sticky;top:0;
+  }
+  .lore-head .badge-ic{flex:0 0 auto;display:flex}
+  .lore-head .badge-ic svg{width:22px;height:22px}
+  .lore-head h2{margin:0;font-size:1.15rem;flex:1;font-family:"Lexend",sans-serif;font-weight:600}
+  .lore-head .chiudi{background:rgba(255,255,255,.18);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.3rem;line-height:1;display:flex;align-items:center;justify-content:center}
+  .lore-head .chiudi:hover{background:rgba(255,255,255,.32)}
+  .lore-body{padding:20px 22px}
+  .lore-body p{margin:0;font-size:1.05rem;line-height:1.7;color:var(--inchiostro)}
+  /* La porta dell'escape room: in sovraimpressione sull'immagine, in alto a destra.
+     Chiusa mostra il buco della serratura; si apre girando sul cardine. */
+  /* Riga di controlli in basso sull'immagine: chiave (sx), porta (accanto), Apri (centro) */
+  .esc-porta{display:none;position:absolute;right:12px;bottom:12px;width:50px;height:66px;z-index:6;perspective:500px}
+  body.castle .esc-porta{display:block}
+  .porta-vano,.porta-anta{position:absolute;inset:0;border-radius:26px 26px 5px 5px;border:2px solid #5b3a17}
+  .porta-vano{
+    background:radial-gradient(circle at 50% 42%, #fff4d2, #ecd188 55%, #cba450);
+    display:flex;align-items:center;justify-content:center;color:#5b3a17;
+    box-shadow:inset 0 0 14px rgba(120,80,20,.35);
+  }
+  .porta-vano svg{width:22px;height:22px}
+  .porta-anta{
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, transparent 2px 16px),
+      linear-gradient(180deg,#9a7833,#6b4f1d);
+    transform-origin:left center;backface-visibility:hidden;
+    transition:transform 1.1s cubic-bezier(.2,.75,.2,1), box-shadow 1.1s ease;
+    box-shadow:0 3px 10px rgba(0,0,0,.3);
+  }
+  .porta-buco{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:#f0d17a;box-shadow:0 0 0 2px #4a2f12}
+  .porta-buco::after{content:"";position:absolute;left:50%;top:6px;transform:translateX(-50%);width:3px;height:8px;border-radius:0 0 2px 2px;background:#f0d17a}
+  .esc-porta.aperta .porta-anta{transform:rotateY(-118deg);box-shadow:8px 6px 16px rgba(0,0,0,.35)}
+  @media (prefers-reduced-motion:reduce){ .porta-anta{transition:none} }
+  /* Pulsante Apri sull'immagine (centro) */
+  .esc-apri{
+    display:none;position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;
+    font-family:"Lexend",sans-serif;font-weight:600;font-size:1rem;color:#fff;
+    background:#6b4f1d;border:2px solid #f0d17a;border-radius:99px;padding:9px 26px;cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,.35);
+  }
+  body.castle .esc-apri{display:inline-flex;align-items:center;gap:8px}
+  .esc-apri svg{width:18px;height:18px;display:block}
+  .esc-apri:hover{background:#5b3a17}
+  .esc-apri:disabled{background:#8ba86a;border-color:#8ba86a;cursor:default}
+  /* Gradiente in basso per la leggibilità dei controlli (solo Castle) */
+  body.castle .col-foto::after{content:"";position:absolute;left:0;right:0;bottom:0;height:78px;background:linear-gradient(to top, rgba(0,0,0,.4), transparent);pointer-events:none;z-index:5;border-radius:0 0 14px 14px}
+  body.castle .foto-luogo figcaption{display:none}
+
+  /* In Castle: foto orizzontale grande sopra, solo l'enigma sotto (niente trascinamento/campi) */
+  body.castle .modale-body{flex-direction:column;gap:10px}
+  body.castle .col-foto{flex:0 0 auto;width:100%;height:clamp(200px,44vh,400px)}
+  body.castle #attivitaWrap{display:none}
+  body.castle .escape{display:block}
+  body.castle .campo{display:none}
+  body.castle .azioni{display:none}
+  body.castle .marker.fatto{background:#6b4f1d}
+  .campo{margin-bottom:0}
+  .campo label{
+    display:block;font-family:"Lexend",sans-serif;font-weight:600;
+    color:var(--blu-scuro);margin-bottom:3px;font-size:.95rem;
+  }
+  .campo .aiuto{font-weight:400;color:var(--grigio);font-size:.9rem;font-family:"Atkinson Hyperlegible",sans-serif}
+  .campo input,.campo textarea{
+    width:100%;font-family:"Atkinson Hyperlegible",sans-serif;font-size:1rem;
+    padding:8px 12px;border:1.5px solid #D5DBE6;border-radius:12px;
+    background:var(--carta);color:var(--inchiostro);resize:vertical;
+  }
+  .campo input:focus,.campo textarea:focus{
+    outline:none;border-color:var(--blu);box-shadow:0 0 0 3px rgba(18,62,144,.15);
+    background:#fff;
+  }
+  .campo textarea{min-height:40px}
+  .azioni{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+  .btn{
+    font-family:"Lexend",sans-serif;font-weight:600;font-size:1rem;
+    padding:9px 20px;border-radius:99px;cursor:pointer;border:none;
+  }
+  .btn-primario{background:var(--blu);color:#fff}
+  .btn-primario:hover{background:var(--blu-scuro)}
+  .btn-secondario{background:#fff;color:var(--grigio);border:1.5px solid #D5DBE6}
+  .btn-secondario:hover{border-color:var(--oro);color:var(--oro-scuro)}
+  .salvato-msg{
+    display:none;align-items:center;gap:8px;color:var(--verde-ok);
+    font-family:"Lexend",sans-serif;font-weight:600;margin-right:auto;font-size:.95rem;
+  }
+  .salvato-msg.mostra{display:flex}
+
+  @media (max-width:760px){
+    .modale{width:min(560px,96vw)}
+    .modale-body{flex-direction:column;gap:14px}
+    .col-foto{flex:0 0 auto;height:190px}
+  }
+  @media (max-width:720px){
+    body{flex-direction:column}
+    .sidebar{
+      flex:0 0 auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;
+      border-right:none;border-bottom:3px solid var(--blu);padding:12px 16px;
+    }
+    .sidebar img.logo{width:auto;height:44px;align-self:center}
+    .titolo-wrap{flex:1 1 auto;min-width:140px}
+    .sidebar h1{font-size:1.15rem}
+    .sidebar p.sub{display:none}
+    .progress{flex-direction:row;align-items:center;margin-left:auto}
+    .barra{width:90px}
+    .btn-reset{align-self:center}
+    .sidebar .pie{display:none}
   }
 </style>
 </head>
 <body>
 
-<div id="gioco">
-  <div id="vista" aria-label="Il castello al buio: tocca un punto per camminare">
-    <div id="mappa">
-      <img class="sfondo" src="Campus.png" alt="" draggable="false" />
-      <div class="bersaglio" id="bersaglio"></div>
-      <div class="mago" id="mago" aria-hidden="true"><span class="verso">
-        <svg viewBox="0 0 44 58">
-          <ellipse cx="22" cy="55" rx="12" ry="3" fill="rgba(0,0,0,.45)"/>
-          <path d="M22 19C13 19 9.500 33 7 51h30C34.500 33 31 19 22 19z" fill="#2b2156" stroke="#e0b64a" stroke-width="1"/>
-          <path d="M22 21v30" stroke="#e0b64a" stroke-width=".8" opacity=".6"/>
-          <rect x="15.500" y="20" width="13" height="3.400" rx="1.500" fill="#e0b64a"/>
-          <circle cx="22" cy="15" r="5.600" fill="#f0d2b0"/>
-          <path d="M22 0l8.500 12.500h-17z" fill="#2b2156" stroke="#e0b64a" stroke-width=".8" stroke-linejoin="round"/>
-          <ellipse cx="22" cy="12.500" rx="11.500" ry="2.600" fill="#1c1540" stroke="#e0b64a" stroke-width=".8"/>
-          <path d="M30 29l7 3" stroke="#2b2156" stroke-width="3.400" stroke-linecap="round"/>
-          <path d="M38 31v3" stroke="#e0b64a" stroke-width="1"/>
-          <rect x="34.500" y="34" width="7" height="9" rx="2" fill="#3a2c10" stroke="#e0b64a" stroke-width="1"/>
-          <circle class="lume" cx="38" cy="38.500" r="2.500" fill="#ffd98a"/>
-        </svg></span>
-      </div>
-      <!-- i luoghi sono generati via JS -->
-    </div>
-    <canvas id="buio"></canvas>
+<aside class="sidebar">
+  <img class="logo" src="logo.png" alt="Logo Scuola Sacra Famiglia" />
+  <div class="titolo-wrap">
+    <h1 id="titoloApp">Campus Map</h1>
+    <p class="sub" id="sottotitoloApp">Scopri, dai un nome e racconta ogni angolo della scuola</p>
   </div>
-
-  <div class="hud">
-    <div class="hud-box">
-      <span class="ic" aria-hidden="true"><svg viewBox="0 0 34 34" fill="none">
-        <path d="M11 6h12M13 6V4h8v2" stroke="#9c7a35" stroke-width="1.8" stroke-linecap="round"/>
-        <path d="M9 10h16l-1.500 18a2 2 0 0 1-2 1.800h-9a2 2 0 0 1-2-1.800z" fill="#241a48" stroke="#9c7a35" stroke-width="1.8" stroke-linejoin="round"/>
-        <ellipse class="fiamma-glow" cx="17" cy="20" rx="4" ry="6" fill="#ffb347"/>
-        <ellipse class="fiamma-glow" cx="17" cy="21" rx="2" ry="3.400" fill="#fff0c4"/></svg></span>
-      <div>
-        <div class="olio-num"><b id="olioVal">0</b><small>gocce d'olio</small></div>
-        <div class="serbatoio" id="serbatoio" aria-hidden="true"><span id="serbatoioFill"></span></div>
-      </div>
-    </div>
-    <div class="hud-box conta">
-      <div><b><span id="conteggio">0</span>/16</b><small>stanze risvegliate</small></div>
-      <div class="stelle" id="stelleWrap" aria-label="Stelle della lanterna"></div>
-    </div>
+  <div class="progress">
+    <span class="conteggio" id="conteggio">0 di 16</span>
+    <div class="barra" aria-hidden="true"><span id="barraFill"></span></div>
   </div>
-  <div class="olio-delta" id="olioDelta" role="status" aria-live="polite"></div>
-  <span class="nota-mondo"><span>Campus reale · tocca i luoghi che hai già scoperto nel castello</span></span>
+  <button class="btn-reset" id="btnReset" type="button">Riparti</button>
+  <button class="btn-castle" id="btnCastle" type="button" aria-pressed="false" aria-label="Trasfigura il campus in castello">
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V6h2v3h2v-3h2v3h2v-3h2v3h2v-3h2v3"/><path d="M4 9v12M20 9v12M3 21h18"/><path d="M10 21v-5h4v5"/></svg>
+    </span>
+    <span class="lbl">Campus Castle</span>
+  </button>
+  <a class="link-3d" id="link3d" href="https://campus-castle.vercel.app/" target="_blank" rel="noopener">
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/><path d="M12 12v10"/></svg>
+    </span>
+    <span>Versione 3D</span>
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </span>
+  </a>
+  <button class="btn-musica" id="btnMusica" type="button" aria-pressed="false" aria-label="Attiva la musica di sottofondo">
+    <span class="ic-off" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    </span>
+    <span class="ic-on" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.5a9 9 0 0 1 0 13"/></svg>
+    </span>
+    <span class="lbl">Attiva musica</span>
+  </button>
+  <p class="pie">
+    <strong>Scuola Sacra Famiglia</strong><br />
+    Animatore Digitale Andrea Cerioli<br />
+    <span class="copy">&copy; 2026</span>
+  </p>
+</aside>
 
-  <div class="hud-dx">
-    <button class="hud-btn" id="btnMondo" type="button" aria-pressed="false" aria-label="Passa al campus reale" title="Campus reale / Castello">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.700L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.700L3 16M3 21v-5h5"/></svg>
-    </button>
-    <button class="hud-btn" id="btnMusica" type="button" aria-pressed="false" aria-label="Musica d'atmosfera" title="Musica">
-      <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg>
-      <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
-    </button>
-    <button class="hud-btn attiva" id="btnSuoni" type="button" aria-pressed="true" aria-label="Effetti sonori" title="Effetti sonori">
-      <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-      <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.500 8.500a5 5 0 0 1 0 7"/><path d="M18.800 5.500a9 9 0 0 1 0 13"/></svg>
-    </button>
-    <button class="hud-btn" id="btnGuida" type="button" aria-label="Come si gioca" title="Come si gioca">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.300a2.600 2.600 0 1 1 3.600 2.400c-.700.400-1.100 1-1.100 1.800M12 17h.01"/></svg>
-    </button>
-    <button class="hud-btn" id="btnRiparti" type="button" aria-label="Nuova esplorazione" title="Nuova esplorazione">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.700M3 4v4h4"/></svg>
-    </button>
+<main class="mappa-scroll">
+  <div class="mappa" id="mappa">
+    <img class="sfondo" src="Campus.png" alt="Veduta aerea del campus della Scuola Sacra Famiglia" />
+    <!-- i marker vengono generati via JS -->
   </div>
+</main>
 
-  <div class="minimappa" id="minimappa" aria-label="Minimappa: tocca per camminare fin lì">
-    <img src="Campus.png" alt="" draggable="false" />
-    <span class="tit">Mappa</span>
-  </div>
-  <div class="suggerimento" id="suggerimento" role="status" aria-live="polite"></div>
-</div>
-
-<iframe id="ytAudio" class="yt-audio" title="Musica d'atmosfera" allow="autoplay; encrypted-media" src=""></iframe>
+<!-- Musica di sottofondo: iframe YouTube nascosto (solo audio percepito). -->
+<iframe id="ytAudio" class="yt-audio" title="Musica di sottofondo" allow="autoplay; encrypted-media" src=""></iframe>
 <iframe id="ytPremio" class="yt-audio" title="Musica del premio finale" allow="autoplay; encrypted-media" src=""></iframe>
 
-<!-- Stanza a tutto schermo -->
-<div class="ov-scena" id="ovScena" role="dialog" aria-modal="true" aria-labelledby="scenaTitolo">
-  <div class="scena" id="scena">
-    <img class="foto foto-magica" id="scenaFoto" src="" alt="" draggable="false" />
-    <img class="foto foto-reale" id="scenaFotoReale" src="" alt="" draggable="false" />
-    <div class="strato" id="scenaStrato"></div>
-    <div class="scena-buio"></div>
-    <div class="hots" id="hots"></div>
-    <div class="pannello-reale" id="pannelloReale">
-      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/></svg></span>
-      <strong id="pannelloReTitolo">Luogo reale</strong>
-      <span class="txt">Di questo luogo non abbiamo ancora una foto: lo si riconosce dall'alto, sulla mappa del campus reale.</span>
+<!-- Popup di benvenuto (compare all'avvio, poi scompare) -->
+<div class="overlay" id="benvenuto" role="dialog" aria-modal="true" aria-labelledby="benvenutoTitolo">
+  <div class="modale">
+    <div class="modale-head">
+      <span class="badge" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="11" y="10.5" width="2" height="7" rx="1" fill="#fff"/>
+          <circle cx="12" cy="7.3" r="1.35" fill="#fff"/>
+        </svg>
+      </span>
+      <h2 id="benvenutoTitolo">Come funziona</h2>
     </div>
-    <div class="scena-top">
-      <span class="sigillo" id="scenaSigillo">1</span>
-      <div>
-        <h2 id="scenaTitolo">Stanza</h2>
-        <div class="sub" id="scenaSub"></div>
-      </div>
-      <div class="missione" id="missione"><span id="missioneTxt">Risveglia gli oggetti</span><span class="pallini" id="missionePallini"></span></div>
-    </div>
-    <div class="scena-info" id="scenaInfo">
-      <p id="scenaFatto"></p>
-      <div class="riga-btn">
-        <button class="btn btn-torcia" id="btnTorcia" type="button" hidden>Raccogli la torcia</button>
-        <button class="btn btn-carta" id="flipMondo" type="button"><span id="flipLbl">Guarda com'è davvero</span></button>
-        <button class="btn btn-primario" id="scenaEsci" type="button">Torna nel castello</button>
+    <div class="modale-body">
+      <p style="margin:0 0 20px">
+        Ogni pallino dorato che pulsa è un luogo del campus tutto da scoprire.
+        Toccalo e apri la sua scheda: scrivi <strong>come si chiama</strong>,
+        <strong>a cosa serve</strong> e <strong>un ricordo o un'esperienza</strong>
+        che hai vissuto lì. Quando salvi, il pallino diventa blu: così vedi quante
+        zone hai già esplorato.
+      </p>
+      <div class="azioni">
+        <button class="btn btn-primario" id="btnInizia" type="button">Inizia a esplorare</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Fuoco di fortuna -->
-<div class="toast" id="toastFuoco" role="alertdialog" aria-labelledby="toastTitolo">
-  <h3 id="toastTitolo">La lanterna è a secco</h3>
-  <p>Raccogli i rami intorno e accendi un <strong>fuoco di fortuna</strong>: recuperi olio per ripartire, ma la lanterna perde una stella.</p>
-  <button class="btn btn-primario" id="fuocoSi" type="button">Accendi il fuoco</button>
-</div>
-
-<!-- Tutorial 4 momenti -->
-<div class="overlay" id="tutorOverlay" role="dialog" aria-modal="true" aria-labelledby="tutorTitolo">
-  <div class="tutor">
-    <div class="icona-grande" id="tutorIcona" aria-hidden="true"></div>
-    <div class="passo-lbl" id="tutorLbl"></div>
-    <h2 id="tutorTitolo"></h2>
-    <p id="tutorTesto"></p>
-    <div class="passi" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-    <div class="nav">
-      <button class="btn btn-ghost" id="tutorIndietro" type="button">Indietro</button>
-      <button class="btn btn-primario" id="tutorAvanti" type="button">Avanti</button>
+<!-- Modale -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modaleTitolo">
+  <div class="modale" id="modale">
+    <div class="modale-head">
+      <span class="badge" id="modaleBadge">1</span>
+      <h2 id="modaleTitolo">Zona 1</h2>
+      <button class="chiudi" id="btnChiudi" type="button" aria-label="Chiudi la scheda">&times;</button>
+    </div>
+    <div class="modale-body">
+      <div class="col-foto">
+        <figure class="foto-luogo" id="fotoWrap">
+          <img id="fotoLuogo" src="" alt="" />
+          <figcaption id="fotoCaption">Guarda la foto e riconosci il luogo</figcaption>
+        </figure>
+        <button class="lore-badge" id="btnPergamena" type="button" aria-label="Leggi la pergamena">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H8a3 3 0 0 1-3-3V4z"/><path d="M8 8h7M8 11h7M8 14h5"/></svg>
+        </button>
+        <div class="esc-porta" id="escPorta" aria-hidden="true">
+          <div class="porta-vano"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l7 7M18 15l2 2-2 2M15 18l2 2"/></svg></div>
+          <div class="porta-anta"><span class="porta-buco"></span></div>
+        </div>
+        <button class="esc-apri" id="escApri" type="button" aria-label="Apri la porta con la chiave">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l7 7M18 15l2 2-2 2M15 18l2 2"/></svg>
+          <span class="apri-lbl">Apri</span>
+        </button>
+      </div>
+      <div class="col-form">
+      <div class="attivita" id="attivitaWrap">
+        <p class="att-consegna" id="attConsegna"></p>
+        <p class="att-sub">Le cose che non c'entrano tornano indietro con un aiuto.</p>
+        <div class="att-zona" id="attZona"><span class="att-hint" id="attHint">Trascina qui le cose giuste</span></div>
+        <div class="att-feedback" id="attFeedback" role="status" aria-live="polite"></div>
+        <div class="att-tray" id="attTray"></div>
+      </div>
+      <div class="escape" id="escapeWrap">
+        <div class="esc-cols" id="escCols"></div>
+        <div class="esc-feedback" id="escFeedback" role="status" aria-live="polite"></div>
+      </div>
+      <div class="campo">
+        <label for="fNome">Come si chiama questo luogo?
+          <span class="aiuto">— il nome che gli daresti tu</span>
+        </label>
+        <input type="text" id="fNome" maxlength="80" placeholder="Es. Il campo da calcio" />
+      </div>
+      <div class="campo">
+        <label for="fFunzione">A cosa serve?
+          <span class="aiuto">— la sua funzione, chi lo usa e per cosa</span>
+        </label>
+        <textarea id="fFunzione" maxlength="600" placeholder="Es. Qui si fa educazione fisica e si giocano i tornei..."></textarea>
+      </div>
+      <div class="campo">
+        <label for="fEsperienza">La mia esperienza in questo luogo
+          <span class="aiuto">— un ricordo, un momento, qualcosa che ti è successo qui</span>
+        </label>
+        <textarea id="fEsperienza" maxlength="600" placeholder="Es. Il primo giorno di scuola qui abbiamo..."></textarea>
+      </div>
+      <div class="azioni">
+        <span class="salvato-msg" id="salvatoMsg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5" stroke="#2E7D5B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Scheda salvata
+        </span>
+        <button class="btn btn-primario" id="btnSalva" type="button">Salva la scheda</button>
+      </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Traguardo + debrief -->
-<div class="overlay" id="traguardoOverlay" role="dialog" aria-modal="true" aria-labelledby="traguardoTitolo">
-  <div class="traguardo">
-    <img class="coppa" src="coppa.jpg" alt="La coppa del castello risvegliato" />
-    <h2 id="traguardoTitolo">Il castello si è risvegliato</h2>
-    <div class="stelle-finali" id="stelleFinali"></div>
-    <p class="riepilogo" id="traguardoRiepilogo"></p>
-    <div class="debrief">
-      <h3>Ripensa al tuo cammino</h3>
-      <p>Il premio non è il punteggio: è capire come hai deciso. Prenditi un momento.</p>
-      <label for="dbr1">Quale scelta di percorso ti ha fatto risparmiare più olio?</label>
-      <textarea id="dbr1" placeholder="Es. Ho seguito il tepore verso la torcia prima di spingermi lontano..."></textarea>
-      <label for="dbr2">Se ricominciassi, da quale parte del castello partiresti, e perché?</label>
-      <textarea id="dbr2" placeholder="Es. Partirei verso l'ala della primaria perché..."></textarea>
+<!-- Secondo popup: la storia "dal mondo magico" (pergamena) -->
+<div class="overlay lore-overlay" id="loreOverlay" role="dialog" aria-modal="true" aria-labelledby="loreTitolo">
+  <div class="lore-modale">
+    <div class="lore-head">
+      <span class="badge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H8a3 3 0 0 1-3-3V4z"/><path d="M8 8h7M8 11h7M8 14h5"/></svg></span>
+      <h2 id="loreTitolo">Dal mondo magico</h2>
+      <button class="chiudi" id="loreClose" type="button" aria-label="Chiudi la storia">&times;</button>
     </div>
-    <details>
-      <summary style="cursor:pointer;color:var(--oro);font-family:var(--font-ui);font-weight:600;margin:6px 0">La pergamena dei luoghi scoperti</summary>
-      <div class="pergamena-finale" id="pergamenaFinale"></div>
-    </details>
-    <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-ghost" id="traguardoChiudi" type="button">Passeggia nel castello illuminato</button>
-      <button class="btn btn-primario" id="traguardoRigioca" type="button">Esplora un castello nuovo</button>
-    </div>
+    <div class="lore-body"><p id="loreTesto"></p></div>
   </div>
 </div>
 
-<!-- Schermata del titolo -->
-<div class="overlay aperto" id="titolo" role="dialog" aria-modal="true" aria-labelledby="titoloH">
-  <div class="sfondo-titolo"></div><div class="velo-titolo"></div>
-  <div class="titolo-box">
-    <span class="stemma" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none">
-      <path d="M24 3l4.500 9.200 10.200 1.500-7.400 7.200 1.800 10.100L24 36l-9.100 4.700 1.800-10.100-7.400-7.200 10.200-1.500z" fill="#241a48" stroke="#e0b64a" stroke-width="1.6" stroke-linejoin="round"/>
-      <circle cx="24" cy="22" r="4.400" fill="#f3cf74"/></svg></span>
-    <h1 id="titoloH">Lume di Lanterna</h1>
-    <div class="sotto">Il castello al buio</div>
-    <p>La notte è scesa sul castello della Scuola Sacra Famiglia. Prendi la lanterna, attraversa il buio e risveglia le sue sedici stanze.</p>
-    <div class="azioni">
-      <button class="btn btn-primario" id="btnGioca" type="button">Inizia l'esplorazione</button>
-      <button class="btn btn-ghost" id="btnNuova" type="button" hidden>Ricomincia da capo</button>
-    </div>
-    <p style="margin:22px auto 0"><a class="btn btn-ghost" href="eco-fattoria.html" style="display:inline-block;text-decoration:none">Altro gioco · Eco-Campus, il giro dei camioncini</a></p>
-    <div class="crediti"><strong>Scuola Sacra Famiglia</strong> · Animatore Digitale Andrea Cerioli · &copy; 2026</div>
+<!-- Traguardo finale: tutte le 16 porte aperte -->
+<div class="overlay traguardo-overlay" id="traguardoOverlay" role="dialog" aria-modal="true" aria-labelledby="traguardoTitolo">
+  <div class="traguardo-modale">
+    <img class="traguardo-img" src="coppa.jpg" alt="La Coppa delle Case del castello" />
+    <h2 id="traguardoTitolo">Hai aperto tutte le porte del castello!</h2>
+    <p>Complimenti: hai risolto tutti gli enigmi e svelato ogni segreto del Campus Castle.</p>
+    <button class="btn btn-primario" id="traguardoClose" type="button">Evviva!</button>
   </div>
 </div>
 
 <script>
-"use strict";
+(function(){
+  "use strict";
 
-/* ====================== PRNG deterministico (RIGIOCABILITA §5) ====================== */
-function cyrb53(s, seed = 0){
-  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-  for(let i=0,c;i<s.length;i++){ c=s.charCodeAt(i);
-    h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
-  h1=Math.imul(h1^h1>>>16,2246822507)^Math.imul(h2^h2>>>13,3266489909);
-  h2=Math.imul(h2^h2>>>16,2246822507)^Math.imul(h1^h1>>>13,3266489909);
-  return 4294967296*(2097151&h2)+(h1>>>0);
-}
-function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
-  let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
-  return ((t^t>>>14)>>>0)/4294967296; }; }
-function sid(){ let v=localStorage.getItem('ldl_sid'); if(!v){ v=(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())); localStorage.setItem('ldl_sid',v);} return v; }
-function run(){ const n=(+localStorage.getItem('ldl_run')||0)+1; localStorage.setItem('ldl_run',n); return n; }
+  // Coordinate rilevate dai pallini rossi di Campus_zone.png (in % sullo sfondo).
+  // "sug" = nome suggerito (solo come segnaposto/aiuto, lo studente scrive il suo).
+  // "foto" = immagine reale del luogo (mostrata nel popup). Dove manca, nessuna foto.
+  var ZONE = [
+    // Numerazione "a percorso": si parte dalla chiesa, poi ingressi e scuole,
+    // e si sale verso i campi sportivi e gli edifici in alto.
+    {id:1,  x:87.00, y:73.50, sug:"La chiesa",                                                    fotoHog:"Castle/Castle_1.png"},
+    {id:2,  x:73.37, y:62.67, sug:"L'ingresso della scuola",       foto:"ingresso_scuola.jpeg",   fotoHog:"Castle/Castle_2.png"},
+    {id:3,  x:47.22, y:49.65, sug:"La scuola secondaria",          foto:"scuola_secondaria.jpeg", fotoHog:"Castle/Castle_3.png"},
+    {id:4,  x:53.46, y:62.79, sug:"L'ingresso delle piscine",      foto:"ingresso_piscina.jpeg",  fotoHog:"Castle/Castle_4.png"},
+    {id:5,  x:40.77, y:73.03, sug:"Il parcheggio",                                                fotoHog:"Castle/Castle_5.png"},
+    {id:6,  x:92.51, y:43.75, sug:"La scuola primaria",            foto:"scuola_primaria.jpeg",   fotoHog:"Castle/Castle_6.png"},
+    {id:7,  x:31.27, y:42.82, sug:"Le piscine – piano vasca",                                     fotoHog:"Castle/Castle_7.png"},
+    {id:8,  x:56.16, y:41.49, sug:"Il campo da basket",            foto:"campo_basket.jpeg",      fotoHog:"Castle/Castle_8.png"},
+    {id:9,  x:77.40, y:37.50, sug:"La mensa",                      foto:"mensa.jpeg",             fotoHog:"Castle/Castle_9.png"},
+    {id:10, x:63.30, y:33.80, sug:"Il campo da pallavolo",         foto:"campo_volley.jpeg",      fotoHog:"Castle/Castle_10.png"},
+    {id:11, x:73.85, y:27.49, sug:"L'aula di musica",                                             fotoHog:"Castle/Castle_11.png"},
+    {id:12, x:80.98, y:27.37, sug:"Il laboratorio di informatica", foto:"lab_info.jpg",           fotoHog:"Castle/Castle_12.png"},
+    {id:13, x:73.85, y:17.19, sug:"La QDV Arena",                  foto:"qdv_arena.jpeg",         fotoHog:"Castle/Castle_13.png"},
+    {id:14, x:58.26, y:16.26, sug:"Il campo da calcio",            foto:"campo_calcio.jpeg",      fotoHog:"Castle/Castle_14.png"},
+    {id:15, x:33.28, y:12.67, sug:"Il parco della piscina",                                       fotoHog:"Castle/Castle_15.png"},
+    {id:16, x:84.00, y:5.67,  sug:"Il garage dei bus",                                            fotoHog:"Castle/Castle_16.png"}
+  ];
 
-/* ====================== Dati del mondo (16 luoghi reali, reskin magico) ====================== */
-const LUOGHI = [
-  {id:1,  x:87.00,y:73.50, foto:"Castle/Castle_1.png",  magico:"Il Santuario delle Candele",   reale:"La chiesa della scuola", fatto:"Qui la comunità si raccoglie, prega e celebra insieme i momenti importanti dell'anno."},
-  {id:2,  x:73.37,y:62.67, foto:"Castle/Castle_2.png",  fotoReale:"ingresso_scuola.jpeg",  magico:"La Soglia dei Nuovi Arrivati", reale:"L'ingresso della scuola", fatto:"Da questa porta, ogni mattina, inizia la giornata: è il confine tra casa e scuola.", start:true},
-  {id:3,  x:47.22,y:49.65, foto:"Castle/Castle_3.png",  fotoReale:"scuola_secondaria.jpeg", magico:"La Torre degli Studi",        reale:"La scuola secondaria di primo grado", fatto:"Nelle sue aule si studiano italiano, matematica, scienze, lingue e tanto altro."},
-  {id:4,  x:53.46,y:62.79, foto:"Castle/Castle_4.png",  fotoReale:"ingresso_piscina.jpeg", magico:"Il Portale delle Acque",      reale:"L'ingresso delle piscine", fatto:"Da qui si accede agli impianti natatori: borse, ciabatte e cuffia alla mano."},
-  {id:5,  x:40.77,y:73.03, foto:"Castle/Castle_5.png",  magico:"Il Cortile delle Carrozze",   reale:"Il parcheggio", fatto:"Dove le auto sostano: ogni giorno accompagna l'arrivo e il ritorno a casa."},
-  {id:6,  x:92.51,y:43.75, foto:"Castle/Castle_6.png",  fotoReale:"scuola_primaria.jpeg", magico:"L'Ala dei Piccoli Apprendisti",reale:"La scuola primaria", fatto:"Qui i più piccoli imparano a leggere, scrivere e contare, un passo alla volta."},
-  {id:7,  x:31.27,y:42.82, foto:"Castle/Castle_7.png",  magico:"La Sala delle Maree",         reale:"Le piscine – piano vasca", fatto:"Si nuota, si imparano gli stili e si fa educazione acquatica in sicurezza."},
-  {id:8,  x:56.16,y:41.49, foto:"Castle/Castle_8.png",  magico:"L'Arena dei Canestri",        reale:"Il campo da basket", fatto:"Qui si allenano tiro, passaggi e gioco di squadra sotto canestro."},
-  {id:9,  x:77.40,y:37.50, foto:"Castle/Castle_9.png",  fotoReale:"mensa.jpeg", magico:"Il Refettorio Incantato",     reale:"La mensa", fatto:"A mezzogiorno il castello si riempie di profumi: si pranza tutti insieme."},
-  {id:10, x:63.30,y:33.80, foto:"Castle/Castle_10.png", magico:"Il Campo dei Palleggi",       reale:"Il campo da pallavolo", fatto:"Battute, ricezioni e schiacciate: qui la squadra impara a muoversi all'unisono."},
-  {id:11, x:73.85,y:27.49, foto:"Castle/Castle_11.png", magico:"La Camera delle Melodie",     reale:"L'aula di musica", fatto:"Strumenti e voci: si impara a leggere le note e a suonare insieme."},
-  {id:12, x:80.98,y:27.37, foto:"Castle/Castle_12.png", fotoReale:"lab_info.jpg", magico:"L'Officina degli Incantesimi",reale:"Il laboratorio di informatica", fatto:"Qui si programma, si fa coding e si guidano piccoli robot: la magia del computer."},
-  {id:13, x:73.85,y:17.19, foto:"Castle/Castle_13.png", fotoReale:"qdv_arena.jpeg", magico:"L'Anfiteatro delle Prove",    reale:"La QDV Arena", fatto:"Lo spazio dei grandi eventi: spettacoli, tornei e sfide davanti a tutti."},
-  {id:14, x:58.26,y:16.26, foto:"Castle/Castle_14.png", magico:"Il Prato dei Tornei",         reale:"Il campo da calcio", fatto:"Qui si corre, si passa la palla e si gioca il campionato della scuola."},
-  {id:15, x:33.28,y:12.67, foto:"Castle/Castle_15.png", magico:"Il Giardino d'Acqua",         reale:"Il parco della piscina", fatto:"Prato e alberi attorno alle vasche: il respiro verde del castello."},
-  {id:16, x:84.00,y:5.67,  foto:"Castle/Castle_16.png", magico:"La Rimessa dei Destrieri di Ferro", reale:"Il garage dei bus", fatto:"Dormono qui i grandi mezzi che ogni giorno portano gli studenti a scuola."}
-];
-const byId = id => LUOGHI.find(l=>l.id===id);
-const $ = id => document.getElementById(id);
-const PARAMS = new URLSearchParams(location.search);
-const DEBUG_ANIM = PARAMS.get('debug')==='1';
-
-/* ====================== Regole: distanze, olio, torce ====================== */
-const MAR = 2482/1728;                 // proporzioni della mappa (larghezza/altezza)
-// unita di distanza = 1% della LARGHEZZA della mappa (x,y dei luoghi sono in % di larghezza/altezza)
-const dU = (a,b) => Math.hypot(a.x-b.x,(a.y-b.y)/MAR);
-const START = LUOGHI.find(l=>l.start) || LUOGHI[0];
-// giro "ingenuo" (sempre il luogo piu vicino): serve da metro per tarare l'olio
-const GIRO = (function(){
-  let cur=START, rest=LUOGHI.filter(l=>l!==START), L=0; const tappe=[];
-  while(rest.length){
-    rest.sort((a,b)=>dU(cur,a)-dU(cur,b));
-    const n=rest.shift(), d=dU(cur,n); L+=d; tappe.push({id:n.id,d}); cur=n;
-  }
-  return {L,tappe};
-})();
-const GOCCIA = GIRO.L/100;             // unita di cammino per goccia: il giro ingenuo costa 100 gocce
-const OLIO_INIZIALE=40, BONUS=18, FUOCO=20, N_TORCE=5;
-const VELOCITA=9.5;                    // unita al secondo
-const R_ARRIVO=2.6;                    // entro questo raggio una stanza ignota viene scoperta
-const R_TOCCO=4;                       // tocco "vicino a un luogo"
-const R_SENSO=30;                      // distanza a cui si avverte il tepore di una torcia
-
-// Solvibilita garantita: le torce si accettano solo se chi segue il giro ingenuo non resta mai a secco.
-function generaTorce(r){
-  const cand=LUOGHI.filter(l=>l!==START).map(l=>l.id);
-  for(let t=0;t<400;t++){
-    const a=[...cand];
-    for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-    const torce=new Set(a.slice(0,N_TORCE));
-    let olio=OLIO_INIZIALE, ok=true;
-    for(const tp of GIRO.tappe){ olio-=tp.d/GOCCIA; if(olio<3){ok=false;break;} if(torce.has(tp.id)) olio+=BONUS; }
-    if(ok) return torce;
-  }
-  return new Set([1,4,7,10,13].map(i=>GIRO.tappe[i].id));   // ripiego: torce spaziate lungo il giro
-}
-
-/* ====================== Stato ====================== */
-let S=null, SEED='';
-let mondo='hogwarts';
-const CHIAVE='ldl2_stato';
-function nuovoStato(){
-  SEED = PARAMS.get('seed') || (sid()+'-'+run());
-  const r=mulberry32(cyrb53(SEED));
-  S={ seed:SEED, olio:OLIO_INIZIALE, x:START.x, y:START.y+3.4,
-      scoperte:new Set([START.id]), sveglie:new Set(), torce:generaTorce(r), raccolte:new Set(),
-      fuochi:0, cammino:0, fine:false, mosso:false };
-  salva();
-}
-function salva(){
-  if(!S) return;
-  try{ localStorage.setItem(CHIAVE, JSON.stringify({...S, scoperte:[...S.scoperte], sveglie:[...S.sveglie], torce:[...S.torce], raccolte:[...S.raccolte]})); }catch(e){}
-}
-function carica(){
-  try{
-    const o=JSON.parse(localStorage.getItem(CHIAVE)||'null'); if(!o||!o.torce) return false;
-    S={...o, scoperte:new Set(o.scoperte), sveglie:new Set(o.sveglie), torce:new Set(o.torce), raccolte:new Set(o.raccolte)};
-    SEED=S.seed; return true;
-  }catch(e){ return false; }
-}
-const stelleOra = () => S.fuochi===0?3:S.fuochi<=2?2:1;
-
-/* ====================== Effetti sonori (WebAudio, niente file) ====================== */
-let actx=null, sfxOn = localStorage.getItem('ldl_sfx')!=='0';
-function tono(f,dur,tipo,vol,quando){
-  if(!sfxOn) return;
-  try{
-    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    if(actx.state==='suspended') actx.resume();
-    const t=actx.currentTime+(quando||0), o=actx.createOscillator(), g=actx.createGain();
-    o.type=tipo||'sine'; o.frequency.setValueAtTime(f,t);
-    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol||.07,t+.015); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.05);
-  }catch(e){}
-}
-const SFX={
-  passo(){ tono(85+Math.random()*30,.07,'triangle',.035); },
-  scoperta(){ tono(392,.28); tono(523,.32,'sine',.07,.12); tono(659,.5,'sine',.07,.24); },
-  sveglia(n){ tono(587*Math.pow(1.189,n),.4,'triangle',.09); tono(1174*Math.pow(1.189,n),.25,'sine',.04,.05); },
-  stanza(){ [523,659,784,1047].forEach((f,i)=>tono(f,.6,'sine',.07,i*.09)); },
-  torcia(){ [587,740,880,1175].forEach((f,i)=>tono(f,.32,'triangle',.08,i*.07)); },
-  vuoto(){ tono(110,.6,'sawtooth',.04); tono(82,.8,'sine',.06,.1); },
-  vittoria(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tono(f,.8,'sine',.07,i*.14)); }
-};
-
-/* ====================== Vista: mondo, telecamera, buio ====================== */
-const vista=$('vista'), mappaEl=$('mappa'), mago=$('mago'), bersaglioEl=$('bersaglio'), cv=$('buio'), ctx=cv.getContext('2d');
-let vw=0, vh=0, WW=0, WH=0; const cam={x:0,y:0};
-function layout(){
-  vw=innerWidth; vh=innerHeight;
-  if(mondo==='reale') WW=Math.min(vw, vh*MAR);               // mappa intera, di giorno
-  else WW=Math.max(vw*1.8, vh*1.5*MAR);                       // mondo piu grande dello schermo: la telecamera segue il mago
-  WH=WW/MAR;
-  mappaEl.style.width=WW+'px'; mappaEl.style.height=WH+'px';
-  cv.width=vw; cv.height=vh;
-  telecamera();
-}
-function telecamera(){
-  if(mondo==='reale'){ cam.x=-(vw-WW)/2; cam.y=-(vh-WH)/2; }
-  else{
-    cam.x=Math.max(0,Math.min(WW-vw, S.x/100*WW - vw/2));
-    cam.y=Math.max(0,Math.min(WH-vh, S.y/100*WH - vh*.52));
-  }
-  mappaEl.style.transform='translate3d('+(-cam.x).toFixed(1)+'px,'+(-cam.y).toFixed(1)+'px,0)';
-}
-function disegnaBuio(t){
-  const c=ctx;
-  c.globalCompositeOperation='source-over';
-  c.clearRect(0,0,vw,vh);
-  c.fillStyle='rgba(5,4,14,.91)'; c.fillRect(0,0,vw,vh);
-  c.globalCompositeOperation='destination-out';
-  const buco=(px,py,r,a)=>{
-    const g=c.createRadialGradient(px,py,0,px,py,r);
-    g.addColorStop(0,'rgba(0,0,0,'+a+')'); g.addColorStop(.5,'rgba(0,0,0,'+(a*.8)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
-    c.fillStyle=g; c.beginPath(); c.arc(px,py,r,0,6.2832); c.fill();
+  // Attività di trascinamento per ogni luogo (10 tessere: le "giuste" appartengono
+  // al luogo, le "sbagliate" [etichetta, aiuto] appartengono altrove nel campus).
+  var ATTIVITA = {
+    1:{ consegna:"Trascina nel riquadro ciò che appartiene alla chiesa",
+        giuste:["Il silenzio e il raccoglimento","La preghiera","Il canto del coro","Le panche","L'altare"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il computer","è nel laboratorio di informatica"],["Il vassoio del pranzo","è in mensa"],["Il canestro","è al campo da basket"]] },
+    2:{ consegna:"Trascina nel riquadro ciò che si fa o si trova all'ingresso della scuola",
+        giuste:["Il saluto del mattino","Appendere la giacca","Il cartellone degli avvisi","L'accoglienza dei compagni","Entrare e uscire"],
+        sbagliate:[["Tuffarsi","si fa in piscina"],["Il canestro","è al campo da basket"],["Gli strumenti musicali","sono in aula di musica"],["Il bus","sta nel suo garage"],["Il vassoio del pranzo","è in mensa"]] },
+    3:{ consegna:"Trascina nel riquadro ciò che appartiene alla scuola secondaria",
+        giuste:["Le aule dei ragazzi","La lavagna","Lo studio delle materie","I compiti","La campanella"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il pallone da basket","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["Gli attrezzi da giardino","servono nel parco"],["Il volante del bus","è del bus nel garage"]] },
+    4:{ consegna:"Trascina nel riquadro ciò che serve all'ingresso delle piscine",
+        giuste:["Mostrare la tessera","Le ciabatte","Gli spogliatoi","La doccia prima di entrare","Il regolamento della piscina"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il computer","è nel laboratorio"],["La lavagna","è nelle aule"],["Il microfono del coro","è in aula di musica"],["Il vassoio del pranzo","è in mensa"]] },
+    5:{ consegna:"Trascina nel riquadro ciò che appartiene al parcheggio",
+        giuste:["Le auto in sosta","Le strisce dei posti","La rotonda","Arrivare e partire","Camminare con prudenza"],
+        sbagliate:[["Nuotare","si fa in piscina"],["Il canestro","è al campo da basket"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["La lavagna","è nelle aule"]] },
+    6:{ consegna:"Trascina nel riquadro ciò che appartiene alla scuola primaria",
+        giuste:["Le aule dei bambini","Imparare a leggere e scrivere","I banchi","La maestra","L'intervallo"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["La rete da pallavolo","è al campo da pallavolo"],["Il bus","sta nel suo garage"],["Gli iMac del laboratorio","sono nel laboratorio"],["L'altare","è nella chiesa"]] },
+    7:{ consegna:"Trascina nel riquadro ciò che serve in piscina",
+        giuste:["Il costume","La cuffia","Le ciabatte","L'asciugamano","Nuotare"],
+        sbagliate:[["La racchetta","serve ai campi da gioco"],["Il pallone da calcio","serve al campo da calcio"],["Il computer","è nel laboratorio"],["Lo zaino di scuola","resta in aula"],["Il vassoio del pranzo","è in mensa"]] },
+    8:{ consegna:"Trascina nel riquadro ciò che serve al campo da basket",
+        giuste:["Il canestro","Il pallone da basket","Le scarpe da ginnastica","Fare canestro","Giocare in squadra"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["Il bus","sta nel suo garage"],["L'altare","è nella chiesa"]] },
+    9:{ consegna:"Trascina nel riquadro ciò che serve in mensa",
+        giuste:["Il vassoio","Le posate","Il pranzo","I tavoli","Mangiare insieme"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["La chitarra","è in aula di musica"],["Gli iMac","sono nel laboratorio"]] },
+    10:{ consegna:"Trascina nel riquadro ciò che serve al campo da pallavolo",
+        giuste:["La rete","Il pallone da pallavolo","Fare una schiacciata","Le due squadre","Il fischietto dell'arbitro"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["La lavagna","è nelle aule"],["Il bus","sta nel suo garage"],["L'altare","è nella chiesa"]] },
+    11:{ consegna:"Trascina nel riquadro ciò che appartiene all'aula di musica",
+        giuste:["Gli strumenti musicali","Il leggio","Cantare","Lo spartito","Suonare insieme"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["Gli iMac","sono nel laboratorio"],["Il canestro","è al campo da basket"]] },
+    12:{ consegna:"Trascina nel riquadro ciò che serve nel laboratorio di informatica",
+        giuste:["I computer (iMac)","La tastiera","Il mouse","Cercare informazioni","Il videoproiettore"],
+        sbagliate:[["Il pallone da calcio","serve al campo da calcio"],["Il costume da bagno","serve in piscina"],["La chitarra","è in aula di musica"],["Il vassoio del pranzo","è in mensa"],["La rete da pallavolo","è al campo da pallavolo"]] },
+    13:{ consegna:"Trascina nel riquadro ciò che appartiene alla QDV Arena",
+        giuste:["Il campo al coperto","Le partite e i tornei","Il pubblico","Gli eventi della scuola","Il grande tendone"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il vassoio del pranzo","è in mensa"],["Gli iMac","sono nel laboratorio"],["L'altare","è nella chiesa"],["Il volante del bus","è del bus nel garage"]] },
+    14:{ consegna:"Trascina nel riquadro ciò che serve al campo da calcio",
+        giuste:["Il pallone da calcio","Le porte","Gli scarpini","Segnare un gol","Le due squadre"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["La chitarra","è in aula di musica"],["Gli iMac","sono nel laboratorio"]] },
+    15:{ consegna:"Trascina nel riquadro ciò che appartiene al parco della piscina",
+        giuste:["L'erba e gli alberi","Prendere il sole","Giocare all'aperto","L'ombra degli alberi","Rilassarsi tra un bagno e l'altro"],
+        sbagliate:[["Il computer","è nel laboratorio"],["La lavagna","è nelle aule"],["Il vassoio del pranzo","è in mensa"],["Gli scarpini da calcio","servono al campo da calcio"],["Il bus","sta nel suo garage"]] },
+    16:{ consegna:"Trascina nel riquadro ciò che appartiene al garage dei bus",
+        giuste:["I pullman della scuola","L'autista","Il posteggio dei mezzi","Salire e scendere dal bus","I sedili del bus"],
+        sbagliate:[["Il costume da bagno","serve in piscina"],["Il canestro","è al campo da basket"],["Il vassoio del pranzo","è in mensa"],["La chitarra","è in aula di musica"],["La lavagna","è nelle aule"]] }
   };
-  for(const l of LUOGHI){
-    if(!S.scoperte.has(l.id)) continue;
-    const sv=S.sveglie.has(l.id), r=WW*(sv?.09:.045), px=l.x/100*WW-cam.x, py=l.y/100*WH-cam.y;
-    if(px<-r||px>vw+r||py<-r||py>vh+r) continue;
-    buco(px,py,r,sv?.96:.6);
-  }
-  const ax=S.x/100*WW-cam.x, ay=S.y/100*WH-cam.y-22;
-  const trem=1+Math.sin(t/130)*.025+Math.sin(t/47)*.015;
-  const ra=WW*.105*trem*(S.olio>0||S.fine?1:.5);
-  buco(ax,ay,ra,1);
-  // tepore: le torce non ancora scoperte scaldano il buio quando ci si avvicina
-  c.globalCompositeOperation='lighter';
-  for(const id of S.torce){
-    if(S.scoperte.has(id)) continue;
-    const l=byId(id), d=dU(S,l); if(d>R_SENSO) continue;
-    const k=(1-d/R_SENSO), puls=.6+.4*Math.sin(t/420+id), r=WW*.07, px=l.x/100*WW-cam.x, py=l.y/100*WH-cam.y;
-    const g=c.createRadialGradient(px,py,0,px,py,r);
-    g.addColorStop(0,'rgba(255,186,90,'+Math.min(.95,(.35+.9*k)*puls).toFixed(3)+')'); g.addColorStop(.4,'rgba(255,170,70,'+(.45*k*puls).toFixed(3)+')'); g.addColorStop(1,'rgba(255,170,70,0)');
-    c.fillStyle=g; c.beginPath(); c.arc(px,py,r,0,6.2832); c.fill();
-    if(k>.2 && !visti.tepore && S.sveglie.size){ visti.tepore=true; suggerisci('Vedi quel tepore dorato nel buio? Lì si nasconde una torcia.',6000); }
-  }
-  const g2=c.createRadialGradient(ax,ay,0,ax,ay,ra*.8);
-  g2.addColorStop(0,'rgba(255,190,110,.12)'); g2.addColorStop(1,'rgba(255,190,110,0)');
-  c.fillStyle=g2; c.beginPath(); c.arc(ax,ay,ra*.8,0,6.2832); c.fill();
-}
 
-/* ====================== Luoghi e minimappa ====================== */
-const IC={
-  ignoto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V7a6 6 0 0 1 12 0v14M4 21h16M14.500 13h.01"/></svg>',
-  scoperta:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V7a6 6 0 0 1 12 0v14M4 21h16"/><path d="M10 12l3 2.500-3 2.500"/></svg>',
-  sveglia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11c.500.300 1 1 1 2h4c0-1 .500-1.700 1-2a6 6 0 0 0-3-11z"/></svg>',
-  torcia:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3 4 4.500 4 8a4 4 0 0 1-8 0c0-1.500.700-2.500 1.500-3.500.300 1.200 1 1.800 1.500 2C11 6.500 11.500 4 12 2zM10 15h4l-.700 7h-2.600z"/></svg>'
-};
-const statoLuogo = l => S.sveglie.has(l.id)?'sveglia':S.scoperte.has(l.id)?'scoperta':'ignoto';
-function renderLuoghi(){
-  mappaEl.querySelectorAll('.luogo').forEach(n=>n.remove());
-  $('minimappa').querySelectorAll('i').forEach(n=>n.remove());
-  for(const l of LUOGHI){
-    const st=statoLuogo(l), d=document.createElement('div');
-    d.className='luogo '+st+((S.torce.has(l.id)&&S.scoperte.has(l.id)&&!S.raccolte.has(l.id))?' torcia':'');
-    d.style.left=l.x+'%'; d.style.top=l.y+'%';
-    d.innerHTML='<span class="cerchio">'+IC[st]+'<span class="torcia-badge">'+IC.torcia+'</span></span>'+
-      '<span class="nome">'+(mondo==='reale'?l.reale:l.magico)+'</span>';
-    mappaEl.appendChild(d);
-    const p=document.createElement('i'); p.className=st; p.style.left=l.x+'%'; p.style.top=l.y+'%';
-    $('minimappa').appendChild(p);
+  // Escape room (versione Castle): un enigma per luogo, legato a ciò che vi si fa/studia.
+  // Gli articoli iniziali (il/lo/la/l'...) sono tollerati automaticamente.
+  // Pool di 12 enigmi per zona: a ogni accesso se ne pescano 3 a caso.
+  // Tutte le risposte sono parole presenti nel racconto "Dal mondo magico".
+  var ENIGMI = {
+    1:{ domande:[
+      {t:"Regna nella Sala delle Ore e non fa rumore: il primo, invisibile incantesimo.", r:["silenzio","raccoglimento"]},
+      {t:"Di ottone, ruotano appese alle volte disegnando pianeti.", r:["sfere","sfera"]},
+      {t:"Alta sopra il mago, lascia entrare la luce colorata.", r:["vetrata"]},
+      {t:"Il metallo lucente di cui sono fatte le sfere celesti.", r:["ottone"]},
+      {t:"Le sfere di ottone li disegnano nel loro girare lento.", r:["pianeti","pianeta"]},
+      {t:"Momento di silenzio interiore: il primo incantesimo che si impara qui.", r:["raccoglimento"]},
+      {t:"Di pietra chiara, è la grande sala dove il tempo rallenta.", r:["cattedrale"]},
+      {t:"Le sfere disegnano pianeti e queste, con la coda, che nessun telescopio vide.", r:["comete","cometa"]},
+      {t:"Strumento per guardare le stelle: eppure non vide mai quelle comete.", r:["telescopio"]},
+      {t:"Qui non serve: si impara il silenzio, non gli incantesimi da lanciare con essa.", r:["bacchetta"]},
+      {t:"Della Casa AquilaBlu, vi entrò furioso e ne uscì più saggio.", r:["mago"]},
+      {t:"Sotto la vetrata, a poco a poco, il loro fragore si spense.", r:["pensieri","pensiero"]} ]},
+    2:{ domande:[
+      {t:"Grigio e saggio, veglia dall'arco e porta le lettere.", r:["gufo"]},
+      {t:"Il legno antico di cui sono fatti i grandi portoni.", r:["quercia"]},
+      {t:"La varchi ed entri nell'avventura.", r:["soglia"]},
+      {t:"Di pietra, sopra di esso veglia il gufo grigio.", r:["arco"]},
+      {t:"Il gufo le consegna ogni mattina.", r:["lettere","posta"]},
+      {t:"Grandi e di quercia, si aprono quasi da soli all'alba.", r:["portoni","portone"]},
+      {t:"Due buoni potrebbero passare a braccetto tra i portoni, tanto sono alti.", r:["giganti","gigante"]},
+      {t:"Poco prima di essa i portoni cigolano e si aprono quasi da soli.", r:["alba"]},
+      {t:"Qui perfino una di esse può cambiare idea e portarti altrove.", r:["scala"]},
+      {t:"Più grande, della Casa TassoRosso, prende per mano il piccolo intimorito.", r:["compagno"]},
+      {t:"Ciò che comincia una volta varcata la soglia.", r:["avventura"]},
+      {t:"Varcare la soglia è un piccolo di questi.", r:["rito"]} ]},
+    3:{ domande:[
+      {t:"Si dice che si spostino quando nessuno le guarda.", r:["scale"]},
+      {t:"La materia più ostica di tutte: serve per capire davvero.", r:["pazienza"]},
+      {t:"Si accesero tutte insieme, come un applauso silenzioso.", r:["candele"]},
+      {t:"Le lingue antiche ne profumano.", r:["pergamena"]},
+      {t:"La studentessa la ripeté un intero inverno prima di riuscirci.", r:["formula"]},
+      {t:"Di pietra, sono un labirinto dove le scale cambiano posto.", r:["corridoi","corridoio"]},
+      {t:"L'ala dei più grandi è un affascinante...", r:["labirinto"]},
+      {t:"Una porta si affaccia un giorno su di esso, il giorno dopo altrove.", r:["cortile"]},
+      {t:"Polverose, riempiono una stanza dell'ala dei grandi.", r:["mappe","mappa"]},
+      {t:"Sembrano indovinelli, tra le arti difficili da studiare.", r:["numeri","numero"]},
+      {t:"La studentessa ne passò uno intero a ripetere la formula.", r:["inverno"]},
+      {t:"Qui il coraggio non è affrontarlo: è ricominciare dopo aver fallito.", r:["drago"]} ]},
+    4:{ domande:[
+      {t:"Ai piedi, prima di scendere alle vasche.", r:["ciabatte"]},
+      {t:"Fredda, lava via la fretta prima del tuffo.", r:["doccia"]},
+      {t:"Il coraggio non è tuffarsi per primo, ma aspettare un...", r:["compagno"]},
+      {t:"Scolpiti nella pietra, mezzi uomini e mezzi pesci, sorvegliano l'acqua.", r:["tritoni","tritone"]},
+      {t:"Inciso sopra l'ingresso: 'l'acqua premia chi la rispetta'.", r:["motto"]},
+      {t:"Nella quale sono scolpite le creature che sorvegliano l'acqua.", r:["pietra"]},
+      {t:"Oltre la porta bassa comincia il suo regno.", r:["acqua"]},
+      {t:"Nel cerimoniale prima del bagno, le si lasciano ai piedi.", r:["scarpe","scarpa"]},
+      {t:"Il ragazzo troppo sicuro volle sfidarla da solo, di notte.", r:["vasca"]},
+      {t:"Ciò che provò il ragazzo imprudente: gli insegnò più di cento lezioni.", r:["paura"]},
+      {t:"Giganti, scolpiti nella pietra insieme a tritoni e serpenti.", r:["cavallucci","cavalluccio"]},
+      {t:"La ricompensa di chi rispetta l'acqua: la leggerezza di ___ senza pensieri.", r:["galleggiare"]} ]},
+    5:{ domande:[
+      {t:"Senza cavalli, aspettano pazienti nella Corte delle Partenze.", r:["carrozze","carrozza"]},
+      {t:"Lucide, allineate al muro come ombrelli: servono a volare.", r:["scope","scopa"]},
+      {t:"Bianche, sul selciato segnano il posto di ogni mezzo.", r:["rune"]},
+      {t:"Su di esso le rune bianche segnano i posti.", r:["selciato"]},
+      {t:"Le carrozze del castello ne fanno a meno: sono 'senza...'.", r:["cavalli","cavallo"]},
+      {t:"La sera si svuota, e resta solo il vento a spostare le foglie.", r:["cortile"]},
+      {t:"La sera, nella corte vuota, solo lui sposta le foglie.", r:["vento"]},
+      {t:"Nel cortile deserto, il vento le sposta.", r:["foglie","foglia"]},
+      {t:"Impolverata, nessuno ha ancora osato trasformarla in qualcosa di magico.", r:["automobile","auto"]},
+      {t:"La vecchia carrozza torna in fondo alla fila come un cavallo cerca la sua...", r:["stalla"]},
+      {t:"Chi attraversa il cortile la mattina lo porta in spalla, e già fa magia.", r:["zaino"]},
+      {t:"Comincia e finisce nello stesso posto: ogni grande...", r:["avventura"]} ]},
+    6:{ domande:[
+      {t:"La magia più potente, che nessuna bacchetta fa per te.", r:["leggere","lettura"]},
+      {t:"Scarabocchi ostinati che si mettono in fila e formano parole.", r:["lettere"]},
+      {t:"Ogni ___ è una stanza segreta in cui entrare quando vuoi.", r:["libro"]},
+      {t:"Le aule dei più piccoli ne profumano, fresco.", r:["inchiostro"]},
+      {t:"Guida i più piccoli e ripete che ogni libro è una porta.", r:["maestra"]},
+      {t:"Quando le lettere si mettono in fila, ne formano una: apre una porta.", r:["parola"]},
+      {t:"Basse e calde, con banchi fatti per gambe che non toccano terra.", r:["aule","aula"]},
+      {t:"Nelle aule, sembrano fatti apposta per i più piccoli.", r:["banchi","banco"]},
+      {t:"Buffi, disegnati alle pareti insieme agli alfabeti colorati.", r:["draghi","drago"]},
+      {t:"Colorati, alle pareti insieme ai draghi buffi.", r:["alfabeti","alfabeto"]},
+      {t:"I più piccoli del castello, che qui imparano a leggere.", r:["bambini","bambino"]},
+      {t:"L'aria delle aule dei piccoli profuma di inchiostro e di...", r:["meraviglia"]} ]},
+    7:{ domande:[
+      {t:"Arrotolato come un gomitolo d'argento, dorme sul fondo della vasca.", r:["serpente"]},
+      {t:"Una dopo l'altra, ti fanno attraversare la vasca.", r:["bracciata","bracciate"]},
+      {t:"È ciò che l'acqua restituisce a chi la rispetta.", r:["calma"]},
+      {t:"Il colore-metallo del serpente che dorme sul fondo.", r:["argento"]},
+      {t:"Là in basso, dove riposa il serpente d'acqua.", r:["fondo"]},
+      {t:"Turchese, di giorno riflette torri e nuvole.", r:["vasca"]},
+      {t:"Bracciata dopo bracciata la attraversi, senza toccare il fondo.", r:["acqua"]},
+      {t:"Il colore dell'acqua della grande vasca.", r:["turchese"]},
+      {t:"Di giorno la vasca le riflette, insieme alle nuvole.", r:["torri","torre"]},
+      {t:"L'acqua turchese le riflette, insieme alle torri.", r:["nuvole","nuvola"]},
+      {t:"Al prepotente, dicono, diventano stranamente pesanti.", r:["gambe","gamba"]},
+      {t:"Il serpente d'argento dorme sul fondo arrotolato come uno di questi.", r:["gomitolo"]} ]},
+    8:{ domande:[
+      {t:"La palla passa nel cerchio con la retina: hai fatto un...", r:["canestro"]},
+      {t:"Ti tiene un istante sospeso a mezz'aria, senza scopa.", r:["slancio"]},
+      {t:"Anche il giocatore più bravo, senza di essa, perde.", r:["squadra"]},
+      {t:"Di legno intrecciato, formano la volta sopra il campo.", r:["travi","trave"]},
+      {t:"È di tutti: la regola non scritta del campo.", r:["palla"]},
+      {t:"Prima della partita si stringono la mano.", r:["capitani","capitano"]},
+      {t:"Un istante di slancio e resti sospeso a mezz'aria grazie a esso.", r:["salto"]},
+      {t:"La palla ci passa dentro, con la retina: è il canestro.", r:["cerchio"]},
+      {t:"Il cerchio del canestro non è diverso da quelli del Quidditch.", r:["anelli","anello"]},
+      {t:"Insieme al coraggio, premia chi la unisce nel tiro.", r:["precisione"]},
+      {t:"Non è di chi la fa da solo, ma di chi la costruisce insieme.", r:["vittoria"]},
+      {t:"Le travi intrecciate della volta sono fatte di questo.", r:["legno"]} ]},
+    9:{ domande:[
+      {t:"Arriva fumante sui vassoi a mezzogiorno.", r:["pranzo"]},
+      {t:"Chi impara a condividerlo, condivide tutto il resto.", r:["pane"]},
+      {t:"Al nuovo studente lasciano il posto migliore, vicino alla...", r:["finestra"]},
+      {t:"Lunghe e di legno scuro, corrono da parete a parete.", r:["tavole","tavola"]},
+      {t:"Ondeggiano piano dall'alto, come sospese da un incantesimo.", r:["lampade","lampada"]},
+      {t:"Ciò che diventa il pranzo quando è fatto in compagnia.", r:["banchetto"]},
+      {t:"Il pranzo fumante arriva su di essi a mezzogiorno.", r:["vassoi","vassoio"]},
+      {t:"L'ora in cui la sala si riempie di voci e di profumo di pranzo.", r:["mezzogiorno"]},
+      {t:"Condiviso, si dice valga più di qualunque pozione.", r:["cibo"]},
+      {t:"Nessuna medicina scalda quanto un pasto in compagnia, neppure una...", r:["pozione"]},
+      {t:"Insieme alle voci, riempiono la sala a mezzogiorno.", r:["risate","risata"]},
+      {t:"Fatto in compagnia, scalda più di ogni medicina.", r:["pasto"]} ]},
+    10:{ domande:[
+      {t:"Sottile, la palla la deve scavalcare senza sfiorarla.", r:["rete"]},
+      {t:"Conta più della forza: ti fidi del compagno.", r:["fiducia"]},
+      {t:"Se ne manca uno solo, il punto è perduto.", r:["passaggio"]},
+      {t:"Insieme alla fiducia, conta più della forza bruta.", r:["tempismo"]},
+      {t:"La squadra mista di tutte le Case riuscì a vincerla.", r:["coppa"]},
+      {t:"Leggera come quella di un gufo: così vola la palla.", r:["piuma"]},
+      {t:"La rete sottile lo taglia in due metà perfette.", r:["campo"]},
+      {t:"Deve scavalcare la rete senza sfiorarla, leggera come una piuma.", r:["palla"]},
+      {t:"Qui non conta quella bruta, ma il tempismo e la fiducia.", r:["forza"]},
+      {t:"Mista, di tutte e quattro le Case, vinse la coppa fidandosi.", r:["squadra"]},
+      {t:"Su di esso, alla rete, qualcuno ha inciso una frase.", r:["palo"]},
+      {t:"Se manca anche un solo passaggio, è perduto.", r:["punto"]} ]},
+    11:{ domande:[
+      {t:"Restano sospese nell'aria; senza di esse, niente canzoni.", r:["note"]},
+      {t:"Arpe, flauti, tamburi appesi alle pareti.", r:["strumenti"]},
+      {t:"Nelle sere di festa i quattro delle Case si sfidano cantando.", r:["cori","coro"]},
+      {t:"A volte se ne sente una vibrare da sola, nella sala vuota.", r:["corda"]},
+      {t:"Basta questa, un fiato, un battito di mani: la magia che tutti sanno.", r:["voce"]},
+      {t:"Ogni Casa ne ha una; intrecciate, diventano un suono più bello.", r:["melodia","melodie"]},
+      {t:"Insieme a flauti e tamburi, appese alle pareti.", r:["arpe","arpa"]},
+      {t:"Insieme ad arpe e tamburi, tra gli strumenti appesi.", r:["flauti","flauto"]},
+      {t:"Insieme ad arpe e flauti, si suonano nell'Aula delle Note.", r:["tamburi","tamburo"]},
+      {t:"Basta una voce, questo, un battito di mani per fare musica.", r:["fiato"]},
+      {t:"Ogni Casa ha il suo, e nelle sere di festa lo intona.", r:["canto"]},
+      {t:"Quattro melodie intrecciate ne formano uno più bello di tutti.", r:["suono"]} ]},
+    12:{ domande:[
+      {t:"Una formula di passi precisi: l'incantesimo senza bacchetta.", r:["algoritmo"]},
+      {t:"La differenza tra un incantesimo e un capriccio, dice il professore.", r:["ordine"]},
+      {t:"Il metallo dei tubi che corrono lungo le pareti.", r:["ottone"]},
+      {t:"Luminosi, ronzano piano accanto alle pergamene.", r:["schermi","schermo"]},
+      {t:"Lucide, stanno sui banchi accanto alle pergamene ingiallite.", r:["tastiere","tastiera"]},
+      {t:"Mezzo inventore e mezzo mago, ripete la regola dell'ordine.", r:["professore"]},
+      {t:"Di ottone, corrono lungo le pareti accanto agli schermi.", r:["tubi","tubo"]},
+      {t:"Ingiallite, riposano sui banchi vicino alle tastiere lucide.", r:["pergamene","pergamena"]},
+      {t:"Se metti i passi in fila con pazienza, obbedisce come per magia.", r:["macchina"]},
+      {t:"L'algoritmo ne è una, fatta di passi precisi come una pozione.", r:["formula"]},
+      {t:"Se la capisci davvero, è una forma di magia coi suoi pericoli.", r:["tecnologia"]},
+      {t:"Su di essi le pergamene ingiallite riposano vicino alle tastiere.", r:["banchi","banco"]} ]},
+    13:{ domande:[
+      {t:"Aspetta paziente sul piedistallo al centro dell'Arena.", r:["coppa"]},
+      {t:"Conta più della fortuna.", r:["coraggio"]},
+      {t:"Pendono dall'alto coi colori delle quattro Case.", r:["bandiere","bandiera"]},
+      {t:"Grande, copre l'Arena dove nascono i sogni.", r:["tendone"]},
+      {t:"Di legno consumato da mille tifosi.", r:["tribune","tribuna"]},
+      {t:"Su di esso, al centro, aspetta paziente la Coppa.", r:["piedistallo"]},
+      {t:"Sotto il grande tendone dell'Arena nascono quelli delle squadre.", r:["sogni","sogno"]},
+      {t:"Si sfidano nei tornei più attesi dell'anno, sotto il tendone.", r:["squadre","squadra"]},
+      {t:"Mille di loro hanno consumato il legno delle tribune.", r:["tifosi","tifoso"]},
+      {t:"I più attesi dell'anno, di cui si parla per mesi.", r:["tornei","torneo"]},
+      {t:"Si alzò in piedi ad applaudire i perdenti più dei vincitori.", r:["pubblico"]},
+      {t:"Una squadra data per perdente vi arrivò, contro i campioni imbattuti.", r:["finale"]} ]},
+    14:{ domande:[
+      {t:"Quando la palla varca la linea nella rete, lo si grida forte.", r:["gol","goal"]},
+      {t:"Sospesi in alto, con un po' di fantasia sono quelli del Quidditch.", r:["anelli","anello"]},
+      {t:"Col vento, di notte, rotola da solo cercando compagni.", r:["pallone"]},
+      {t:"Immenso e verde, ci si corre sopra tra due porte.", r:["prato"]},
+      {t:"Due, agli estremi del campo: la palla deve entrarci.", r:["porte","porta"]},
+      {t:"Il sole tramonta dietro di esse, del castello.", r:["torri","torre"]},
+      {t:"Il più spettacolare del castello, con gli anelli sospesi.", r:["campo"]},
+      {t:"Con un po' di fantasia, ogni gol diventa quella decisiva del Quidditch.", r:["meta"]},
+      {t:"Ogni gol, con fantasia, è la meta decisiva di una di Quidditch.", r:["partita"]},
+      {t:"Nelle notti in cui soffia forte, il pallone rotola da solo.", r:["vento"]},
+      {t:"Da soli si corre più veloci, ma con essa si va più lontano.", r:["squadra"]},
+      {t:"Quando tramonta dietro le torri, vincitori e vinti tornano insieme.", r:["sole"]} ]},
+    15:{ domande:[
+      {t:"Al calar del sole si accendono di luce tenue, come lanterne.", r:["fiori","fiore"]},
+      {t:"Di pietra, nell'angolo nascosto, porta una frase incisa.", r:["panca"]},
+      {t:"Ci si siede, si respira, e si lasciano sistemare da soli.", r:["pensieri","pensiero"]},
+      {t:"Crescono contorti come vecchi saggi.", r:["alberi","albero"]},
+      {t:"Tiepida, ci si sdraia sopra tra un tuffo e l'altro.", r:["erba"]},
+      {t:"Le si guarda distesi, e arriva la soluzione a un problema.", r:["nuvole","nuvola"]},
+      {t:"Al crepuscolo i fiori si accendono di una tenue...", r:["luce"]},
+      {t:"I fiori, al calar del sole, sembrano piccole...", r:["lanterne","lanterna"]},
+      {t:"Passa tra i rami e sembra raccontare vecchie storie.", r:["vento"]},
+      {t:"Il vento vi passa in mezzo e sembra raccontare storie.", r:["rami","ramo"]},
+      {t:"Del Crepuscolo: aiuta a pensare tra un'avventura e l'altra.", r:["giardino"]},
+      {t:"Molti ne trovarono la soluzione qui, guardando le nuvole.", r:["problema"]} ]},
+    16:{ domande:[
+      {t:"Enormi e un po' sbuffanti, i maghi le chiamano fatate.", r:["carrozze","carrozza"]},
+      {t:"Guida il mezzo e rallenta appena per i ritardatari.", r:["autista"]},
+      {t:"Dove la vecchia carrozza rientra a riposare.", r:["garage"]},
+      {t:"La carrozza le conosce tutte, e ogni bambino.", r:["fermata","fermate"]},
+      {t:"Si appannano di risate durante il viaggio.", r:["finestrini","finestrino"]},
+      {t:"Tra essa appare il castello in lontananza, come un sogno.", r:["nebbia"]},
+      {t:"In fondo ad esso, dove la strada incontra i campi, riposano i mezzi.", r:["viale"]},
+      {t:"Grandi, ogni mattina portano gli studenti al castello.", r:["mezzi","mezzo"]},
+      {t:"Ogni mattina le carrozze fatate li portano al castello.", r:["studenti","studente"]},
+      {t:"All'ora in cui si parte, con lo zaino in spalla e gli occhi pieni di sonno.", r:["alba"]},
+      {t:"All'alba gli occhi ne sono ancora pieni quando si parte.", r:["sonno"]},
+      {t:"Alla sera, qualcuno dorme appoggiato ad esso.", r:["vetro"]} ]}
+  };
+  // Micro-testi ORIGINALI in atmosfera "maghi e castello" (non tratti dai libri):
+  // ogni luogo è legato a un elemento del mondo magico.
+  var LORE = {
+    1:"Nel cuore del castello sorge la Sala delle Ore, una cattedrale di pietra chiara dove il tempo non corre come fuori. Grandi sfere di ottone ruotano appese alle volte, disegnando pianeti e comete che nessun telescopio ha mai visto. Si racconta che, molti anni fa, un giovane mago della Casa AquilaBlu vi entrò furioso per un torto subito. Rimase seduto in silenzio, sotto la vetrata più alta, e a poco a poco il fragore dei suoi pensieri si spense. Quando uscì aveva capito una cosa che nessun incantesimo gli aveva mai insegnato: certe risposte arrivano solo quando smetti di cercarle a voce alta. Da allora la Sala delle Ore è il luogo dove gli studenti imparano il primo, invisibile incantesimo: quello del raccoglimento. Non serve la bacchetta. Basta abbassare la voce, respirare piano e lasciare che le sfere celesti girino. Chi ci riesce, dicono i professori, ha già compiuto il passo più difficile di tutta la magia: fare silenzio dentro di sé. Non a caso, chi vi entra in tempesta ne esce quasi sempre più sereno di prima.",
+    2:"I portoni del castello sono di quercia antica, così alti che due giganti buoni potrebbero passarci a braccetto. Ogni mattina, poco prima dell'alba, cigolano e si aprono quasi da soli: nessuno sa se sia un incantesimo dimenticato o soltanto l'abitudine di secoli. Sull'arco di pietra veglia un gufo grigio dallo sguardo saggio; consegna le lettere, ma soprattutto osserva chi entra, e si dice che riconosca al primo sguardo chi è pronto per la giornata che lo aspetta. Varcare questa soglia è un piccolo rito: alle tue spalle resti il mondo di sempre, con le sue fretta e le sue distrazioni; davanti si apre un luogo dove perfino una scala può cambiare idea. I più piccoli, la prima volta, si fermano intimoriti. Poi un compagno più grande della Casa TassoRosso li prende per mano e sussurra la regola più importante del castello: qui nessuno entra da solo, e nessuno resta indietro. Da quel momento la soglia non fa più paura: diventa l'inizio di ogni avventura. E ogni avventura, si sa, comincia con il coraggio di fare il primo passo oltre una porta.",
+    3:"I corridoi dell'ala dei più grandi sono un labirinto affascinante. Le scale, dicono, si spostano quando nessuno le guarda, e capita che una porta si affacci un giorno sul cortile e il giorno dopo su una stanza di mappe polverose. È qui che i ragazzi affrontano le arti più difficili: numeri che sembrano indovinelli, lingue antiche che profumano di pergamena e la materia più ostica di tutte, la pazienza. Perché nel castello si impara presto una verità che nessun incantesimo può accorciare: per capire davvero una cosa, bisogna prima sbagliarla molte volte. Una leggenda racconta di una studentessa della Casa QuerciaVerde che passò un intero inverno a ripetere la stessa formula senza riuscirci. Non si arrese. La notte in cui finalmente le riuscì, tutte le candele del corridoio si accesero insieme, come un applauso silenzioso. I professori la citano ancora oggi: non per la formula, ma per l'ostinazione. Qui il coraggio non è affrontare un drago: è ricominciare da capo il giorno dopo aver fallito.",
+    4:"Oltre questa porta bassa comincia il regno dell'acqua. Le pareti sono decorate con creature scolpite nella pietra, tritoni, cavallucci giganti, serpenti d'argento, e sembra che ti seguano con lo sguardo mentre passi. Prima di scendere alle vasche c'è un piccolo cerimoniale: si lasciano le scarpe, si indossano le ciabatte, si passa sotto una doccia fredda che, dicono i più fantasiosi, serve a lavare via la fretta. Sopra l'ingresso è inciso il motto dei nuotatori del castello: l'acqua premia chi la rispetta. Non è una frase da poco. Anni fa un ragazzo troppo sicuro di sé volle sfidare la vasca grande da solo, di notte, senza avvisare nessuno. Non gli accadde nulla di grave, ma la paura che provò gli insegnò più di cento lezioni. Da allora la regola è scolpita accanto al motto: nessuno entra in acqua da solo. Qui il coraggio non è tuffarsi per primo, ma sapere quando aspettare un compagno. E la ricompensa, per chi rispetta l'acqua, è quella leggerezza quasi incantata di galleggiare senza pensieri.",
+    5:"Quello che sembra un parcheggio, nel castello è la Corte delle Partenze. Di giorno è un via vai ordinato: carrozze senza cavalli che aspettano pazienti, scope lucide allineate contro il muro come ombrelli, e qualche automobile impolverata che nessuno ha ancora osato trasformare. Ogni mezzo ha il suo posto, segnato da rune bianche sul selciato. La sera, quando il cortile si svuota, resta solo il vento a spostare le foglie. Si racconta che una vecchia carrozza, la più malandata di tutte, torni ogni notte da sola in fondo alla fila, come un cavallo stanco che cerca la sua stalla. I ragazzi della Casa CeroGiallo giurano di averla vista muoversi; i professori sorridono e non smentiscono. Perché la Corte delle Partenze insegna una cosa semplice e importante: ogni grande avventura comincia e finisce nello stesso posto, e tornare a casa sani e salvi è un incantesimo prezioso quanto partire. Chi attraversa questo cortile la mattina, con lo zaino in spalla, sta già facendo magia: sta scegliendo di andare a imparare.",
+    6:"Nell'ala dei più piccoli l'aria profuma di inchiostro fresco e di meraviglia. Le aule sono basse e calde, con banchi che sembrano fatti apposta per gambe che ancora non toccano terra, e alle pareti disegni di draghi buffi e alfabeti colorati. È qui che si compie la magia più potente di tutte, quella che nessuna bacchetta può fare al posto tuo: imparare a leggere. All'inizio le lettere sono scarabocchi ostinati che non vogliono stare fermi; poi, un giorno, all'improvviso, si mettono in fila e formano una parola. E quella parola apre una porta. Una maestra del castello ripete sempre ai suoi alunni che ogni libro è una stanza segreta: puoi entrarci quando vuoi, di giorno o di notte, e non finisce mai. I bambini della Casa TassoRosso hanno una tradizione: quando uno di loro legge la sua prima frase intera ad alta voce, tutti gli altri battono le mani piano, tre volte. Non è un incantesimo scritto in nessun libro, eppure funziona: da quel momento, il piccolo lettore non ha più paura delle parole.",
+    7:"La grande vasca del castello è un rettangolo di acqua turchese che di giorno riflette torri e nuvole, e di sera si tinge d'oro. È il luogo preferito da chi ama la fatica leggera: bracciata dopo bracciata, senza mai toccare il fondo, fino a dimenticare tutto il resto. Ma la vasca ha anche la sua leggenda. Si racconta che sul fondo, arrotolato come un gomitolo d'argento, dorma un lungo serpente d'acqua, gentile ma permaloso. Chi nuota con rispetto, senza schizzi cattivi e senza spinte, lo lascia dormire, e in cambio riceve la calma che solo l'acqua sa dare. Chi invece fa il prepotente, dicono, si ritrova le gambe stranamente pesanti, come trattenute da mille piccole mani. Nessuno l'ha mai visto davvero, il serpente; eppure tutti, uscendo dalla vasca, si sentono un po' più leggeri e un po' più buoni. Gli istruttori sorridono: la vera magia dell'acqua, dicono, non è galleggiare, ma imparare a muoversi insieme agli altri senza fare del male. E questa è una lezione che vale ben oltre la piscina.",
+    8:"Sotto una volta di travi di legno intrecciate, che sembrano rami di un albero gigantesco, si trova il campo dove la palla rimbalza come se fosse leggermente stregata. Non serve una scopa per volare, qui: basta uno slancio, un salto, e per un istante resti sospeso a mezz'aria mentre miri al canestro. I ragazzi dicono che il cerchio con la retina non sia poi così diverso dagli anelli del Quidditch: entrambi premiano chi sa unire coraggio e precisione. Ma c'è una regola non scritta, più importante di ogni punto: la palla è di tutti. Una volta, durante una sfida tra la Casa AquilaBlu e la Casa CeroGiallo, il giocatore più bravo tenne la palla per sé fino alla fine, senza passarla mai. Segnò molti canestri, eppure perse: perché una squadra che non condivide, per quanto talentuosa, resta sempre più debole di una che si fida. Da allora, prima di ogni partita, i capitani si stringono la mano e ripetono: il canestro è di chi lo fa, ma la vittoria è di chi la costruisce insieme. E il pallone, quasi per magia, sembra dare ragione a chi sa aspettare il momento giusto per passarla a un compagno.",
+    9:"La Sala del Banchetto è il cuore caldo del castello. Lunghe tavole di legno scuro corrono da una parete all'altra, illuminate da lampade che ondeggiano piano, come sospese da un incantesimo distratto. A mezzogiorno la sala si riempie di voci, di risate e del profumo del pranzo che arriva fumante sui vassoi. Qui, nel mondo dei maghi, si dice che il cibo condiviso valga più di qualunque pozione: nessuna medicina scalda quanto un pasto fatto in compagnia. C'è una tradizione che nessuno ricorda chi abbia iniziato: quando un nuovo studente si siede per la prima volta, i compagni gli lasciano il posto migliore, quello vicino alla finestra. È un modo silenzioso per dirgli che ormai è dei loro. Le quattro Case, AquilaBlu, CeroGiallo, QuerciaVerde e TassoRosso, a volte litigano nei campi e nelle gare, ma qui, davanti a un piatto, le rivalità si sciolgono come burro sul pane caldo. Perché la Sala del Banchetto insegna la magia più antica e più semplice del mondo: si sta meglio insieme. E chi impara a condividere il pane, quasi sempre, impara anche a condividere tutto il resto.",
+    10:"Il campo della rete alta è forse il più elegante del castello. Una rete sottile lo taglia in due metà perfette, come un confine incantato: la palla lo deve scavalcare senza sfiorarlo, leggera come una piuma di gufo. Qui non conta la forza bruta, ma il tempismo e la fiducia, perché la pallavolo è uno strano sport in cui nessuno può fare tutto da solo. Uno riceve, un altro alza, un terzo colpisce; e se manca anche un solo passaggio, il punto è perduto. I professori la usano come lezione di magia collettiva: gli incantesimi più potenti, dicono, funzionano proprio così, con ogni mago che fa la sua parte al momento giusto. Una leggenda racconta di una squadra mista, formata da studenti di tutte e quattro le Case, che vinse la coppa proprio perché nessuno voleva essere il protagonista: si passavano la palla ridendo, fidandosi a occhi chiusi. Sul palo della rete, qualcuno ha inciso una piccola frase: la palla non tocca terra se nessuno resta indietro. Ed è una regola che vale anche fuori dal campo.",
+    11:"L'Aula delle Note è una stanza che sembra respirare. Appesi alle pareti ci sono strumenti di ogni forma, arpe, flauti, tamburi, e qualcuno che nessuno sa più suonare; a volte, quando la sala è vuota, si sente una corda vibrare da sola, come se lo strumento ricordasse una vecchia melodia. Si racconta che le note, qui, non svaniscano subito: restino sospese nell'aria per qualche istante, invisibili, prima di dissolversi. La musica, dicono i maghi del castello, è l'unica magia che tutti sanno fare fin dal primo giorno, senza bisogno di bacchetta né di formule: bastano una voce, un fiato, un battito di mani a tempo. Ogni Casa ha il suo canto, e nelle sere di festa i quattro cori si sfidano non per vincere, ma per il gusto di sentire come suonano insieme. E allora accade la cosa più sorprendente: quattro melodie diverse, che da sole sembravano incompatibili, si intrecciano in un unico suono più bello di tutti. È la prova che la magia più grande nasce quando voci diverse imparano ad ascoltarsi.",
+    12:"Il Laboratorio degli Ingranaggi è il luogo più curioso del castello: un posto dove la magia antica e quella nuova convivono senza litigare. Tubi di ottone corrono lungo le pareti, accanto a schermi luminosi che ronzano piano; sui banchi, pergamene ingiallite riposano vicino a tastiere lucide. Qui gli studenti scoprono che esiste un incantesimo che non ha bisogno di bacchetta: si chiama algoritmo. È una formula fatta di passi precisi, uno dopo l'altro, nell'ordine giusto, proprio come una pozione. Sbaglia un passaggio e nulla funziona; mettili in fila con pazienza e la macchina obbedisce come per magia. Un vecchio professore, mezzo inventore e mezzo mago, ripete sempre ai ragazzi che la differenza tra un incantesimo e un capriccio è l'ordine. E ha ragione. Qui si impara che anche la tecnologia, se la capisci davvero, è una forma di magia, con la sua bellezza e i suoi pericoli. Per questo, accanto alla porta, è appesa una regola d'oro: prima di usare uno strumento potente, chiediti sempre a che cosa serve, e a chi.",
+    13:"Sotto il grande tendone dell'Arena nascono i sogni delle squadre. Le tribune sono di legno consumato da mille tifosi, le bandiere delle quattro Case pendono dall'alto, il blu di AquilaBlu, il giallo di CeroGiallo, il verde di QuerciaVerde, il rosso di TassoRosso, e al centro, su un piedistallo, aspetta paziente la Coppa. È qui che si tengono i tornei più attesi dell'anno, quelli di cui si parla per mesi. Ma chi conosce bene l'Arena sa che il suo vero segreto non è la vittoria. Anni fa una squadra data per perdente arrivò in finale contro i campioni imbattuti. Persero, come tutti si aspettavano. Eppure, quando uscirono dal campo a testa alta, il pubblico si alzò in piedi ad applaudirli più forte dei vincitori, perché avevano giocato senza mai arrendersi, sostenendosi a ogni caduta. Da quel giorno, sotto la Coppa, è incisa una frase che i capitani leggono prima di ogni partita: il coraggio conta più della fortuna. Nell'Arena si impara che si può perdere una gara e vincere qualcosa di più importante.",
+    14:"Il grande prato con gli anelli sospesi è il campo più spettacolare del castello. Di giorno i ragazzi ci giocano a pallone, correndo tra due porte; ma basta un po' di fantasia e gli anelli in alto diventano quelli del Quidditch, e ogni gol si trasforma nella meta decisiva di una partita leggendaria. Qui si allena il fiato e si allena il cuore, perché il gioco di squadra, sul prato come nella vita, insegna una cosa che nessun libro può spiegare: da soli si corre più veloci, ma insieme si va più lontano. C'è una leggenda che i più piccoli adorano: si dice che nelle notti di vento forte il pallone lasciato al centro del campo cominci a rotolare da solo, come se cercasse ancora qualcuno con cui giocare. Nessuno ci crede davvero, eppure ogni sera qualcuno controlla di riportarlo dentro. Le quattro Case si sfidano qui con passione, a volte con qualche muso lungo; ma quando il sole tramonta dietro le torri, vincitori e vinti tornano insieme verso il castello, sudati e felici. E quello è il vero premio: la strada fatta fianco a fianco.",
+    15:"Attorno alle vasche si stende il Giardino del Crepuscolo, un parco dove gli alberi crescono contorti come vecchi saggi e i fiori, al calar del sole, si accendono di una luce tenue, quasi fossero piccole lanterne. È il luogo dove i maghi del castello riposano tra un'avventura e l'altra: ci si sdraia sull'erba tiepida, si ascolta il vento passare tra i rami e sembra che racconti vecchie storie. Si dice che questo giardino abbia una qualità rara: aiuta a pensare. Molti studenti giurano di aver trovato la soluzione a un problema difficile proprio qui, senza cercarla, mentre guardavano le nuvole. Una vecchia panca di pietra, nell'angolo più nascosto, porta incisa una frase mezza cancellata dal tempo: anche i maghi hanno bisogno di fermarsi. Ed è una verità che i più bravi imparano presto. Nel castello si insegna a correre, a studiare, a competere; ma si insegna anche che riposare non è perdere tempo. A volte la magia più utile è semplicemente sedersi, respirare e lasciare che i pensieri si sistemino da soli.",
+    16:"In fondo al viale, dove la strada incontra i campi, riposano i grandi mezzi che ogni mattina portano gli studenti al castello. Li chiamerebbero autobus; nel mondo dei maghi passano per carrozze fatate. Sono enormi, un po' sbuffanti, e conoscono la strada meglio di chiunque le guidi. Si racconta che una di esse, la più anziana, ricordi a memoria ogni fermata e ogni bambino: se qualcuno è in ritardo, rallenta appena, come per aspettarlo, e nessun autista sa spiegare perché. Partire da qui, all'alba, con lo zaino in spalla e gli occhi ancora pieni di sonno, è un piccolo incanto quotidiano: la carrozza parte con un sobbalzo, i finestrini si appannano di risate, e il castello appare in lontananza tra la nebbia come un sogno che si avvicina. Alla sera il viaggio di ritorno è più tranquillo: qualcuno ripassa la lezione, qualcuno dorme appoggiato al vetro. La vecchia carrozza li riporta tutti a casa, puntuale, e poi rientra nel suo garage a riposare. Perché anche la magia più fedele ha bisogno, ogni tanto, di una buona notte di sonno."
+  };
+  function normalizza(s){
+    return (s || "").toLowerCase()
+      .replace(/[’']/g, " ")
+      .replace(/[!?.,;:"()]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^(l|lo|la|il|i|gli|le|un|uno|una) /, "");
   }
-  const io=document.createElement('i'); io.className='io'; io.id='miniIo'; $('minimappa').appendChild(io);
-  aggiornaHUD();
-}
-function stelleSvg(piene,tot){
-  let o=''; for(let i=0;i<tot;i++) o+='<svg class="'+(i<piene?'stella-piena':'stella-vuota')+'" viewBox="0 0 24 24"><path d="M12 3l2.600 5.300 5.900.900-4.300 4.100 1 5.800L12 16.900 6.800 19.100l1-5.800L3.500 9.200l5.900-.900z" stroke-width="1.4" stroke-linejoin="round"/></svg>';
-  return o;
-}
-let olioMostrato=-1;
-function aggiornaHUD(){
-  const n=Math.ceil(S.olio);
-  if(n!==olioMostrato){
-    olioMostrato=n; $('olioVal').textContent=n;
-    $('serbatoioFill').style.width=Math.max(0,Math.min(100,S.olio/60*100))+'%';
-    $('serbatoio').classList.toggle('basso', S.olio<10 && !S.fine);
-  }
-  $('conteggio').textContent=S.sveglie.size;
-  $('stelleWrap').innerHTML=stelleSvg(stelleOra(),3);
-}
-function mostraDelta(txt){
-  const d=$('olioDelta'); d.textContent=txt; d.style.opacity='1';
-  clearTimeout(d._t); d._t=setTimeout(()=>{ d.style.opacity='0'; },2400);
-}
-const visti={tepore:false};
-function suggerisci(txt,ms){
-  const el=$('suggerimento'); el.textContent=txt; clearTimeout(el._t);
-  if(ms) el._t=setTimeout(()=>{ if(el.textContent===txt) suggerimentoBase(); },ms);
-}
-function suggerimentoBase(){
-  const el=$('suggerimento');
-  if(mondo==='reale'){ el.textContent=''; return; }
-  if(S.fine) el.textContent='';
-  else if(!S.sveglie.size && S.scoperte.size===1) el.textContent='Sei davanti alla Soglia. Tocca la porta che pulsa per entrare.';
-  else if(!S.mosso) el.textContent='Tocca un punto della mappa (o usa le frecce) per camminare nel buio.';
-  else if(S.scoperte.size<3) el.textContent='Cerca le porte nel buio: la minimappa ti mostra dove sono.';
-  else el.textContent='';
-}
 
-/* ====================== Comandi ====================== */
-let bersaglio=null;                 // {x,y,luogo?}
-const tasti={};
-function schermoAMondo(cx,cy){ return {x:(cx+cam.x)/WW*100, y:(cy+cam.y)/WH*100}; }
-function luogoVicino(p,raggio,filtro){
-  let best=null, bd=raggio;
-  for(const l of LUOGHI){ if(filtro && !filtro(l)) continue; const d=dU(p,l); if(d<bd){bd=d;best=l;} }
-  return best;
-}
-function puntaVerso(p){
-  const l=luogoVicino(p,R_TOCCO,l=>S.scoperte.has(l.id));
-  bersaglio = l ? {x:l.x,y:l.y+3.4,luogo:l} : {x:Math.max(1,Math.min(99,p.x)), y:Math.max(2,Math.min(98,p.y))};
-  // gia sul posto: si entra subito
-  if(l && dU(S,bersaglio)<.4){ bersaglio=null; bersaglioEl.classList.remove('on'); premuto=false; apriScena(l); return; }
-  bersaglioEl.style.left=bersaglio.x+'%'; bersaglioEl.style.top=bersaglio.y+'%'; bersaglioEl.classList.add('on');
-}
-let premuto=false;
-vista.addEventListener('pointerdown',e=>{
-  if(inPausa()) return;
-  const p=schermoAMondo(e.clientX,e.clientY);
-  if(mondo==='reale'){
-    const l=luogoVicino(p,5,l=>S.scoperte.has(l.id)); if(l) apriScena(l,'reale');
-    return;
+  // ---- Selezione casuale: 3 enigmi su 6 per ogni zona (partita unica) ----
+  // Stabile nella sessione (così i progressi combaciano), rimescolata a ogni
+  // nuovo accesso e con "Riparti", così ogni studente vive un percorso diverso.
+  var SEL_KEY = "campus_castle_sel";
+  function generaSelezione(){
+    var s = {};
+    ZONE.forEach(function(z){
+      var e = ENIGMI[z.id];
+      var n = e ? e.domande.length : 0;
+      var idx = []; for(var i=0;i<n;i++){ idx.push(i); }
+      for(var k=idx.length-1;k>0;k--){ var j=Math.floor(Math.random()*(k+1)); var t=idx[k]; idx[k]=idx[j]; idx[j]=t; }
+      s[z.id] = idx.slice(0, Math.min(3, n));
+    });
+    return s;
   }
-  premuto=true; puntaVerso(p);
-});
-vista.addEventListener('pointermove',e=>{ if(premuto && !inPausa() && mondo==='hogwarts') puntaVerso(schermoAMondo(e.clientX,e.clientY)); });
-window.addEventListener('pointerup',()=>{ premuto=false; });
-window.addEventListener('pointercancel',()=>{ premuto=false; });
-$('minimappa').addEventListener('pointerdown',e=>{
-  if(inPausa()||mondo!=='hogwarts') return;
-  const r=$('minimappa').getBoundingClientRect();
-  puntaVerso({x:(e.clientX-r.left)/r.width*100, y:(e.clientY-r.top)/r.height*100});
-});
-const FRECCE={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1]};
-document.addEventListener('keydown',e=>{
-  if(e.target && /TEXTAREA|INPUT/.test(e.target.tagName)) return;
-  if(e.key==='Escape'){ if($('ovScena').classList.contains('aperto')) chiudiScena(); return; }
-  if(inPausa()) return;
-  const k=e.key.length===1?e.key.toLowerCase():e.key;
-  if(FRECCE[k]){ tasti[k]=true; e.preventDefault(); }
-  if((e.key==='Enter'||e.key===' ') && mondo==='hogwarts'){
-    const l=luogoVicino(S,4.2,l=>S.scoperte.has(l.id)); if(l){ e.preventDefault(); apriScena(l); }
+  function caricaSelezione(){
+    try{ var raw = sessionStorage.getItem(SEL_KEY); if(raw){ return JSON.parse(raw); } }catch(e){}
+    var s = generaSelezione();
+    try{ sessionStorage.setItem(SEL_KEY, JSON.stringify(s)); }catch(e){}
+    return s;
   }
-});
-document.addEventListener('keyup',e=>{ const k=e.key.length===1?e.key.toLowerCase():e.key; delete tasti[k]; });
-function inPausa(){ return !!document.querySelector('.overlay.aperto,.ov-scena.aperto,.toast.on'); }
+  var SELEZIONE = caricaSelezione();
+  function nuovaSelezione(){
+    SELEZIONE = generaSelezione();
+    try{ sessionStorage.setItem(SEL_KEY, JSON.stringify(SELEZIONE)); }catch(e){}
+  }
+  function domandeDi(zona){
+    var e = ENIGMI[zona.id]; if(!e) return [];
+    var sel = (SELEZIONE && SELEZIONE[zona.id]) ? SELEZIONE[zona.id] : [0,1,2];
+    return sel.map(function(i){ return e.domande[i]; }).filter(Boolean);
+  }
 
-/* ====================== Ciclo di gioco ====================== */
-let ultimo=0, tPasso=0, tSalva=0;
-function ciclo(t){
-  const dt=Math.min(.05,(t-ultimo)/1000||0); ultimo=t;
-  if(S && mondo==='hogwarts' && !inPausa()){
-    let ux=0, uy=0, daTasti=false;
-    for(const k in tasti){ if(FRECCE[k]){ ux+=FRECCE[k][0]; uy+=FRECCE[k][1]; daTasti=true; } }
-    if(daTasti){ bersaglio=null; bersaglioEl.classList.remove('on'); }
-    else if(bersaglio){ ux=bersaglio.x-S.x; uy=(bersaglio.y-S.y)/MAR; }
-    let dist=Math.hypot(ux,uy), inMoto=false;
-    if(dist>.001){
-      if(S.olio<=0 && !S.fine){ bersaglio=null; bersaglioEl.classList.remove('on'); chiediFuoco(); }
-      else{
-        let passo=VELOCITA*dt;
-        if(!daTasti && passo>=dist){ passo=dist; }
-        S.x=Math.max(1,Math.min(99,S.x+ux/dist*passo));
-        S.y=Math.max(2,Math.min(98,S.y+uy/dist*passo*MAR));
-        inMoto=true; S.cammino+=passo;
-        if(!S.mosso){ S.mosso=true; suggerimentoBase(); }
-        if(!S.fine){ S.olio=Math.max(0,S.olio-passo/GOCCIA); if(S.olio<=0){ SFX.vuoto(); } }
-        if(Math.abs(ux)>.05) mago.classList.toggle('sx',ux<0);
-        tPasso+=dt; if(tPasso>.3){ tPasso=0; SFX.passo(); }
-        if(!daTasti && bersaglio && dU(S,bersaglio)<.15){
-          const l=bersaglio.luogo; bersaglio=null; bersaglioEl.classList.remove('on');
-          if(l && S.scoperte.has(l.id)) apriScena(l);
-        }
-        // scoperta: arrivando vicino a una stanza ancora nel buio
-        const nuovo=luogoVicino(S,R_ARRIVO,l=>!S.scoperte.has(l.id));
-        if(nuovo) scopri(nuovo);
-        aggiornaHUD();
-        tSalva+=dt; if(tSalva>2){ tSalva=0; salva(); }
-      }
+  var STORAGE_KEY = "campus_map_sacrafamiglia_v1";
+  var dati = caricaDati();
+  var zonaAttiva = null;
+  var castleMode = false;
+
+  var mappa      = document.getElementById("mappa");
+  var overlay    = document.getElementById("overlay");
+  var modale     = document.getElementById("modale");
+  var elTitolo   = document.getElementById("modaleTitolo");
+  var elBadge    = document.getElementById("modaleBadge");
+  var elNome     = document.getElementById("fNome");
+  var elFunzione = document.getElementById("fFunzione");
+  var elEsperienza = document.getElementById("fEsperienza");
+  var elSalvato  = document.getElementById("salvatoMsg");
+  var elFoto     = document.getElementById("fotoLuogo");
+  var elFotoWrap = document.getElementById("fotoWrap");
+  var modaleBody = document.querySelector("#modale .modale-body");
+  var attWrap    = document.getElementById("attivitaWrap");
+  var attConsegna= document.getElementById("attConsegna");
+  var attZona    = document.getElementById("attZona");
+  var attHint    = document.getElementById("attHint");
+  var attFeedback= document.getElementById("attFeedback");
+  var attTray    = document.getElementById("attTray");
+  var escCols    = document.getElementById("escCols");
+  var escInputs  = [];
+  var fotoCaption= document.getElementById("fotoCaption");
+  var escApri    = document.getElementById("escApri");
+  var escApriLbl = escApri.querySelector(".apri-lbl");
+  var escFeedback= document.getElementById("escFeedback");
+  var escPorta   = document.getElementById("escPorta");
+  var btnPergamena = document.getElementById("btnPergamena");
+  var loreOverlay = document.getElementById("loreOverlay");
+  var loreTitolo  = document.getElementById("loreTitolo");
+  var loreTesto   = document.getElementById("loreTesto");
+  var traguardoOverlay = document.getElementById("traguardoOverlay");
+  var ytPremio = document.getElementById("ytPremio");
+  var traguardoMostrato = false;
+
+  var CHECK_SVG = '<svg class="check" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+    '<path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // I progressi vivono solo nella SESSIONE del browser: si conservano se lo
+  // studente ricarica la pagina, ma si cancellano alla chiusura della scheda/
+  // del browser, così il prossimo studente riparte con la mappa pulita.
+  function caricaDati(){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){} // rimuove eventuali dati persistenti vecchi
+    try{ return JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function salvaDati(){
+    try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dati)); }catch(e){}
+  }
+  function completata(id){
+    var d = dati[id];
+    return !!(d && (d.nome || d.funzione || d.esperienza));
+  }
+  function risoltoCastle(id){
+    var d = dati[id];
+    return !!(d && d.escapeOk);
+  }
+  // In Map il pallino è "fatto" se la scheda è compilata; in Castle se l'enigma è risolto.
+  function markerFatto(id){
+    return castleMode ? risoltoCastle(id) : completata(id);
+  }
+
+  // ---- Costruzione marker ----
+  ZONE.forEach(function(z){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "marker";
+    b.style.left = z.x + "%";
+    b.style.top  = z.y + "%";
+    b.setAttribute("data-id", z.id);
+    b.innerHTML = '<span class="num">'+z.id+'</span>' + CHECK_SVG;
+    b.addEventListener("click", function(){ apriZona(z.id); });
+    aggiornaMarker(b, z.id);
+    b.setAttribute("aria-label", "Zona "+z.id+": " + (completata(z.id) ? "scheda compilata, modifica" : "da esplorare"));
+    z._el = b;
+    mappa.appendChild(b);
+  });
+
+  function aggiornaMarker(el, id){
+    if(markerFatto(id)){
+      el.classList.add("fatto");
+      el.classList.remove("da-fare");
+    }else{
+      el.classList.add("da-fare");
+      el.classList.remove("fatto");
     }
-    mago.classList.toggle('cammina',inMoto);
-    mago.style.left=S.x+'%'; mago.style.top=S.y+'%';
-    const io=$('miniIo'); if(io){ io.style.left=S.x+'%'; io.style.top=S.y+'%'; }
-    telecamera();
-    disegnaBuio(t);
   }
-  requestAnimationFrame(ciclo);
-}
-function scopri(l){
-  S.scoperte.add(l.id); bersaglio=null; bersaglioEl.classList.remove('on');
-  SFX.scoperta(); salva(); renderLuoghi();
-  mostraDelta('Hai trovato una stanza!');
-  setTimeout(()=>apriScena(l),450);
-}
 
-/* ====================== Oggetti animati, immagine per immagine ====================== */
-const ANIM = {
-  1:[ // Santuario: rosone, planetario, sfere armillari appese
-    {t:'raggio',l:60,tp:-10,w:28,h:120,rot:-16,op:.5},
-    {t:'ruota',x:50,y:28.4,d:9.2,dur:140,soft:94},
-    {t:'ruota',x:50,y:61.8,d:8.2,dur:48,soft:88},
-    {t:'lancetta',x:50,y:41,len:2,dur:60},
-    {t:'dondola',l:5.1,tp:0,w:16.2,h:45.4,ang:1.3,dur:4.3},
-    {t:'dondola',l:78.7,tp:0,w:16.2,h:46.3,ang:1.3,dur:4.7},
-    {t:'dondola',l:27.3,tp:32.1,w:8,h:24.6,ang:1.8,dur:3.4},
-    {t:'dondola',l:64.7,tp:32.1,w:8,h:24.6,ang:1.8,dur:3.7},
-    {t:'glow',x:13.2,y:25.5,d:8,c:'oro'},{t:'glow',x:86.8,y:26.6,d:8,c:'oro'},
-    {t:'glow',x:31.3,y:46.9,d:4.5,c:'oro'},{t:'glow',x:68.7,y:46.9,d:4.5,c:'oro'},
-    {t:'glow',x:50,y:28.4,d:13,c:'ciano',op:.4,dur:6},
-    {t:'mote',n:10}
-  ],
-  2:[ // Soglia: scope impazienti, lampioni, gufi in cielo
-    {t:'volo',y:9,dur:23,s:4},{t:'volo',y:21,dur:33,s:2.6,rev:true,delay:9},
-    {t:'boccino',l:30,tp:5,w:34,h:22},
-    {t:'dondola',l:25.3,tp:72.8,w:14.2,h:24.3,oy:100,ang:.8,dur:1.9},
-    {t:'scintille',l:27,tp:74,w:11,h:20,n:7,c:'oro'},
-    {t:'glow',x:35.7,y:71.3,d:3,c:'oro'},{t:'glow',x:38.5,y:71.3,d:3,c:'oro'},
-    {t:'glow',x:65.8,y:71.2,d:3,c:'oro'},{t:'glow',x:68.7,y:71,d:3,c:'oro'},
-    {t:'glow',x:53.8,y:70,d:9,c:'oro',op:.4,dur:5},
-    {t:'brillio',x:21.4,y:40,d:3},{t:'brillio',x:67.3,y:60,d:2.2,delay:1.5},{t:'brillio',x:39,y:60,d:2,delay:2.6}
-  ],
-  3:[ // Torre degli Studi: ingranaggi alla parete, lanterne in fila
-    {t:'raggio',l:56,tp:-10,w:34,h:125,rot:14,op:.5},
-    {t:'ruota',x:23.9,y:44.4,d:6,dur:16},{t:'ruota',x:27.6,y:43.1,d:3,dur:8,rev:true},
-    {t:'ruota',x:29.6,y:48.4,d:3.6,dur:9.6},{t:'ruota',x:31.1,y:43.7,d:1.8,dur:5,rev:true},
-    {t:'dondola',l:46.8,tp:0,w:7.7,h:28,ang:2,dur:3.8},
-    {t:'dondola',l:50.4,tp:23.6,w:4.1,h:13.8,ang:2.2,dur:3.1},
-    {t:'glow',x:50.6,y:14,d:8,c:'oro'},{t:'glow',x:52.4,y:31.5,d:4,c:'oro'},
-    {t:'glow',x:53,y:36.5,d:2.5,c:'oro'},{t:'glow',x:53.3,y:40,d:1.8,c:'oro'},
-    {t:'brillio',x:91.2,y:84.1,d:3.5},
-    {t:'mote',n:12}
-  ],
-  4:[ // Portale delle Acque: globi d'acqua appesi, luce subacquea
-    {t:'dondola',l:5.9,tp:0,w:12.4,h:55.4,ang:1.4,dur:4.4},
-    {t:'dondola',l:81.1,tp:0,w:12.4,h:55.4,ang:1.4,dur:4.9},
-    {t:'dondola',l:21.2,tp:27.7,w:7.5,h:37,ang:1.8,dur:3.6},
-    {t:'dondola',l:71,tp:27.7,w:7.5,h:37,ang:1.8,dur:3.9},
-    {t:'glow',x:12.1,y:32.3,d:10,c:'ciano'},{t:'glow',x:87.4,y:32.3,d:10,c:'ciano'},
-    {t:'glow',x:25,y:50.3,d:6,c:'ciano'},{t:'glow',x:74.7,y:50.3,d:6,c:'ciano'},
-    {t:'glow',x:31.6,y:58.2,d:3.5,c:'ciano'},{t:'glow',x:68.1,y:58.2,d:3.5,c:'ciano'},
-    {t:'acqua',l:42.5,tp:43,w:15,h:18,c:'ciano'},
-    {t:'acqua',l:44,tp:62,w:12,h:38,c:'ciano'},
-    {t:'lancetta',x:38.3,y:69.3,len:1.2,dur:60}
-  ],
-  5:[ // Cortile delle Carrozze: globi alle mensole, fanali, portale
-    {t:'volo',y:7,dur:27,s:2.5},
-    {t:'dondola',l:7.9,tp:10.4,w:11,h:29.3,ang:1.8,dur:3.9},
-    {t:'dondola',l:81,tp:8.5,w:11.4,h:32.1,ang:1.8,dur:4.3},
-    {t:'dondola',l:72.9,tp:26.8,w:7.4,h:21.4,ang:2.2,dur:3.3},
-    {t:'dondola',l:83.9,tp:52.9,w:9.5,h:38.8,oy:100,ang:.9,dur:2.1},
-    {t:'glow',x:13.4,y:26.8,d:9,c:'ciano'},{t:'glow',x:86.7,y:27.4,d:9.5,c:'ciano'},
-    {t:'glow',x:76.6,y:38.8,d:6,c:'ciano'},{t:'glow',x:36.1,y:44.8,d:4,c:'ciano'},{t:'glow',x:72.2,y:45.9,d:4,c:'ciano'},
-    {t:'acqua',l:55.2,tp:49,w:7,h:18,c:'ciano'},
-    {t:'fiamma',x:21.4,y:51,d:3},{t:'fiamma',x:28.3,y:51.4,d:3},
-    {t:'lancetta',x:58.4,y:32.5,len:1.3,dur:60},
-    {t:'brillio',x:91.2,y:84.7,d:3.5}
-  ],
-  6:[ // Ala dei Piccoli Apprendisti: lanterne di rame, campana, ingranaggio della porta
-    {t:'raggio',l:54,tp:-10,w:36,h:125,rot:18,op:.5},
-    {t:'dondola',l:50.6,tp:0,w:9.5,h:26.5,ang:2,dur:3.9},
-    {t:'dondola',l:63.3,tp:18,w:5.5,h:19.8,ang:2.2,dur:3.2},
-    {t:'dondola',l:77.5,tp:35.9,w:4.8,h:9.5,ang:5,dur:1.7},
-    {t:'ruota',x:35.1,y:55.2,d:2.2,dur:6},
-    {t:'glow',x:55.4,y:11.5,d:9,c:'oro'},{t:'glow',x:66,y:29,d:5,c:'oro'},
-    {t:'glow',x:69.2,y:34.5,d:3,c:'oro'},{t:'glow',x:71.1,y:37,d:2.2,c:'oro'},
-    {t:'glow',x:72,y:47,d:13,c:'oro',op:.3,dur:7},
-    {t:'mote',n:12}
-  ],
-  7:[ // Sala delle Maree: veliero, acqua, cascate, bracieri
-    {t:'galleggia',l:34.8,tp:1.9,w:38,h:79.3,dur:5.5},
-    {t:'acqua',l:12,tp:66,w:68,h:34,c:'bianco'},
-    {t:'cascata',l:37.6,tp:62,w:3.4,h:16},{t:'cascata',l:58.6,tp:66,w:2.8,h:12},{t:'cascata',l:62,tp:66,w:2.4,h:10},
-    {t:'fiamma',x:6.3,y:66,d:6},{t:'fiamma',x:25,y:64.2,d:4},{t:'fiamma',x:94.5,y:72.5,d:7},
-    {t:'fiamma',x:86,y:66,d:4},{t:'fiamma',x:82.1,y:63,d:3},{t:'fiamma',x:80.8,y:54,d:2.4},
-    {t:'fiamma',x:40.7,y:41,d:2.8},{t:'fiamma',x:44.7,y:42.9,d:2.4},{t:'fiamma',x:38.1,y:45.1,d:2.2},
-    {t:'glow',x:94.6,y:25.7,d:5,c:'oro'},
-    {t:'scintille',l:4,tp:48,w:5,h:17,n:5,c:'fuoco'},{t:'scintille',l:92,tp:53,w:5,h:18,n:5,c:'fuoco'},
-    {t:'scintille',l:84,tp:52,w:4,h:13,n:3,c:'fuoco'},{t:'scintille',l:23,tp:50,w:4,h:13,n:3,c:'fuoco'}
-  ],
-  8:[ // Arena dei Canestri: palla che gira, retina, sfera dorata in cielo
-    {t:'volo',y:13,dur:25,s:3},
-    {t:'boccino',l:8,tp:8,w:55,h:26},
-    {t:'ruota',x:68.6,y:90.3,d:5,dur:7,soft:92},
-    {t:'dondola',l:69.2,tp:28.5,w:9.3,h:14,ang:2,dur:2.6},
-    {t:'brillio',x:90.9,y:44,d:2},{t:'brillio',x:93.2,y:41,d:2,delay:1.1},{t:'brillio',x:95.5,y:45.5,d:2,delay:2.2},
-    {t:'brillio',x:48,y:47,d:2,delay:.6},
-    {t:'acqua',l:2.5,tp:61,w:22,h:5,c:'ciano'}
-  ],
-  9:[ // Refettorio: lampadari, ingranaggi della porta, dirigibili alla finestra
-    {t:'dondola',l:15.4,tp:0,w:10.3,h:19.9,ang:1.6,dur:3.9},
-    {t:'dondola',l:46.4,tp:9.4,w:7.4,h:16.9,ang:1.8,dur:3.4},
-    {t:'dondola',l:72,tp:0,w:11.3,h:18,ang:1.6,dur:4.2},
-    {t:'ruota',x:14.8,y:35.1,d:6.4,dur:30,soft:92},
-    {t:'ruota',x:27.6,y:35.3,d:3,dur:9},{t:'ruota',x:29.6,y:38.5,d:2.8,dur:8.4,rev:true},
-    {t:'glow',x:20.5,y:12.5,d:10,c:'oro'},{t:'glow',x:50.1,y:19.5,d:7,c:'oro'},
-    {t:'glow',x:77.6,y:10,d:10,c:'oro'},{t:'glow',x:33.2,y:28,d:3.5,c:'oro'},
-    {t:'dirigibile',l:82.6,tp:16,w:14,h:27.6,dur:38},
-    {t:'mote',n:8}
-  ],
-  10:[ // Campo dei Palleggi: lanterne sui pilastri, orologio della torre, palla runica
-    {t:'volo',y:8,dur:29,s:2.2},
-    {t:'boccino',l:26,tp:5,w:34,h:20},
-    {t:'fiamma',x:20.3,y:14.7,d:7},{t:'fiamma',x:81.4,y:14.7,d:7},
-    {t:'lancetta',x:60.4,y:17.4,len:1.5,dur:60},
-    {t:'ruota',x:36.1,y:87.3,d:8,dur:16,soft:92},
-    {t:'brillio',x:91.4,y:84.3,d:3.5}
-  ],
-  11:[ // Camera delle Melodie: sfere sonore, note che salgono, campanelle
-    {t:'raggio',l:72,tp:-10,w:26,h:120,rot:20,op:.45},
-    {t:'glow',x:6.5,y:37.8,d:8,c:'ciano'},{t:'glow',x:31.4,y:47.6,d:4,c:'ciano'},
-    {t:'glow',x:84.5,y:46.9,d:4,c:'ciano'},{t:'glow',x:95.7,y:39.1,d:8,c:'ciano'},
-    {t:'glow',x:63.3,y:70.3,d:5.5,c:'ciano',dur:2},
-    {t:'note',l:72,tp:36,w:12,h:22,n:5},{t:'note',l:44,tp:6,w:20,h:36,n:6},{t:'note',l:59.5,tp:50,w:7,h:18,n:3},
-    {t:'dondola',l:85.7,tp:62.4,w:9.5,h:10.4,ang:2.5,dur:1.6},
-    {t:'mote',n:8}
-  ],
-  12:[ // Officina degli Incantesimi: ingranaggi, schermi vivi, ampolle, quadro coi dirigibili
-    {t:'ruota',x:4.7,y:16.5,d:3.8,dur:10},{t:'ruota',x:2.3,y:7.9,d:2.6,dur:7,rev:true},
-    {t:'ruota',x:32.7,y:21,d:3.8,dur:40},
-    {t:'fiamma',x:33.5,y:9.4,d:5},{t:'fiamma',x:52.1,y:16.5,d:4},
-    {t:'glow',x:21.6,y:78,d:13,c:'viola',op:.4,dur:2.2},{t:'glow',x:39,y:66.5,d:10,c:'viola',op:.4,dur:2.6},
-    {t:'glow',x:48.5,y:59.5,d:8,c:'viola',op:.4,dur:1.9},{t:'glow',x:73,y:42,d:7,c:'viola',op:.4,dur:2.4},
-    {t:'glow',x:2.3,y:92,d:8,c:'viola',op:.4,dur:2.8},
-    {t:'glow',x:30.6,y:78.5,d:2.5,c:'viola'},{t:'glow',x:52.4,y:61.5,d:2.2,c:'viola'},
-    {t:'glow',x:56.4,y:29,d:3,c:'ciano'},{t:'glow',x:65,y:28.1,d:2.5,c:'ciano'},
-    {t:'dirigibile',l:79.9,tp:11.6,w:15.6,h:14.1,dur:30},
-    {t:'mote',n:6}
-  ],
-  13:[ // Anfiteatro delle Prove: lanterne, candele fluttuanti nell'ombra, scopa
-    {t:'fiamma',x:5.1,y:42,d:7},{t:'fiamma',x:95.5,y:42.5,d:7},
-    {t:'candela',x:38,y:50},{t:'candela',x:45,y:46},{t:'candela',x:52,y:52},{t:'candela',x:58,y:47},{t:'candela',x:63,y:53},
-    {t:'glow',x:61.7,y:59.5,d:3,c:'bianco'},
-    {t:'glow',x:49.2,y:19.6,d:1.2,c:'fuoco',dur:1.6},{t:'glow',x:50.7,y:19.6,d:1.2,c:'fuoco',dur:1.6},
-    {t:'dondola',l:79.7,tp:50.1,w:9.3,h:42.9,oy:100,ang:.9,dur:2.2},
-    {t:'lucciole',l:0,tp:60,w:10,h:34,n:5,c:'verde'}
-  ],
-  14:[ // Prato dei Tornei: lumi tra gli alberi, sfera armillare, cerchi magici
-    {t:'volo',y:11,dur:31,s:2.4},
-    {t:'boccino',l:15,tp:5,w:60,h:26},
-    {t:'lucciole',l:3,tp:26,w:24,h:15,n:9,c:'oro'},{t:'lucciole',l:63,tp:28,w:14,h:15,n:7,c:'oro'},{t:'lucciole',l:78,tp:36,w:8,h:10,n:3,c:'oro'},
-    {t:'glow',x:4.2,y:48.2,d:4,c:'ciano'},{t:'glow',x:21.6,y:48.2,d:2.5,c:'ciano'},{t:'glow',x:25.3,y:47.3,d:2.5,c:'ciano'},
-    {t:'glow',x:68,y:48.2,d:2.5,c:'ciano'},{t:'glow',x:74.9,y:43.9,d:2.5,c:'ciano'},{t:'glow',x:90.9,y:36.9,d:3,c:'ciano'},
-    {t:'ruota',x:29.2,y:49.5,d:4.4,dur:24},
-    {t:'glow',x:53.5,y:59.7,d:15,c:'verde',sy:.22,op:.5,dur:4},{t:'glow',x:78.3,y:60.1,d:13,c:'verde',sy:.22,op:.5,dur:4.6},
-    {t:'brillio',x:52.4,y:81.3,d:3},{t:'brillio',x:76.2,y:80.3,d:3,delay:1.4}
-  ],
-  15:[ // Giardino d'Acqua: piante luminose nella serra, riflessi sul vetro, lucciole
-    {t:'volo',y:9,dur:35,s:2.4},
-    {t:'glow',x:25.6,y:58,d:4,c:'viola'},{t:'glow',x:58.3,y:46.4,d:4,c:'verde'},
-    {t:'glow',x:67.5,y:61.9,d:4,c:'ciano'},{t:'glow',x:76.7,y:61.5,d:3.5,c:'ciano'},
-    {t:'glow',x:62.2,y:61.5,d:3,c:'verde'},{t:'glow',x:81.8,y:58,d:3,c:'verde'},
-    {t:'brillio',x:51.7,y:21.3,d:3},{t:'brillio',x:73.8,y:29,d:2.5,delay:1.2},
-    {t:'brillio',x:31.4,y:36.8,d:2.2,delay:2.1},{t:'brillio',x:57,y:30,d:2,delay:.7},
-    {t:'lucciole',l:0,tp:68,w:24,h:30,n:8,c:'verde'},{t:'lucciole',l:84,tp:58,w:16,h:24,n:5,c:'verde'}
-  ],
-  16:[ // Rimessa dei Destrieri: torce, fanali, cavalli alati evanescenti
-    {t:'volo',y:8,dur:26,s:2.6},
-    {t:'fiamma',x:13.5,y:46.5,d:4},{t:'fiamma',x:50.6,y:46,d:4},{t:'fiamma',x:85.7,y:45.5,d:4},
-    {t:'glow',x:9,y:51.8,d:5,c:'oro'},
-    {t:'glow',x:35.5,y:57.4,d:2.2,c:'oro'},{t:'glow',x:43.2,y:56.1,d:2.2,c:'oro'},
-    {t:'glow',x:64.6,y:54.7,d:1.8,c:'oro'},{t:'glow',x:73.8,y:56.1,d:1.8,c:'oro'},{t:'glow',x:80.2,y:56.5,d:1.8,c:'oro'},
-    {t:'glow',x:21.1,y:63.8,d:18,c:'bianco',op:.32,dur:5},
-    {t:'scintille',l:12,tp:52,w:20,h:16,n:6,c:'bianco'},
-    {t:'brillio',x:91.4,y:84.1,d:3.5}
-  ]
-};
-
-const COL={oro:'255,200,110',ciano:'110,230,255',fuoco:'255,170,70',verde:'120,255,170',viola:'190,140,255',bianco:'235,240,255'};
-const SVG_GUFO='<svg viewBox="0 0 48 32" fill="currentColor"><path class="ala" d="M24 16C18 6 6 4 0 10c8 0 12 4 16 8z"/><path class="ala" d="M24 16c6-10 18-12 24-6-8 0-12 4-16 8z"/><ellipse cx="24" cy="18" rx="5" ry="8"/><circle cx="24" cy="12" r="4"/></svg>';
-const SVG_STELLA='<svg viewBox="0 0 24 24"><path fill="#fff" d="M12 0C12.6 8 16 11.4 24 12 16 12.6 12.6 16 12 24 11.4 16 8 12.6 0 12 8 11.4 11.4 8 12 0Z"/></svg>';
-const SVG_NOTA='<svg viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8" cy="18" rx="4.2" ry="3.2" transform="rotate(-18 8 18)"/><path d="M11.4 17.5V3.5l8 2.4v3.4l-6.2-1.9v10.1z"/></svg>';
-const SVG_DIRIG='<svg viewBox="0 0 60 30" fill="currentColor"><ellipse cx="30" cy="11" rx="26" ry="9"/><path d="M52 11l7-6v12z"/><rect x="24" y="22" width="13" height="5" rx="2"/><path d="M26 20v2M35 20v2" stroke="currentColor" stroke-width="1"/></svg>';
-const n3 = v => (+v).toFixed(3);
-// stile del ritaglio: stessa immagine, dimensionata come l'intera scena e traslata sul punto giusto
-function ritaglio(l,tp,w,h,url){
-  const bx = w>=100 ? 0 : l/(100-w)*100, by = h>=100 ? 0 : tp/(100-h)*100;
-  return 'left:'+n3(l)+'%;top:'+n3(tp)+'%;width:'+n3(w)+'%;height:'+n3(h)+'%;background-image:'+url+
-    ';background-size:'+n3(10000/w)+'% '+n3(10000/h)+'%;background-position:'+n3(bx)+'% '+n3(by)+'%;';
-}
-const centro = (x,y,d) => 'left:'+x+'%;top:'+y+'%;width:'+d+'%;margin:-'+n3(d/2)+'% 0 0 -'+n3(d/2)+'%;';
-const PRIM = {
-  ruota(s,ar,url){
-    const h=s.d*ar, soft=s.soft||90, m='radial-gradient(closest-side,#000 '+soft+'%,transparent 100%)';
-    return '<div class="an an-ruota" style="'+ritaglio(s.x-s.d/2,s.y-h/2,s.d,h,url)+'animation-duration:'+(s.dur||20)+'s;'+
-      (s.rev?'animation-direction:reverse;':'')+'-webkit-mask-image:'+m+';mask-image:'+m+'"></div>';
-  },
-  dondola(s,ar,url,r){
-    const ox=s.ox==null?50:s.ox, oy=s.oy==null?0:s.oy;
-    const v = oy<50 ? 'linear-gradient(180deg,#000 0,#000 84%,transparent 100%)' : 'linear-gradient(0deg,#000 0,#000 84%,transparent 100%)';
-    const m = 'linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%),'+v;
-    return '<div class="an an-dondola" style="'+ritaglio(s.l,s.tp,s.w,s.h,url)+'transform-origin:'+ox+'% '+oy+'%;--ang:'+(s.ang||2)+'deg;animation-duration:'+(s.dur||3.5)+
-      's;animation-delay:-'+n3(r()*3)+'s;-webkit-mask-image:'+m+';mask-image:'+m+'"></div>';
-  },
-  galleggia(s,ar,url){
-    return '<div class="an an-galleggia" style="'+ritaglio(s.l,s.tp,s.w,s.h,url)+'animation-duration:'+(s.dur||5)+'s"></div>';
-  },
-  glow(s,ar,url,r){
-    return '<div class="an an-glow" style="'+centro(s.x,s.y,s.d)+'--c:'+COL[s.c||'oro']+';--op:'+(s.op||.8)+';--sy:'+(s.sy||1)+
-      ';animation-duration:'+(s.dur||3)+'s;animation-delay:-'+n3(r()*3)+'s"></div>';
-  },
-  fiamma(s,ar,url,r){
-    return '<div class="an an-fiamma" style="'+centro(s.x,s.y,s.d)+'animation-duration:'+n3(1+r()*.7)+'s;animation-delay:-'+n3(r())+'s"></div>';
-  },
-  regione(s,figli){
-    return '<div class="an an-reg" style="left:'+s.l+'%;top:'+s.tp+'%;width:'+s.w+'%;height:'+s.h+'%">'+figli+'</div>';
-  },
-  scintille(s,ar,url,r){
-    let f=''; for(let i=0;i<(s.n||5);i++) f+='<i class="an-sc" style="left:'+n3(r()*100)+'%;--c:'+COL[s.c||'oro']+';animation-duration:'+n3(2.6+r()*3)+'s;animation-delay:-'+n3(r()*5)+'s"></i>';
-    return PRIM.regione(s,f);
-  },
-  note(s,ar,url,r){
-    let f=''; for(let i=0;i<(s.n||4);i++) f+='<span class="an-nota" style="left:'+n3(r()*100)+'%;animation-duration:'+n3(4.5+r()*4)+'s;animation-delay:-'+n3(r()*8)+'s">'+SVG_NOTA+'</span>';
-    return PRIM.regione(s,f);
-  },
-  lucciole(s,ar,url,r){
-    let f=''; for(let i=0;i<(s.n||6);i++) f+='<i class="an-lucc" style="left:'+n3(r()*100)+'%;top:'+n3(r()*100)+'%;--c:'+COL[s.c||'oro']+';animation-duration:'+n3(2.8+r()*3.5)+'s;animation-delay:-'+n3(r()*6)+'s"></i>';
-    return PRIM.regione(s,f);
-  },
-  mote(s,ar,url,r){
-    let f=''; for(let i=0;i<(s.n||10);i++) f+='<div class="an an-mote" style="left:'+n3(r()*100)+'%;animation-duration:'+n3(7+r()*7)+'s;animation-delay:-'+n3(r()*14)+'s"></div>';
-    return f;
-  },
-  acqua(s){
-    return '<div class="an an-acqua" style="left:'+s.l+'%;top:'+s.tp+'%;width:'+s.w+'%;height:'+s.h+'%;--c:'+COL[s.c||'ciano']+'"></div>';
-  },
-  cascata(s){
-    return '<div class="an an-cascata" style="left:'+s.l+'%;top:'+s.tp+'%;width:'+s.w+'%;height:'+s.h+'%"></div>';
-  },
-  raggio(s){
-    return '<div class="an an-raggio" style="left:'+s.l+'%;top:'+s.tp+'%;width:'+s.w+'%;height:'+s.h+'%;transform:rotate('+(s.rot||0)+'deg);--op:'+(s.op||.5)+'"></div>';
-  },
-  brillio(s){
-    return '<div class="an an-brillio" style="'+centro(s.x,s.y,s.d)+'animation-delay:'+(s.delay||0)+'s">'+SVG_STELLA+'</div>';
-  },
-  lancetta(s){
-    return '<div class="an an-lancetta" style="left:'+s.x+'%;top:'+s.y+'%;width:'+s.len+'%;animation-duration:'+(s.dur||60)+'s"></div>';
-  },
-  volo(s){
-    return '<div class="an an-volo" style="top:'+s.y+'%;width:'+(s.s||3)+'%;animation-duration:'+(s.dur||24)+'s;animation-delay:'+(s.delay||0)+'s;'+
-      (s.rev?'animation-direction:reverse;':'')+'">'+SVG_GUFO+'</div>';
-  },
-  boccino(s){
-    return PRIM.regione(s,'<div class="an-bx"><div class="an-by"><span class="an-bocc"></span></div></div>');
-  },
-  candela(s,ar,url,r){
-    return '<div class="an an-candela" style="left:'+s.x+'%;top:'+s.y+'%;animation-duration:'+n3(2.2+r()*2)+'s;animation-delay:-'+n3(r()*3)+'s"><i></i></div>';
-  },
-  dirigibile(s){
-    return '<div class="an an-clip" style="left:'+s.l+'%;top:'+s.tp+'%;width:'+s.w+'%;height:'+s.h+'%"><div class="an-dirig" style="animation-duration:'+(s.dur||34)+'s">'+SVG_DIRIG+'</div></div>';
+  function aggiornaProgresso(){
+    var fatte = ZONE.filter(function(z){ return markerFatto(z.id); }).length;
+    document.getElementById("conteggio").textContent = fatte + " di " + ZONE.length;
+    document.getElementById("barraFill").style.width = (fatte/ZONE.length*100) + "%";
   }
-};
 
-/* ====================== La stanza: lanterna, oggetti da risvegliare, torcia ====================== */
-const ovScena=$('ovScena'), scenaEl=$('scena'), strato=$('scenaStrato'), hots=$('hots');
-let scn=null;       // stanza aperta: {l, gruppi, svegliati, need}
-const eHot = s => s.t==='ruota'||s.t==='dondola'||s.t==='galleggia'||s.t==='fiamma'||s.t==='candela'||(s.t==='glow' && s.d>=2.5 && (s.op==null||s.op>=.6));
-function boxHot(s,ar){   // centro e ingombro in % (w sulla larghezza, h sull'altezza)
-  if(s.t==='dondola'||s.t==='galleggia') return {x:s.l+s.w/2,y:s.tp+s.h/2,w:s.w,h:s.h};
-  if(s.t==='candela') return {x:s.x,y:s.y-1,w:3,h:3*ar};
-  return {x:s.x,y:s.y,w:s.d,h:s.d*ar};
-}
-function apriScena(l, faccia){
-  if(!l) return;
-  bersaglio=null; bersaglioEl.classList.remove('on'); premuto=false;
-  for(const k in tasti) delete tasti[k];
-  scn={l, gruppi:[], svegliati:0, need:0};
-  $('scenaSigillo').textContent=l.id;
-  $('scenaTitolo').textContent=l.magico;
-  $('scenaSub').textContent=l.reale;
-  $('scenaFatto').innerHTML='Sotto l’incantesimo c’è un luogo che conosci: <strong>'+l.reale+'.</strong> '+l.fatto;
-  strato.innerHTML=''; hots.innerHTML='';
-  scenaEl.classList.remove('sveglia','mostra-reale');
-  scenaEl.style.setProperty('--mx','50%'); scenaEl.style.setProperty('--my','45%');
-  // lato reale: foto se c'e, altrimenti pannello di testo
-  const fr=$('scenaFotoReale'), pr=$('pannelloReale');
-  if(l.fotoReale){ fr.src=l.fotoReale; fr.alt='Foto reale: '+l.reale; fr.style.display='block'; pr.classList.remove('attivo'); }
-  else{ fr.removeAttribute('src'); fr.style.display='none'; pr.classList.add('attivo'); $('pannelloReTitolo').textContent=l.reale; }
-  const foto=$('scenaFoto');
-  foto.onload=()=>{
-    if(!scn||scn.l!==l) return;
-    const ar=foto.naturalWidth/foto.naturalHeight;
-    scenaEl.style.setProperty('--ar',ar.toFixed(4));
-    costruisciScena(l,ar);
-  };
-  foto.alt='Stanza magica: '+l.magico;
-  if(foto.getAttribute('src')===l.foto && foto.complete && foto.naturalWidth) foto.onload(); else foto.src=l.foto;
-  aggiornaTorcia();
-  mostraFaccia(faccia||'magico');
-  ovScena.classList.add('aperto');
-}
-function costruisciScena(l,ar){
-  const url="url('"+l.foto+"')", r=mulberry32(cyrb53('anim-'+l.id)), specs=ANIM[l.id]||[];
-  strato.innerHTML=''; hots.innerHTML='';
-  specs.forEach((s,i)=>{
-    const tmp=document.createElement('div'); tmp.innerHTML=PRIM[s.t](s,ar,url,r);
-    [...tmp.children].forEach(el=>{ el.dataset.i=i; strato.appendChild(el); });
+  // ---- Attività di trascinamento ----
+  var CK_SVG = '<svg class="ck" viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+    '<path d="M20 6L9 17l-5-5" stroke="#27500A" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function mescola(a){
+    for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+    return a;
+  }
+
+  function creaTessera(label, giusta, aiuto, id, nGiuste){
+    var c = document.createElement("button");
+    c.type = "button";
+    c.className = "att-chip";
+    c.dataset.label = label;
+    c.dataset.giusta = giusta ? "1" : "0";
+    if(aiuto) c.dataset.aiuto = aiuto;
+    c.textContent = label;
+    c.addEventListener("pointerdown", function(e){ iniziaDrag(e, c, id, nGiuste); });
+    return c;
+  }
+
+  function segnaPiazzata(c){
+    c.classList.add("ok");
+    c.dataset.piazzata = "1";
+    if(!c.querySelector(".ck")) c.insertAdjacentHTML("afterbegin", CK_SVG);
+  }
+
+  function costruisciAttivita(zona){
+    attTray.innerHTML = "";
+    Array.prototype.slice.call(attZona.querySelectorAll(".att-chip")).forEach(function(c){ c.remove(); });
+    attFeedback.textContent = "";
+    var att = ATTIVITA[zona.id];
+    if(!att){ attWrap.classList.remove("mostra"); return; }
+    attWrap.classList.add("mostra");
+    attConsegna.textContent = att.consegna;
+    var nGiuste = att.giuste.length;
+    var piazzate = (dati[zona.id] && dati[zona.id].attivita) ? dati[zona.id].attivita : [];
+    var tessere = [];
+    att.giuste.forEach(function(l){ tessere.push({t:l, ok:true}); });
+    att.sbagliate.forEach(function(s){ tessere.push({t:s[0], ok:false, h:s[1]}); });
+    mescola(tessere);
+    tessere.forEach(function(t){
+      var c = creaTessera(t.t, t.ok, t.h, zona.id, nGiuste);
+      if(t.ok && piazzate.indexOf(t.t) >= 0){ segnaPiazzata(c); attZona.appendChild(c); }
+      else{ attTray.appendChild(c); }
+    });
+    aggiornaHint();
+    aggiornaAttProgresso(nGiuste);
+  }
+
+  function aggiornaHint(){
+    attHint.style.display = attZona.querySelector(".att-chip") ? "none" : "block";
+  }
+
+  function contaPiazzate(){ return attZona.querySelectorAll(".att-chip").length; }
+
+  function aggiornaAttProgresso(nGiuste){
+    var n = contaPiazzate();
+    if(n === 0){ attFeedback.textContent = ""; return; }
+    if(n >= nGiuste){
+      attFeedback.style.color = "var(--verde-ok)";
+      attFeedback.textContent = "Bravo! Hai trovato tutto ciò che appartiene a questo luogo.";
+    }else{
+      attFeedback.style.color = "var(--verde-ok)";
+      attFeedback.textContent = "Giusto! (" + n + " su " + nGiuste + ")";
+    }
+  }
+
+  function salvaAttivita(id){
+    if(!dati[id]) dati[id] = {};
+    dati[id].attivita = Array.prototype.slice.call(attZona.querySelectorAll(".att-chip"))
+      .map(function(c){ return c.dataset.label; });
+    salvaDati();
+  }
+
+  var dragEl=null, dragOffX=0, dragOffY=0, dragId=null, dragN=0;
+  function iniziaDrag(e, el, id, nGiuste){
+    if(el.dataset.piazzata) return;
+    dragEl=el; dragId=id; dragN=nGiuste;
+    var r=el.getBoundingClientRect();
+    dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top;
+    el.classList.add("dragging");
+    el.style.width=r.width+"px"; el.style.left=r.left+"px"; el.style.top=r.top+"px";
+    try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    el.addEventListener("pointermove", muoviDrag);
+    el.addEventListener("pointerup", fineDrag);
+    el.addEventListener("pointercancel", fineDrag);
+  }
+  function sopraZona(e){
+    var z=attZona.getBoundingClientRect();
+    return e.clientX>=z.left && e.clientX<=z.right && e.clientY>=z.top && e.clientY<=z.bottom;
+  }
+  function muoviDrag(e){
+    if(!dragEl) return;
+    dragEl.style.left=(e.clientX-dragOffX)+"px";
+    dragEl.style.top=(e.clientY-dragOffY)+"px";
+    attZona.classList.toggle("hover", sopraZona(e));
+  }
+  function fineDrag(e){
+    if(!dragEl) return;
+    var el=dragEl, giusta=el.dataset.giusta==="1", aiuto=el.dataset.aiuto;
+    el.removeEventListener("pointermove", muoviDrag);
+    el.removeEventListener("pointerup", fineDrag);
+    el.removeEventListener("pointercancel", fineDrag);
+    var dentro = sopraZona(e);
+    el.classList.remove("dragging");
+    el.style.width=""; el.style.left=""; el.style.top="";
+    attZona.classList.remove("hover");
+    if(dentro && giusta){
+      segnaPiazzata(el);
+      attZona.appendChild(el);
+      aggiornaHint();
+      aggiornaAttProgresso(dragN);
+      salvaAttivita(dragId);
+    }else if(dentro && !giusta){
+      attFeedback.style.color = "var(--oro-scuro)";
+      attFeedback.textContent = el.dataset.label + ": " + aiuto + " — riprova.";
+      lampeggia(el);
+    }
+    dragEl=null; dragId=null;
+  }
+  function lampeggia(el){
+    el.style.background="#FAEEDA"; el.style.borderColor="#BA7517"; el.style.color="#854F0B";
+    setTimeout(function(){ el.style.background=""; el.style.borderColor=""; el.style.color=""; }, 750);
+  }
+
+  // In modalità castello si usa la foto trasfigurata (fotoHog); dove non esiste,
+  // nessuna foto (per non rompere l'atmosfera). In modalità reale si usa "foto".
+  function fotoDi(zona){
+    return castleMode ? (zona.fotoHog || null) : (zona.foto || null);
+  }
+  function aggiornaFotoPopup(zona){
+    fotoCaption.textContent = castleMode
+      ? "Leggi la pergamena e risolvi gli enigmi per aprire la porta"
+      : "Guarda la foto e riconosci il luogo";
+    var f = fotoDi(zona);
+    if(f){
+      elFoto.src = f;
+      elFoto.alt = "Foto del luogo: " + zona.sug;
+      elFotoWrap.classList.add("mostra");
+      modaleBody.classList.remove("senza-foto");
+    }else{
+      elFoto.removeAttribute("src");
+      elFotoWrap.classList.remove("mostra");
+      modaleBody.classList.add("senza-foto");
+    }
+  }
+
+  // ---- Escape room ----
+  // Suono "magico" sintetizzato (arpeggio scintillante) al momento dell'apertura.
+  var audioCtx = null;
+  function suonoMagico(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      if(!audioCtx) audioCtx = new AC();
+      if(audioCtx.state === "suspended") audioCtx.resume();
+      var ctx = audioCtx, now = ctx.currentTime;
+      var note = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // Do-Mi-Sol-Do-Mi
+      note.forEach(function(f, i){
+        var t = now + i * 0.09;
+        var osc = ctx.createOscillator(); osc.type = "triangle"; osc.frequency.value = f;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+        osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t + 0.65);
+        var arm = ctx.createOscillator(); arm.type = "sine"; arm.frequency.value = f * 2;
+        var g2 = ctx.createGain();
+        g2.gain.setValueAtTime(0.0001, t);
+        g2.gain.exponentialRampToValueAtTime(0.07, t + 0.02);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        arm.connect(g2); g2.connect(ctx.destination); arm.start(t); arm.stop(t + 0.45);
+      });
+      // scintillio finale ascendente
+      var sw = ctx.createOscillator(); sw.type = "sine";
+      sw.frequency.setValueAtTime(1046.5, now + 0.45);
+      sw.frequency.exponentialRampToValueAtTime(2093, now + 0.95);
+      var sg = ctx.createGain();
+      sg.gain.setValueAtTime(0.0001, now + 0.45);
+      sg.gain.exponentialRampToValueAtTime(0.09, now + 0.5);
+      sg.gain.exponentialRampToValueAtTime(0.0001, now + 1.0);
+      sw.connect(sg); sg.connect(ctx.destination); sw.start(now + 0.45); sw.stop(now + 1.05);
+    }catch(e){}
+  }
+  // Suono meccanico di ingranaggio per ogni risposta corretta.
+  function ctxAudio(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+      if(!audioCtx) audioCtx = new AC();
+      if(audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }catch(e){ return null; }
+  }
+  // Tick metallico (un dente della serratura): rumore filtrato risonante ad alta frequenza.
+  function tickMetallico(ctx, t, freq, vol){
+    var len = Math.floor(ctx.sampleRate * 0.045);
+    var buf = ctx.createBuffer(1, len, ctx.sampleRate), dc = buf.getChannelData(0);
+    for(var i=0;i<len;i++){ dc[i] = (Math.random()*2-1) * (1 - i/len); }
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = freq; bp.Q.value = 7;
+    var g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    src.connect(bp); bp.connect(g); g.connect(ctx.destination); src.start(t); src.stop(t + 0.05);
+  }
+  // Scatto singolo: una risposta corretta fa girare il meccanismo di un dente.
+  function suonoScatto(delay){
+    var ctx = ctxAudio(); if(!ctx) return;
+    var t = ctx.currentTime + (delay || 0);
+    tickMetallico(ctx, t, 2600, 0.14);
+    var o = ctx.createOscillator(); o.type = "triangle";
+    o.frequency.setValueAtTime(1900, t); o.frequency.exponentialRampToValueAtTime(1150, t + 0.05);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.1);
+  }
+  // Sblocco completo: il meccanismo gira, il chiavistello scorre e la serratura si apre.
+  function suonoSblocco(){
+    var ctx = ctxAudio(); if(!ctx) return;
+    var now = ctx.currentTime;
+    tickMetallico(ctx, now,       2800, 0.13);
+    tickMetallico(ctx, now + 0.08, 2500, 0.13);
+    tickMetallico(ctx, now + 0.16, 2200, 0.14);
+    var c = ctx.createOscillator(); c.type = "square";
+    c.frequency.setValueAtTime(160, now + 0.26); c.frequency.exponentialRampToValueAtTime(60, now + 0.44);
+    var cg = ctx.createGain();
+    cg.gain.setValueAtTime(0.0001, now + 0.26); cg.gain.exponentialRampToValueAtTime(0.22, now + 0.28); cg.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    c.connect(cg); cg.connect(ctx.destination); c.start(now + 0.26); c.stop(now + 0.52);
+    [2100, 3100, 4300].forEach(function(f, i){
+      var o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+      var g = ctx.createGain(); var tt = now + 0.34;
+      g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(0.06/(i+1), tt + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.6);
+      o.connect(g); g.connect(ctx.destination); o.start(tt); o.stop(tt + 0.65);
+    });
+  }
+  // Campanella tipo celesta (sinusoide + ottava a triangolo, decadimento veloce).
+  function campana(ctx, f, t, dur, vol){
+    var o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+    var h = ctx.createOscillator(); h.type = "triangle"; h.frequency.value = f * 2;
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    var hg = ctx.createGain(); hg.gain.setValueAtTime(0.0001, t); hg.gain.exponentialRampToValueAtTime(vol * 0.35, t + 0.012); hg.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.55);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + dur + 0.05);
+    h.connect(hg); hg.connect(ctx.destination); h.start(t); h.stop(t + dur * 0.55 + 0.05);
+  }
+  function bassoCaldo(ctx, f, t, dur, vol){
+    var o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = f;
+    var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + dur + 0.05);
+  }
+  // Melodia ORIGINALE in atmosfera magica (non è un tema di film).
+  function suonoTraguardo(){
+    var ctx = ctxAudio(); if(!ctx) return;
+    var n = ctx.currentTime + 0.03;
+    var mel = [[880,0,0.4],[1046.5,0.2,0.4],[1318.51,0.4,0.5],[1174.66,0.6,0.4],[1046.5,0.85,0.4],[987.77,1.05,0.4],[880,1.3,0.4],[987.77,1.55,0.35],[1318.51,1.75,0.9],[1174.66,2.1,0.4],[1046.5,2.35,0.4]];
+    mel.forEach(function(m){ campana(ctx, m[0], n + m[1], m[2], 0.13); });
+    [880, 1046.5, 1318.51].forEach(function(f){ campana(ctx, f, n + 2.6, 1.4, 0.1); });
+    bassoCaldo(ctx, 220, n, 1.5, 0.08);
+    bassoCaldo(ctx, 164.81, n + 1.55, 1.0, 0.08);
+    bassoCaldo(ctx, 220, n + 2.6, 1.5, 0.09);
+  }
+  var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H8a3 3 0 0 1-3-3V4z"/><path d="M8 8h7M8 11h7M8 14h5"/></svg>';
+  var escGears = [];
+
+  function mostraPortaAperta(animata){
+    escFeedback.style.color = "#3b6d11";
+    escFeedback.textContent = "Porta aperta! Hai risolto tutti gli enigmi.";
+    escInputs.forEach(function(inp){ inp.disabled = true; });
+    escGears.forEach(function(gear){ gear.classList.add("on"); });
+    escApri.disabled = true;
+    escApriLbl.textContent = "Aperta";
+    if(animata){
+      suonoSblocco();
+      // forza un reflow così la transizione parte anche subito dopo il reset
+      void escPorta.offsetWidth;
+    }
+    escPorta.classList.add("aperta");
+  }
+  function costruisciEscape(zona){
+    var dom = domandeDi(zona);
+    escCols.innerHTML = "";
+    escInputs = []; escGears = [];
+    escFeedback.textContent = "";
+    escApriLbl.textContent = "Apri";
+    escApri.disabled = false;
+    escPorta.classList.remove("aperta");
+    var risolto = !!(dati[zona.id] && dati[zona.id].escapeOk);
+    if(dom.length){
+      dom.forEach(function(d, i){
+        var col = document.createElement("div");
+        col.className = "esc-col";
+        var p = document.createElement("p");
+        p.className = "esc-testo";
+        p.textContent = d.t;
+        var row = document.createElement("div");
+        row.className = "esc-in-row";
+        var gear = document.createElement("span");
+        gear.className = "esc-gear"; gear.setAttribute("aria-hidden", "true"); gear.innerHTML = GEAR_SVG;
+        var inp = document.createElement("input");
+        inp.type = "text"; inp.maxLength = 40; inp.autocomplete = "off"; inp.spellcheck = false;
+        inp.placeholder = "Parola-chiave...";
+        inp.addEventListener("keydown", function(ev){ if(ev.key === "Enter"){ ev.preventDefault(); verificaEscape(); } });
+        if(risolto){ inp.value = d.r[0]; inp.classList.add("ok"); inp.disabled = true; gear.classList.add("on"); }
+        row.appendChild(gear); row.appendChild(inp);
+        col.appendChild(p); col.appendChild(row);
+        escCols.appendChild(col);
+        escInputs.push(inp); escGears.push(gear);
+      });
+    }
+    if(risolto) mostraPortaAperta(false);
+  }
+  function verificaEscape(){
+    if(!zonaAttiva) return;
+    var dom = domandeDi(zonaAttiva);
+    if(!dom.length) return;
+    var tot = dom.length, giuste = 0, nuove = [];
+    dom.forEach(function(d, i){
+      var inp = escInputs[i];
+      if(!inp) return;
+      if(inp.classList.contains("ok")){ giuste++; return; }
+      var risp = normalizza(inp.value);
+      if(risp && d.r.some(function(r){ return normalizza(r) === risp; })){ nuove.push(i); giuste++; }
+    });
+    // ingrana le nuove risposte una dopo l'altra, ciascuna col suo suono
+    nuove.forEach(function(idx, k){
+      var inp = escInputs[idx], gear = escGears[idx];
+      suonoScatto(k * 0.22);
+      setTimeout(function(){
+        inp.classList.add("ok"); inp.disabled = true;
+        if(gear) gear.classList.add("on");
+      }, k * 220);
+    });
+    if(giuste >= tot){
+      if(!dati[zonaAttiva.id]) dati[zonaAttiva.id] = {};
+      dati[zonaAttiva.id].escapeOk = true;
+      salvaDati();
+      aggiornaMarker(zonaAttiva._el, zonaAttiva.id);
+      aggiornaProgresso();
+      var ritardo = Math.max(1, nuove.length) * 220 + 180;
+      setTimeout(function(){ mostraPortaAperta(true); }, ritardo);
+      if(!traguardoMostrato && tuttoRisolto()){
+        traguardoMostrato = true;
+        setTimeout(apriTraguardo, Math.max(1, nuove.length) * 220 + 1100);
+      }
+    }else{
+      escFeedback.style.color = "var(--oro-scuro)";
+      escFeedback.textContent = "Ne hai indovinate " + giuste + " su " + tot + ". Gli indizi sono nascosti nel racconto: tocca la pergamena in basso a sinistra.";
+    }
+  }
+  escApri.addEventListener("click", verificaEscape);
+  function apriLore(){
+    if(!zonaAttiva) return;
+    loreTitolo.textContent = zonaAttiva.sug;
+    loreTesto.textContent = LORE[zonaAttiva.id] || "";
+    loreOverlay.classList.add("aperto");
+  }
+  function chiudiLore(){ loreOverlay.classList.remove("aperto"); }
+  btnPergamena.addEventListener("click", apriLore);
+  document.getElementById("loreClose").addEventListener("click", chiudiLore);
+  loreOverlay.addEventListener("click", function(e){ if(e.target === loreOverlay) chiudiLore(); });
+
+  // ---- Traguardo finale: tutte e 16 le porte aperte ----
+  function tuttoRisolto(){
+    return ZONE.every(function(z){ return dati[z.id] && dati[z.id].escapeOk; });
+  }
+  var PREMIO_ID = "1-13AkxQyts";
+  function apriTraguardo(){
+    traguardoOverlay.classList.add("aperto");
+    if(musicaOn) ytAudio.src = "";               // pausa la musica di sottofondo
+    ytPremio.src = "https://www.youtube-nocookie.com/embed/" + PREMIO_ID +
+      "?autoplay=1&start=36&loop=1&playlist=" + PREMIO_ID +
+      "&controls=0&modestbranding=1&playsinline=1&rel=0";
+  }
+  function chiudiTraguardo(){
+    traguardoOverlay.classList.remove("aperto");
+    ytPremio.src = "";                            // ferma la musica del premio
+    if(musicaOn) avviaMusica();                   // riprende l'eventuale sottofondo
+  }
+  document.getElementById("traguardoClose").addEventListener("click", chiudiTraguardo);
+  traguardoOverlay.addEventListener("click", function(e){ if(e.target === traguardoOverlay) chiudiTraguardo(); });
+
+  // ---- Modale ----
+  function apriZona(id){
+    zonaAttiva = ZONE.find(function(z){ return z.id === id; });
+    var d = dati[id] || {};
+    elBadge.textContent = id;
+    elTitolo.textContent = castleMode ? "Leggi la pergamena e risolvi gli enigmi per aprire la porta" : (d.nome ? d.nome : ("Zona " + id));
+    aggiornaFotoPopup(zonaAttiva);
+    elNome.value = d.nome || "";
+    elFunzione.value = d.funzione || "";
+    elEsperienza.value = d.esperienza || "";
+    elNome.placeholder = "Es. " + zonaAttiva.sug;
+    costruisciAttivita(zonaAttiva);
+    costruisciEscape(zonaAttiva);
+    elSalvato.classList.remove("mostra");
+    overlay.classList.add("aperto");
+    document.body.style.overflow = "hidden";
+    modale.scrollTop = 0;
+    setTimeout(function(){ elNome.focus(); }, 60);
+  }
+
+  function chiudiModale(){
+    loreOverlay.classList.remove("aperto");
+    overlay.classList.remove("aperto");
+    document.body.style.overflow = "";
+    zonaAttiva = null;
+  }
+
+  function salva(){
+    if(!zonaAttiva) return;
+    var id = zonaAttiva.id;
+    var prec = dati[id] || {};
+    dati[id] = {
+      nome: elNome.value.trim(),
+      funzione: elFunzione.value.trim(),
+      esperienza: elEsperienza.value.trim(),
+      attivita: prec.attivita || []
+    };
+    salvaDati();
+    aggiornaMarker(zonaAttiva._el, id);
+    zonaAttiva._el.setAttribute("aria-label", "Zona "+id+": " + (completata(id) ? "scheda compilata, modifica" : "da esplorare"));
+    elTitolo.textContent = dati[id].nome ? dati[id].nome : ("Zona " + id);
+    aggiornaProgresso();
+    elSalvato.classList.add("mostra");
+    setTimeout(function(){ chiudiModale(); }, 750);
+  }
+
+  document.getElementById("btnSalva").addEventListener("click", salva);
+  document.getElementById("btnChiudi").addEventListener("click", chiudiModale);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) chiudiModale(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "Escape") return;
+    if(traguardoOverlay.classList.contains("aperto")){ chiudiTraguardo(); return; }
+    if(loreOverlay.classList.contains("aperto")){ chiudiLore(); return; }
+    if(overlay.classList.contains("aperto")) chiudiModale();
   });
-  strato.classList.toggle('dbg',DEBUG_ANIM);
-  const giaSveglia=S.sveglie.has(l.id)||DEBUG_ANIM;
-  strato.classList.toggle('dorme',!giaSveglia);
-  scenaEl.classList.toggle('sveglia',giaSveglia);
-  if(giaSveglia) return;
-  // oggetti risvegliabili, raggruppati quando coincidono (es. lanterna + il suo bagliore)
-  const hot=[]; specs.forEach((s,i)=>{ if(eHot(s)) hot.push({i,b:boxHot(s,ar)}); });
-  const dentro=(a,b)=>Math.abs(a.x-b.x)<=b.w/2 && Math.abs(a.y-b.y)<=b.h/2;
-  const gruppi=[];
-  hot.forEach(h=>{
-    const g=gruppi.find(g=>g.some(o=>Math.hypot(o.b.x-h.b.x,(o.b.y-h.b.y)/ar)<4.5||dentro(h.b,o.b)||dentro(o.b,h.b)));
-    if(g) g.push(h); else gruppi.push([h]);
+
+  document.getElementById("btnReset").addEventListener("click", function(){
+    if(confirm("Vuoi cancellare tutte le schede e ripartire da capo?")){
+      dati = {};
+      traguardoMostrato = false;
+      nuovaSelezione();
+      salvaDati();
+      ZONE.forEach(function(z){
+        aggiornaMarker(z._el, z.id);
+        z._el.setAttribute("aria-label", "Zona "+z.id+": da esplorare");
+      });
+      aggiornaProgresso();
+    }
   });
-  scn.gruppi=gruppi; scn.need=Math.min(3,gruppi.length); scn.svegliati=0;
-  const lista=[]; gruppi.forEach((g,gi)=>{
-    const rappr=g.reduce((a,b)=>(a.b.w*a.b.h<=b.b.w*b.b.h?a:b));
-    g.forEach(h=>lista.push({h,gi,rappr:h===rappr}));
+
+  // ---- Adatta la mappa alla schermata (nessuno scroll) ----
+  var RATIO = 2482/1728;
+  var mainWrap = document.querySelector(".mappa-scroll");
+  function fitMap(){
+    var stile = getComputedStyle(mainWrap);
+    var padX = parseFloat(stile.paddingLeft) + parseFloat(stile.paddingRight);
+    var padY = parseFloat(stile.paddingTop) + parseFloat(stile.paddingBottom);
+    var availW = mainWrap.clientWidth - padX;
+    var availH = mainWrap.clientHeight - padY;
+    var w = Math.min(availW, availH * RATIO);
+    if(w > 0) mappa.style.width = Math.floor(w) + "px";
+  }
+  window.addEventListener("resize", fitMap);
+  window.addEventListener("orientationchange", fitMap);
+  var imgSfondo = mappa.querySelector("img.sfondo");
+  if(imgSfondo){ imgSfondo.addEventListener("load", fitMap); }
+  fitMap();
+
+  // ---- Popup di benvenuto ----
+  var benvenuto = document.getElementById("benvenuto");
+  benvenuto.classList.add("aperto");
+  document.body.style.overflow = "hidden";
+  function chiudiBenvenuto(){
+    benvenuto.classList.remove("aperto");
+    document.body.style.overflow = "";
+    fitMap();
+  }
+  document.getElementById("btnInizia").addEventListener("click", chiudiBenvenuto);
+  benvenuto.addEventListener("click", function(e){ if(e.target === benvenuto) chiudiBenvenuto(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && benvenuto.classList.contains("aperto")) chiudiBenvenuto();
   });
-  lista.sort((a,b)=>b.h.b.w*b.h.b.h-a.h.b.w*a.h.b.h);     // i piccoli sopra i grandi
-  lista.forEach(o=>{
-    const b=o.h.b, w=Math.max(b.w,5.5), h=Math.max(b.h,5.5*ar);
-    const btn=document.createElement('button');
-    btn.type='button'; btn.className='hot'+(o.rappr?' rappr':''); btn.dataset.g=o.gi;
-    btn.setAttribute('aria-label','Oggetto addormentato: tocca per risvegliarlo');
-    if(!o.rappr) btn.tabIndex=-1;
-    btn.style.cssText='left:'+(b.x-w/2)+'%;top:'+(b.y-h/2)+'%;width:'+w+'%;height:'+h+'%';
-    btn.addEventListener('click',ev=>svegliaGruppo(o.gi,ev,btn));
-    hots.appendChild(btn);
+
+  // ---- Musica di sottofondo (YouTube, solo audio) ----
+  // La traccia dipende dal tema: reale vs castello.
+  var TRACCIA_REALE = "4Eg0GmYe1m4";
+  var TRACCIA_CASTLE = "a7z8HGXVR80";
+  var ytAudio = document.getElementById("ytAudio");
+  var btnMusica = document.getElementById("btnMusica");
+  var lblMusica = btnMusica.querySelector(".lbl");
+  var musicaOn = false;
+  function avviaMusica(){
+    var id = castleMode ? TRACCIA_CASTLE : TRACCIA_REALE;
+    ytAudio.src = "https://www.youtube-nocookie.com/embed/" + id +
+      "?autoplay=1&loop=1&playlist=" + id +
+      "&controls=0&modestbranding=1&playsinline=1&rel=0";
+  }
+  btnMusica.addEventListener("click", function(){
+    musicaOn = !musicaOn;
+    if(musicaOn){
+      avviaMusica();
+      btnMusica.classList.add("attiva");
+      lblMusica.textContent = "Musica attiva";
+      btnMusica.setAttribute("aria-pressed", "true");
+      btnMusica.setAttribute("aria-label", "Disattiva la musica di sottofondo");
+    }else{
+      ytAudio.src = "";
+      btnMusica.classList.remove("attiva");
+      lblMusica.textContent = "Attiva musica";
+      btnMusica.setAttribute("aria-pressed", "false");
+      btnMusica.setAttribute("aria-label", "Attiva la musica di sottofondo");
+    }
   });
-  if(!gruppi.length){ risvegliaStanza(); return; }
-  aggiornaMissione();
-  if(!S.sveglie.size) suggerisci('',0);
-}
-function aggiornaMissione(){
-  $('missioneTxt').textContent='Muovi la lanterna e risveglia gli oggetti che luccicano';
-  let p=''; for(let i=0;i<scn.need;i++) p+='<i class="'+(i<scn.svegliati?'on':'')+'"></i>';
-  $('missionePallini').innerHTML=p;
-}
-function svegliaGruppo(gi,ev,btn){
-  if(!scn) return;
-  const g=scn.gruppi[gi]; if(!g||g.fatto) return; g.fatto=true;
-  g.forEach(h=>strato.querySelectorAll('[data-i="'+h.i+'"]').forEach(el=>el.classList.add('sveglio')));
-  hots.querySelectorAll('[data-g="'+gi+'"]').forEach(b=>b.remove());
-  const r=scenaEl.getBoundingClientRect(), br=btn.getBoundingClientRect();
-  const px=(ev && ev.clientX)?ev.clientX-r.left:br.left+br.width/2-r.left, py=(ev && ev.clientY)?ev.clientY-r.top:br.top+br.height/2-r.top;
-  const sc=document.createElement('div'); sc.className='scoppio'; sc.style.left=px+'px'; sc.style.top=py+'px';
-  scenaEl.appendChild(sc); setTimeout(()=>sc.remove(),700);
-  SFX.sveglia(scn.svegliati);
-  scn.svegliati++; aggiornaMissione();
-  if(scn.svegliati>=scn.need) setTimeout(risvegliaStanza,550);
-}
-function risvegliaStanza(){
-  if(!scn) return;
-  const l=scn.l;
-  S.sveglie.add(l.id); salva();
-  strato.classList.remove('dorme'); scenaEl.classList.add('sveglia'); hots.innerHTML='';
-  SFX.stanza(); aggiornaTorcia(); renderLuoghi();
-  setTimeout(()=>{ const b=$('btnTorcia'); (b.hidden||b.disabled?$('scenaEsci'):b).focus(); },700);
-}
-function aggiornaTorcia(){
-  const b=$('btnTorcia'), l=scn.l;
-  if(!S.torce.has(l.id)){ b.hidden=true; return; }
-  b.hidden=false;
-  if(S.raccolte.has(l.id)){ b.disabled=true; b.textContent='Torcia raccolta'; }
-  else{ b.disabled=false; b.textContent='Raccogli la torcia: +'+BONUS+' gocce'; }
-}
-$('btnTorcia').addEventListener('click',()=>{
-  const l=scn.l; if(S.raccolte.has(l.id)) return;
-  S.raccolte.add(l.id); S.olio+=BONUS; SFX.torcia(); salva();
-  aggiornaTorcia(); renderLuoghi(); mostraDelta('Torcia raccolta: +'+BONUS+' gocce d’olio');
-});
-function mostraFaccia(f){
-  const reale=(f==='reale');
-  scenaEl.classList.toggle('mostra-reale',reale);
-  $('flipLbl').textContent = reale ? 'Rilancia l’incantesimo' : 'Guarda com’è davvero';
-  // dal campus reale la stanza si guarda soltanto: info sempre visibile
-  $('scenaInfo').style.transform = reale ? 'translate(-50%,0)' : '';
-}
-$('flipMondo').addEventListener('click',()=>mostraFaccia(scenaEl.classList.contains('mostra-reale')?'magico':'reale'));
-function chiudiScena(){
-  ovScena.classList.remove('aperto'); strato.innerHTML=''; hots.innerHTML=''; scn=null;
-  suggerimentoBase(); aggiornaHUD();
-  if(S.sveglie.size===LUOGHI.length && !S.fine) setTimeout(finePartita,700);
-}
-$('scenaEsci').addEventListener('click',chiudiScena);
-// la lanterna segue il puntatore dentro la stanza
-scenaEl.addEventListener('pointermove',e=>{
-  const r=scenaEl.getBoundingClientRect();
-  scenaEl.style.setProperty('--mx',(e.clientX-r.left)+'px'); scenaEl.style.setProperty('--my',(e.clientY-r.top)+'px');
-});
-scenaEl.addEventListener('pointerdown',e=>{
-  const r=scenaEl.getBoundingClientRect();
-  scenaEl.style.setProperty('--mx',(e.clientX-r.left)+'px'); scenaEl.style.setProperty('--my',(e.clientY-r.top)+'px');
-});
 
-/* ====================== Fuoco di fortuna (niente game over) ====================== */
-function chiediFuoco(){ if($('toastFuoco').classList.contains('on')) return; $('toastFuoco').classList.add('on'); $('fuocoSi').focus(); }
-$('fuocoSi').addEventListener('click',()=>{
-  S.olio+=FUOCO; S.fuochi++; $('toastFuoco').classList.remove('on');
-  SFX.torcia(); mostraDelta('Fuoco di fortuna: +'+FUOCO+' gocce, una stella in meno'); salva(); aggiornaHUD();
-});
+  // ---- Campus Castle: trasfigura mappa, foto e musica ----
+  var MAPPA_REALE = "Campus.png";
+  var MAPPA_CASTLE = "Campus_Hogwarts.png";
+  var sfondo = document.querySelector(".sfondo");
+  var btnCastle = document.getElementById("btnCastle");
+  var lblCastle = btnCastle.querySelector(".lbl");
+  var titoloApp = document.getElementById("titoloApp");
+  var sottotitoloApp = document.getElementById("sottotitoloApp");
+  var SUB_REALE = "Scopri, dai un nome e racconta ogni angolo della scuola";
+  var SUB_CASTLE = "Risolvi l'enigma di ogni luogo e apri tutte le porte del castello";
+  btnCastle.addEventListener("click", function(){
+    castleMode = !castleMode;
+    document.body.classList.toggle("castle", castleMode);
+    sfondo.src = castleMode ? MAPPA_CASTLE : MAPPA_REALE;
+    titoloApp.textContent = castleMode ? "Campus Castle" : "Campus Map";
+    sottotitoloApp.textContent = castleMode ? SUB_CASTLE : SUB_REALE;
+    document.title = (castleMode ? "Campus Castle" : "Campus Map") + " — Scuola Sacra Famiglia";
+    sfondo.alt = castleMode
+      ? "Il campus trasfigurato in castello"
+      : "Veduta aerea del campus della Scuola Sacra Famiglia";
+    btnCastle.classList.toggle("attiva", castleMode);
+    btnCastle.setAttribute("aria-pressed", castleMode ? "true" : "false");
+    lblCastle.textContent = castleMode ? "Campus reale" : "Campus Castle";
+    if(musicaOn) avviaMusica();
+    if(overlay.classList.contains("aperto") && zonaAttiva){
+      aggiornaFotoPopup(zonaAttiva);
+      var dz = dati[zonaAttiva.id] || {};
+      elTitolo.textContent = castleMode ? "Leggi la pergamena e risolvi gli enigmi per aprire la porta" : (dz.nome ? dz.nome : ("Zona " + zonaAttiva.id));
+    }
+    ZONE.forEach(function(z){ aggiornaMarker(z._el, z.id); });
+    aggiornaProgresso();
+    fitMap();
+  });
 
-/* ====================== Fine partita + debrief ====================== */
-function finePartita(){
-  S.fine=true; salva(); SFX.vittoria(); suggerimentoBase();
-  $('stelleFinali').innerHTML=stelleSvg(stelleOra(),3);
-  $('traguardoRiepilogo').textContent = S.fuochi===0
-    ? 'Hai risvegliato tutte le 16 stanze senza mai restare a secco: un cammino pianificato con cura, con '+Math.ceil(S.olio)+' gocce d’olio d’avanzo.'
-    : 'Hai risvegliato tutte le 16 stanze. Per '+S.fuochi+(S.fuochi>1?' volte':' volta')+' l’olio è finito e hai acceso un fuoco di fortuna: la prossima volta prova un percorso che incontri prima le torce.';
-  $('pergamenaFinale').innerHTML=LUOGHI.map(l=>'<div class="voce"><strong>'+l.magico+'</strong> — '+l.reale+'</div>').join('');
-  $('traguardoOverlay').classList.add('aperto');
-  avviaPremio();
-}
-
-/* ====================== Tutorial 4 momenti ====================== */
-const TUTOR=[
-  {lbl:'Passo 1 di 4 · Il contesto', tit:'Un castello al buio',
-   txt:'La notte è scesa sul castello della Scuola Sacra Famiglia e le sue stanze si sono addormentate. Tu sei l’esploratore: hai solo una lanterna e la voglia di scoprire che cosa nasconde il buio.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-5h6v5"/></svg>'},
-  {lbl:'Passo 2 di 4 · L’obiettivo', tit:'Risveglia le 16 stanze',
-   txt:'Trova nel buio tutte le stanze del castello ed entra in ognuna per risvegliarla. Dietro ogni stanza magica si nasconde un luogo vero della tua scuola: sta a te riconoscerlo.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-3 11c.500.300 1 1 1 2h4c0-1 .500-1.700 1-2a6 6 0 0 0-3-11z"/><path d="M9 18h6M10 21h4"/></svg>'},
-  {lbl:'Passo 3 di 4 · Come si gioca', tit:'Passi, olio e torce',
-   txt:'Tocca la mappa o usa le frecce per camminare: ogni passo consuma l’olio della lanterna. Alcune stanze nascondono una torcia che la ricarica: quando vedi un tepore dorato nel buio, una torcia è vicina. Dentro una stanza muovi la lanterna e tocca gli oggetti che luccicano.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h6l-1 14a1 1 0 0 1-1 .900h-2a1 1 0 0 1-1-.900z"/><path d="M10 6V4h4v2"/><path d="M12 10v6"/></svg>'},
-  {lbl:'Passo 4 di 4 · In breve', tit:'Scegli bene la strada',
-   txt:'L’olio non basta per vagare a caso: guarda la minimappa e decidi in che ordine raggiungere le stanze. Se resti a secco puoi accendere un fuoco di fortuna: non si perde mai, ma la lanterna perde una stella.',
-   ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>'}
-];
-let tutorPasso=0;
-function renderTutor(){
-  const t=TUTOR[tutorPasso];
-  $('tutorIcona').innerHTML=t.ic; $('tutorLbl').textContent=t.lbl; $('tutorTitolo').textContent=t.tit; $('tutorTesto').textContent=t.txt;
-  $('tutorOverlay').querySelectorAll('.passi i').forEach((n,i)=>n.classList.toggle('on',i===tutorPasso));
-  $('tutorIndietro').style.visibility = tutorPasso===0?'hidden':'visible';
-  $('tutorAvanti').textContent = tutorPasso===TUTOR.length-1 ? 'Entra nel castello' : 'Avanti';
-}
-function apriTutor(){ tutorPasso=0; renderTutor(); $('tutorOverlay').classList.add('aperto'); $('tutorAvanti').focus(); }
-$('tutorAvanti').addEventListener('click',()=>{
-  if(tutorPasso<TUTOR.length-1){ tutorPasso++; renderTutor(); }
-  else { $('tutorOverlay').classList.remove('aperto'); localStorage.setItem('ldl_tutorVisto','1'); suggerimentoBase(); }
-});
-$('tutorIndietro').addEventListener('click',()=>{ if(tutorPasso>0){tutorPasso--;renderTutor();} });
-$('btnGuida').addEventListener('click',apriTutor);
-
-/* ====================== Musica (YouTube nascosto) ====================== */
-// Tracce gia scelte da Andrea nell'app originale: una per mondo + quella del premio finale.
-const TRACCIA_REALE='4Eg0GmYe1m4', TRACCIA_CASTLE='a7z8HGXVR80', PREMIO_ID='1-13AkxQyts', PREMIO_START=36;
-const ytAudio=$('ytAudio'), ytPremio=$('ytPremio');
-let musicaOn=false, premioOn=false;
-function ytSrc(id,start){
-  return 'https://www.youtube.com/embed/'+id+'?autoplay=1&loop=1&playlist='+id+(start?'&start='+start:'')+'&controls=0&rel=0&playsinline=1&enablejsapi=1';
-}
-function avviaMusica(){ ytAudio.src = ytSrc(mondo==='reale'?TRACCIA_REALE:TRACCIA_CASTLE); }
-$('btnMusica').addEventListener('click',function(){
-  musicaOn=!musicaOn; this.classList.toggle('attiva',musicaOn); this.setAttribute('aria-pressed',musicaOn?'true':'false');
-  if(musicaOn && !premioOn) avviaMusica(); else ytAudio.src='';
-});
-function avviaPremio(){ if(!musicaOn) return; premioOn=true; ytAudio.src=''; ytPremio.src=ytSrc(PREMIO_ID,PREMIO_START); }
-function fermaPremio(){ if(!premioOn) return; premioOn=false; ytPremio.src=''; if(musicaOn) avviaMusica(); }
-$('btnSuoni').addEventListener('click',function(){
-  sfxOn=!sfxOn; localStorage.setItem('ldl_sfx',sfxOn?'1':'0');
-  this.classList.toggle('attiva',sfxOn); this.setAttribute('aria-pressed',sfxOn?'true':'false');
-  if(sfxOn) SFX.sveglia(0);
-});
-
-/* ====================== I due mondi: castello / campus reale ====================== */
-function impostaMondo(m){
-  mondo=m; document.body.classList.toggle('reale',m==='reale');
-  const b=$('btnMondo'); b.setAttribute('aria-pressed',m==='reale'?'true':'false');
-  b.setAttribute('aria-label',m==='reale'?'Torna al castello':'Passa al campus reale');
-  bersaglio=null; bersaglioEl.classList.remove('on');
-  layout(); renderLuoghi(); suggerimentoBase();
-  if(musicaOn && !premioOn) avviaMusica();     // la traccia cambia insieme al mondo
-}
-$('btnMondo').addEventListener('click',()=>impostaMondo(mondo==='reale'?'hogwarts':'reale'));
-
-/* ====================== Avvio ====================== */
-function chiudiTraguardo(){ $('traguardoOverlay').classList.remove('aperto'); fermaPremio(); }
-$('traguardoChiudi').addEventListener('click',chiudiTraguardo);
-function ricomincia(){
-  chiudiTraguardo(); if(scn) chiudiScena();
-  if(mondo==='reale') impostaMondo('hogwarts');
-  nuovoStato(); visti.tepore=false; olioMostrato=-1;
-  layout(); renderLuoghi(); suggerimentoBase();
-}
-$('traguardoRigioca').addEventListener('click',ricomincia);
-$('btnRiparti').addEventListener('click',()=>{ if(confirm('Vuoi iniziare una nuova esplorazione? Il castello tornerà nel buio.')) ricomincia(); });
-$('btnGioca').addEventListener('click',()=>{
-  $('titolo').classList.remove('aperto'); SFX.scoperta();
-  if(!localStorage.getItem('ldl_tutorVisto')) apriTutor();
-});
-$('btnNuova').addEventListener('click',()=>{ ricomincia(); $('titolo').classList.remove('aperto'); if(!localStorage.getItem('ldl_tutorVisto')) apriTutor(); });
-window.addEventListener('resize',()=>{ if(S){ layout(); } });
-
-(function avvia(){
-  const ripresa=carica();
-  if(!ripresa) nuovoStato();
-  $('btnSuoni').classList.toggle('attiva',sfxOn); $('btnSuoni').setAttribute('aria-pressed',sfxOn?'true':'false');
-  if(ripresa && (S.mosso||S.sveglie.size)){ $('btnGioca').textContent='Continua l’esplorazione'; $('btnNuova').hidden=false; }
-  layout(); renderLuoghi(); suggerimentoBase();
-  mago.style.left=S.x+'%'; mago.style.top=S.y+'%';
-  requestAnimationFrame(ciclo);
-  // Anteprima diretta di una stanza (docente / verifica): index.html?scena=7  [+ &debug=1 per i contorni]
-  const anteprima=+PARAMS.get('scena');
-  if(anteprima && byId(anteprima)){ $('titolo').classList.remove('aperto'); apriScena(byId(anteprima)); }
+  aggiornaProgresso();
 })();
 </script>
 </body>
