@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Musica — ponte per «Dobby prima di Dobby»</title>
+<!--
+  PERCHÉ ESISTE QUESTO FILE
+  «Dobby prima di Dobby» si apre da disco (file://). Una pagina aperta da disco non manda a YouTube
+  l'indirizzo di provenienza (Referer), e YouTube risponde con l'Errore 153: il video non parte.
+  Verificato il 13/11/2026: stesso embed, con provenienza suona, senza provenienza dà 153.
+  Questa pagina è il ponte: va pubblicata in rete (https) e contiene lei il player. L'app la carica
+  in un riquadro invisibile; YouTube vede come provenienza questa pagina e la musica parte.
+  L'audio resta sul player di YouTube: qui non c'è nessun file musicale.
+
+  USO:  musica-ponte.html?v=ID_DEL_VIDEO&vol=14
+  Poi, in index.html, scrivere l'indirizzo pubblico di questa pagina in MUSICA_PONTE.
+-->
+<style>html,body{margin:0;height:100%;background:#000}iframe{width:100%;height:100%;border:0}</style>
+</head>
+<body>
+<iframe id="yt" title="Musica di sottofondo" allow="autoplay; encrypted-media"></iframe>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var id = (q.get('v') || '').replace(/[^\w-]/g, '');
+  var vol = Math.max(0, Math.min(100, parseInt(q.get('vol'), 10) || 14));
+  if(!id) return;
+  var f = document.getElementById('yt');
+  // parametri di casa: youtube.com/embed, rel=0, playsinline=1, enablejsapi=1
+  f.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&loop=1&playlist=' + id +
+          '&controls=0&rel=0&playsinline=1&enablejsapi=1&origin=' + encodeURIComponent(location.origin);
+  // il player accetta i comandi solo quando è pronto: si ripetono per qualche secondo
+  var n = 0, t = setInterval(function(){
+    n++;
+    try{
+      f.contentWindow.postMessage(JSON.stringify({event:'listening', id:1, channel:'widget'}), '*');
+      f.contentWindow.postMessage(JSON.stringify({event:'command', func:'setVolume', args:[vol]}), '*');
+    }catch(e){}
+    if(n > 18) clearInterval(t);
+  }, 700);
+  // all'app si dice solo se suona o se c'è un errore
+  window.addEventListener('message', function(e){
+    if(e.source !== f.contentWindow) return;
+    try{
+      var d = JSON.parse(e.data);
+      if(d.event === 'onError') parent.postMessage({dobbyMusica:'errore', codice:d.info}, '*');
+      if(d.event === 'infoDelivery' && d.info && d.info.playerState === 1) parent.postMessage({dobbyMusica:'suona'}, '*');
+    }catch(x){}
+  });
+})();
+</script>
+</body>
+</html>
