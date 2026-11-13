@@ -673,6 +673,8 @@ var CONFIG = {
   voce: true,           // Dobby parla ad alta voce (servono le cuffie)
   musica: true,         // musica di sottofondo (serve la rete)
   suoni: true,          // suoni di gioco (prova archiviata, libro sbloccato)
+  velocitaLettura: 0.75, // «Ascolta la carta»: 1 = velocità normale della sintesi, più basso = più lento
+  pausaLettura: 600,    // millisecondi di pausa tra una frase e l'altra nella lettura delle carte
   stesura: 'schermo',   // 'schermo' | 'mano' | 'scelta' (lo studente decide)
   pin: '2806'           // PIN del pannello docente: è un deterrente, non una sicurezza
 };
@@ -1553,7 +1555,7 @@ var voce = {
         if(finito) return; finito=true; clearInterval(tic); clearTimeout(guardia);
         if(id!==io.corr) return;
         accendi(quante); if(o.finePezzo) o.finePezzo(n);
-        setTimeout(prossimo, (dato||sintesi)?170:60);
+        setTimeout(prossimo, (dato||sintesi)?(o.pausa||170):60);
       }
       var guardia = setTimeout(chiudi, stimato + ((dato||sintesi)?3000:0));
       if(o.inizioPezzo) o.inizioPezzo(n);
@@ -1949,7 +1951,7 @@ AZ.leggiCarta = function(el){
   if(!voce.it){ dobby.di(DICE.senzaVoce); return; }
   dobby.zitto(); el.setAttribute('data-su','1'); el.lastChild.textContent='Ferma la lettura';
   function spegni(){ var a=box.querySelectorAll('.letta'), i; for(i=0;i<a.length;i++) a[i].classList.remove('letta'); }
-  voce.dici(d.frasi.map(function(f){ return f.t; }), {parla:true, sintesi:true, pitch:1, rate:.94,
+  voce.dici(d.frasi.map(function(f){ return f.t; }), {parla:true, sintesi:true, pitch:1, rate:cfg.velocitaLettura||.75, pausa:cfg.pausaLettura||600,
     inizioPezzo:function(n){ spegni(); var s=box.querySelector('[data-i="'+n+'"]'); if(s){ s.classList.add('letta'); s.scrollIntoView({block:'nearest', behavior:'smooth'}); } },
     fine:function(){ spegni(); el.removeAttribute('data-su'); el.lastChild.textContent='Ascolta la carta'; }});
 };
